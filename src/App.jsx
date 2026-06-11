@@ -5,6 +5,7 @@ import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Configurar from './pages/Configurar'
+import Preview from './pages/Preview'
 import Precios from './pages/Precios'
 
 function ProtectedRoute({ session, children }) {
