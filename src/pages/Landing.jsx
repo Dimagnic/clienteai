@@ -165,11 +165,15 @@ export default function Landing({ session }) {
 
       {/* FOOTER */}
       <footer className={s.footer}>
-        <div className={s.footerInner}>
-          <div className={s.logo}>✦ ClienteAI</div>
-          <p className={s.footerText}>© 2026 ClienteAI · Hecho en Puebla, México 🇲🇽</p>
-        </div>
-      </footer>
+  <div className={s.footerInner}>
+    <div className={s.logo}>✦ ClienteAI</div>
+    <p className={s.footerText}>© 2026 ClienteAI · Hecho en Puebla, México 🇲🇽</p>
+    <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Desarrollado por</span>
+      <img src="/cero-logo.png" alt="Cero+" style={{ height: 24, objectFit: 'contain' }} />
+    </div>
+  </div>
+</footer>
     </div>
   )
 }
