@@ -16,8 +16,9 @@ export default function Preview({ session }) {
   const inputRef = useRef(null)
 
   useEffect(() => {
-    loadNegocio()
-  }, [])
+  window.scrollTo(0, 0)
+  loadNegocio()
+}, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
