@@ -1,11 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+﻿import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { askClaude, buildSystemPrompt } from '../lib/claude'
 import s from './Preview.module.css'
 
 export default function Preview({ session }) {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
   const [negocio, setNegocio] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -34,7 +39,7 @@ export default function Preview({ session }) {
       setNegocio(data)
       setMessages([{
         role: 'assistant',
-        content: `¡Hola! Soy el asistente de ${data.nombre} 👋 ¿En qué te puedo ayudar?`
+        content: `Â¡Hola! Soy el asistente de ${data.nombre} ðŸ‘‹ Â¿En quÃ© te puedo ayudar?`
       }])
     }
     setLoading(false)
@@ -84,7 +89,7 @@ export default function Preview({ session }) {
   function resetChat() {
     setMessages([{
       role: 'assistant',
-      content: `¡Hola! Soy el asistente de ${negocio.nombre} 👋 ¿En qué te puedo ayudar?`
+      content: `Â¡Hola! Soy el asistente de ${negocio.nombre} ðŸ‘‹ Â¿En quÃ© te puedo ayudar?`
     }])
     setError('')
   }
@@ -99,11 +104,11 @@ export default function Preview({ session }) {
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
-        <div className={s.sidebarLogo}>✦ ClienteAI</div>
+        <div className={s.sidebarLogo}>âœ¦ ClienteAI</div>
         <nav className={s.sidebarNav}>
-          <button className={s.navItem} onClick={() => navigate('/dashboard')}>⊞ Dashboard</button>
-          <button className={s.navItem} onClick={() => navigate('/configurar')}>⚙ Mi asistente</button>
-          <button className={`${s.navItem} ${s.navItemActive}`}>◉ Vista previa</button>
+          <button className={s.navItem} onClick={() => navigate('/dashboard')}>âŠž Dashboard</button>
+          <button className={s.navItem} onClick={() => navigate('/configurar')}>âš™ Mi asistente</button>
+          <button className={`${s.navItem} ${s.navItemActive}`}>â—‰ Vista previa</button>
         </nav>
       </aside>
 
@@ -111,20 +116,20 @@ export default function Preview({ session }) {
         <div className={s.header}>
           <div>
             <h1 className={s.title}>Vista previa</h1>
-            <p className={s.subtitle}>Así verán el chat tus clientes. Pruébalo antes de publicarlo.</p>
+            <p className={s.subtitle}>AsÃ­ verÃ¡n el chat tus clientes. PruÃ©balo antes de publicarlo.</p>
           </div>
           <div className={s.headerActions}>
-            <button className={s.btnReset} onClick={resetChat}>↺ Reiniciar</button>
-            <button className={s.btnConfig} onClick={() => navigate('/configurar')}>⚙ Editar info</button>
+            <button className={s.btnReset} onClick={resetChat}>â†º Reiniciar</button>
+            <button className={s.btnConfig} onClick={() => navigate('/configurar')}>âš™ Editar info</button>
           </div>
         </div>
 
         {!negocio ? (
           <div className={s.emptyState}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⚙</div>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>âš™</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>Primero configura tu negocio</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>Necesitas agregar la información de tu negocio antes de probar el bot.</p>
-            <button onClick={() => navigate('/configurar')} className={s.btnConfig}>Configurar ahora →</button>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>Necesitas agregar la informaciÃ³n de tu negocio antes de probar el bot.</p>
+            <button onClick={() => navigate('/configurar')} className={s.btnConfig}>Configurar ahora â†’</button>
           </div>
         ) : (
           <div className={s.chatWrapper}>
@@ -158,8 +163,8 @@ export default function Preview({ session }) {
                 )}
                 {error && (
                   <div className={s.errorBubble}>
-                    ⚠️ {error}
-                    {error.includes('API') && <span> — Revisa tu API key en el archivo .env</span>}
+                    âš ï¸ {error}
+                    {error.includes('API') && <span> â€” Revisa tu API key en el archivo .env</span>}
                   </div>
                 )}
                 <div ref={bottomRef} />
@@ -181,14 +186,14 @@ export default function Preview({ session }) {
                   onClick={sendMessage}
                   disabled={!input.trim() || thinking}
                   style={{ opacity: !input.trim() || thinking ? 0.4 : 1 }}
-                >↑</button>
+                >â†‘</button>
               </div>
-              <p className={s.chatFooter}>Asistente con IA · ClienteAI</p>
+              <p className={s.chatFooter}>Asistente con IA Â· ClienteAI</p>
             </div>
 
             <div className={s.tip}>
-              <span className={s.tipIcon}>💡</span>
-              <span>Esta es exactamente la experiencia que verán tus clientes. Si el bot no responde bien, <button className={s.tipLink} onClick={() => navigate('/configurar')}>actualiza la información de tu negocio</button>.</span>
+              <span className={s.tipIcon}>ðŸ’¡</span>
+              <span>Esta es exactamente la experiencia que verÃ¡n tus clientes. Si el bot no responde bien, <button className={s.tipLink} onClick={() => navigate('/configurar')}>actualiza la informaciÃ³n de tu negocio</button>.</span>
             </div>
           </div>
         )}
