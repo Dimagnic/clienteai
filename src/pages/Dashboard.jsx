@@ -142,9 +142,12 @@ export default function Dashboard({ session }) {
     </div>
   </div>
 </div>
+          </>
+        )}
+      </main>
+    </div>
   )
 }
-
 function StatCard({ label, value, icon, isText }) {
   return (
     <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px 24px' }}>
