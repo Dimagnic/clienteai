@@ -120,7 +120,11 @@ export default function Dashboard({ session }) {
                 />
               </div>
             </div>
-
+{/* Historial de conversaciones */}
+<div className={s.section}>
+  <h2 className={s.sectionTitle}>Últimas conversaciones</h2>
+  <ConversacionesRecientes negocioId={negocio.id} />
+</div>
             {/* Embed snippet */}
             <div className={s.section}>
               <h2 className={s.sectionTitle}>Código para tu web</h2>
@@ -206,4 +210,56 @@ function PageLoader() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
+function ConversacionesRecientes({ negocioId }) {
+  const [mensajes, setMensajes] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from('conversaciones')
+        .select('*')
+        .eq('negocio_id', negocioId)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      setMensajes(data || [])
+      setLoading(false)
+    }
+    load()
+  }, [negocioId])
+
+  if (loading) return <div style={{ color: '#9ca3af', fontSize: 14 }}>Cargando...</div>
+  if (!mensajes.length) return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '32px', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>
+      Aún no hay conversaciones. ¡Comparte tu widget para empezar!
+    </div>
+  )
+
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+      {mensajes.map((m, i) => (
+        <div key={m.id} style={{
+          padding: '14px 20px',
+          borderBottom: i < mensajes.length - 1 ? '1px solid #f3f4f6' : 'none',
+          display: 'flex', alignItems: 'flex-start', gap: 12
+        }}>
+          <span style={{
+            fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
+            background: m.rol === 'user' ? '#dbeafe' : '#dcfce7',
+            color: m.rol === 'user' ? '#1d4ed8' : '#16a34a',
+            whiteSpace: 'nowrap', marginTop: 2
+          }}>
+            {m.rol === 'user' ? 'Cliente' : 'Bot'}
+          </span>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.5 }}>{m.mensaje}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>
+              {new Date(m.created_at).toLocaleString('es-MX')}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 }
