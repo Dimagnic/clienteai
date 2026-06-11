@@ -140,7 +140,7 @@
           'Content-Type': 'application/json',
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ systemPrompt, messages }),
+        body: JSON.stringify({ systemPrompt, messages, negocio_id: negocio.id }),
       });
       const data = await res.json();
       document.getElementById('cai-thinking')?.remove();
