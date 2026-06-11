@@ -222,6 +222,8 @@ function PageLoader() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
+}
+
 function ConversacionesRecientes({ negocioId }) {
   const [mensajes, setMensajes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -274,4 +276,4 @@ function ConversacionesRecientes({ negocioId }) {
     </div>
   )
 }
-}
+
