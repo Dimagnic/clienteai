@@ -17,7 +17,7 @@ export default function Preview({ session }) {
   const mainRef = useRef(null)
 
   useEffect(() => {
-    mainRef.current?.scrollTo(0, 0)
+    window.scrollTo({ top: 0, behavior: 'instant' })
     loadNegocio()
   }, [])
 
