@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,8 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { systemPrompt, messages } = await req.json()
+    const { systemPrompt, messages, negocio_id } = await req.json()
 
+    // Llamar a Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -37,8 +39,25 @@ serve(async (req) => {
       throw new Error(data.error?.message || 'Error al conectar con Claude')
     }
 
+    const reply = data.content[0].text
+
+    // Guardar conversación en Supabase
+    if (negocio_id) {
+      const supabase = createClient(
+        'https://hwdxqddkiheewirgbsor.supabase.co',
+        Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
+      )
+
+      const lastUserMessage = messages[messages.length - 1]
+
+      await supabase.from('conversaciones').insert([
+        { negocio_id, mensaje: lastUserMessage.content, rol: 'user' },
+        { negocio_id, mensaje: reply, rol: 'assistant' },
+      ])
+    }
+
     return new Response(
-      JSON.stringify({ text: data.content[0].text }),
+      JSON.stringify({ text: reply }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
