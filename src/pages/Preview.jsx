@@ -7,10 +7,6 @@ import s from './Preview.module.css'
 export default function Preview({ session }) {
   const navigate = useNavigate()
   const location = useLocation()
-
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [location.pathname])
   const [negocio, setNegocio] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -19,6 +15,10 @@ export default function Preview({ session }) {
   const [error, setError] = useState('')
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
 
   useEffect(() => {
     loadNegocio()
@@ -34,13 +34,9 @@ export default function Preview({ session }) {
       .select('*')
       .eq('user_id', session.user.id)
       .single()
-
     if (data) {
       setNegocio(data)
-      setMessages([{
-        role: 'assistant',
-        content: `Â¡Hola! Soy el asistente de ${data.nombre} ðŸ‘‹ Â¿En quÃ© te puedo ayudar?`
-      }])
+      setMessages([{ role: 'assistant', content: `Hola! Soy el asistente de ${data.nombre} que tal? En que te puedo ayudar?` }])
     }
     setLoading(false)
   }
@@ -48,29 +44,18 @@ export default function Preview({ session }) {
   async function sendMessage() {
     const text = input.trim()
     if (!text || thinking || !negocio) return
-
     const userMsg = { role: 'user', content: text }
     const newMessages = [...messages, userMsg]
     setMessages(newMessages)
     setInput('')
     setThinking(true)
     setError('')
-
-    await supabase.from('conversaciones').insert({
-      negocio_id: negocio.id,
-      mensaje: text,
-      rol: 'user'
-    })
-
+    await supabase.from('conversaciones').insert({ negocio_id: negocio.id, mensaje: text, rol: 'user' })
     try {
       const systemPrompt = buildSystemPrompt(negocio)
       const reply = await askClaude({ systemPrompt, messages: newMessages })
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
-      await supabase.from('conversaciones').insert({
-        negocio_id: negocio.id,
-        mensaje: reply,
-        rol: 'assistant'
-      })
+      await supabase.from('conversaciones').insert({ negocio_id: negocio.id, mensaje: reply, rol: 'assistant' })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -80,17 +65,11 @@ export default function Preview({ session }) {
   }
 
   function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
   }
 
   function resetChat() {
-    setMessages([{
-      role: 'assistant',
-      content: `Â¡Hola! Soy el asistente de ${negocio.nombre} ðŸ‘‹ Â¿En quÃ© te puedo ayudar?`
-    }])
+    setMessages([{ role: 'assistant', content: `Hola! Soy el asistente de ${negocio.nombre}. En que te puedo ayudar?` }])
     setError('')
   }
 
@@ -104,32 +83,30 @@ export default function Preview({ session }) {
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
-        <div className={s.sidebarLogo}>âœ¦ ClienteAI</div>
+        <div className={s.sidebarLogo}>ClienteAI</div>
         <nav className={s.sidebarNav}>
-          <button className={s.navItem} onClick={() => navigate('/dashboard')}>âŠž Dashboard</button>
-          <button className={s.navItem} onClick={() => navigate('/configurar')}>âš™ Mi asistente</button>
-          <button className={`${s.navItem} ${s.navItemActive}`}>â—‰ Vista previa</button>
+          <button className={s.navItem} onClick={() => navigate('/dashboard')}>Dashboard</button>
+          <button className={s.navItem} onClick={() => navigate('/configurar')}>Mi asistente</button>
+          <button className={`${s.navItem} ${s.navItemActive}`}>Vista previa</button>
         </nav>
       </aside>
-
       <main className={s.main}>
         <div className={s.header}>
           <div>
             <h1 className={s.title}>Vista previa</h1>
-            <p className={s.subtitle}>AsÃ­ verÃ¡n el chat tus clientes. PruÃ©balo antes de publicarlo.</p>
+            <p className={s.subtitle}>Asi veran el chat tus clientes. Pruebalo antes de publicarlo.</p>
           </div>
           <div className={s.headerActions}>
-            <button className={s.btnReset} onClick={resetChat}>â†º Reiniciar</button>
-            <button className={s.btnConfig} onClick={() => navigate('/configurar')}>âš™ Editar info</button>
+            <button className={s.btnReset} onClick={resetChat}>Reiniciar</button>
+            <button className={s.btnConfig} onClick={() => navigate('/configurar')}>Editar info</button>
           </div>
         </div>
-
         {!negocio ? (
           <div className={s.emptyState}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>âš™</div>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>⚙</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>Primero configura tu negocio</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>Necesitas agregar la informaciÃ³n de tu negocio antes de probar el bot.</p>
-            <button onClick={() => navigate('/configurar')} className={s.btnConfig}>Configurar ahora â†’</button>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>Necesitas agregar la informacion de tu negocio antes de probar el bot.</p>
+            <button onClick={() => navigate('/configurar')} className={s.btnConfig}>Configurar ahora</button>
           </div>
         ) : (
           <div className={s.chatWrapper}>
@@ -139,20 +116,14 @@ export default function Preview({ session }) {
                 <p className={s.negocioNombre}>{negocio.nombre}</p>
                 <p className={s.negocioDesc}>{negocio.descripcion || 'Tu asistente de IA'}</p>
               </div>
-              <div className={s.activeBadge}>
-                <span className={s.activeDot} />
-                Activo
-              </div>
+              <div className={s.activeBadge}><span className={s.activeDot} />Activo</div>
             </div>
-
             <div className={s.chatBox}>
               <div className={s.messages}>
                 {messages.map((m, i) => (
                   <div key={i} className={`${s.msgRow} ${m.role === 'user' ? s.msgRowUser : ''}`}>
                     {m.role === 'assistant' && <div className={s.botAvatar}>{negocio.nombre[0]}</div>}
-                    <div className={`${s.bubble} ${m.role === 'user' ? s.bubbleUser : s.bubbleBot}`}>
-                      {m.content}
-                    </div>
+                    <div className={`${s.bubble} ${m.role === 'user' ? s.bubbleUser : s.bubbleBot}`}>{m.content}</div>
                   </div>
                 ))}
                 {thinking && (
@@ -161,39 +132,18 @@ export default function Preview({ session }) {
                     <div className={`${s.bubble} ${s.bubbleBot}`}><TypingDots /></div>
                   </div>
                 )}
-                {error && (
-                  <div className={s.errorBubble}>
-                    âš ï¸ {error}
-                    {error.includes('API') && <span> â€” Revisa tu API key en el archivo .env</span>}
-                  </div>
-                )}
+                {error && <div className={s.errorBubble}>Error: {error}</div>}
                 <div ref={bottomRef} />
               </div>
-
               <div className={s.inputArea}>
-                <input
-                  ref={inputRef}
-                  className={s.input}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={handleKey}
-                  placeholder="Escribe una pregunta..."
-                  disabled={thinking}
-                  maxLength={500}
-                />
-                <button
-                  className={s.sendBtn}
-                  onClick={sendMessage}
-                  disabled={!input.trim() || thinking}
-                  style={{ opacity: !input.trim() || thinking ? 0.4 : 1 }}
-                >â†‘</button>
+                <input ref={inputRef} className={s.input} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} placeholder="Escribe una pregunta..." disabled={thinking} maxLength={500} />
+                <button className={s.sendBtn} onClick={sendMessage} disabled={!input.trim() || thinking} style={{ opacity: !input.trim() || thinking ? 0.4 : 1 }}>↑</button>
               </div>
-              <p className={s.chatFooter}>Asistente con IA Â· ClienteAI</p>
+              <p className={s.chatFooter}>Asistente con IA - ClienteAI</p>
             </div>
-
             <div className={s.tip}>
-              <span className={s.tipIcon}>ðŸ’¡</span>
-              <span>Esta es exactamente la experiencia que verÃ¡n tus clientes. Si el bot no responde bien, <button className={s.tipLink} onClick={() => navigate('/configurar')}>actualiza la informaciÃ³n de tu negocio</button>.</span>
+              <span className={s.tipIcon}>💡</span>
+              <span>Esta es la experiencia que veran tus clientes. Si el bot no responde bien, <button className={s.tipLink} onClick={() => navigate('/configurar')}>actualiza la informacion de tu negocio</button>.</span>
             </div>
           </div>
         )}
