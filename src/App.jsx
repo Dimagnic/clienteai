@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Configurar from './pages/Configurar'
 import Preview from './pages/Preview'
 import Precios from './pages/Precios'
+import ThemeToggle from './components/ThemeToggle'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -37,9 +38,21 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      {/* Toggle global — solo visible en páginas que no tienen sidebar */}
+      <Routes>
+        <Route path="/dashboard" element={null} />
+        <Route path="/configurar" element={null} />
+        <Route path="/preview" element={null} />
+        <Route path="*" element={
+          <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 99999 }}>
+            <ThemeToggle />
+          </div>
+        } />
+      </Routes>
       <Routes>
         <Route path="/" element={<Landing session={session} />} />
         <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/precios" element={<Precios />} />
         <Route path="/dashboard" element={
           <ProtectedRoute session={session}>
             <Dashboard session={session} />
@@ -55,7 +68,7 @@ export default function App() {
             <Preview session={session} />
           </ProtectedRoute>
         } />
-        <Route path="/precios" element={<Precios />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )
