@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
-
 
 export default function Dashboard({ session }) {
   const navigate = useNavigate()
@@ -38,18 +37,16 @@ export default function Dashboard({ session }) {
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
-        <div className={s.sidebarLogo}>
-  ✦ ClienteAI
-</div>
+        <div className={s.sidebarLogo}>ClienteAI</div>
         <nav className={s.sidebarNav}>
           <button className={`${s.navItem} ${s.navItemActive}`}>
-            <span className={s.navIcon}>⊞</span> Dashboard
+            <span className={s.navIcon}>+</span> Dashboard
           </button>
           <button className={s.navItem} onClick={() => navigate('/configurar')}>
-            <span className={s.navIcon}>⚙</span> Mi asistente
+            <span className={s.navIcon}>*</span> Mi asistente
           </button>
           <button className={s.navItem} onClick={() => navigate('/preview')}>
-            <span className={s.navIcon}>◉</span> Vista previa
+            <span className={s.navIcon}>o</span> Vista previa
           </button>
         </nav>
         <div className={s.sidebarBottom}>
@@ -57,15 +54,15 @@ export default function Dashboard({ session }) {
             <div className={s.userAvatar}>{session.user.email[0].toUpperCase()}</div>
             <div className={s.userEmail}>{session.user.email}</div>
           </div>
-          <button className={s.signOutBtn} onClick={handleSignOut}>Cerrar sesión</button>
+          <button className={s.signOutBtn} onClick={handleSignOut}>Cerrar sesion</button>
         </div>
       </aside>
 
       <main className={s.main}>
         <div className={s.header}>
           <div>
-            <h1 className={s.greeting}>Hola{negocio ? `, ${negocio.nombre}` : ''} 👋</h1>
-            <p className={s.subGreeting}>Aquí está el resumen de tu asistente</p>
+            <h1 className={s.greeting}>Hola{negocio ? `, ${negocio.nombre}` : ''}</h1>
+            <p className={s.subGreeting}>Aqui esta el resumen de tu asistente</p>
           </div>
           {negocio && (
             <div className={s.statusBadge}>
@@ -79,37 +76,41 @@ export default function Dashboard({ session }) {
             <div className={s.statsGrid}>
               <StatCard label="Conversaciones hoy" value={stats.hoy} icon="💬" />
               <StatCard label="Esta semana" value={stats.semana} icon="📅" />
-              <StatCard label="Total histórico" value={stats.total} icon="📊" />
+              <StatCard label="Total historico" value={stats.total} icon="📊" />
               <StatCard label="Plan actual" value="Gratuito" icon="⭐" isText />
             </div>
 
             <div className={s.section}>
-              <h2 className={s.sectionTitle}>Acciones rápidas</h2>
+              <h2 className={s.sectionTitle}>Acciones rapidas</h2>
               <div className={s.actionsGrid}>
-                <ActionCard icon="⚙" title="Configurar asistente" desc="Actualiza el menú, horarios y datos de tu negocio" onClick={() => navigate('/configurar')} />
-                <ActionCard icon="◉" title="Probar bot" desc="Habla con tu asistente antes de publicarlo" onClick={() => navigate('/preview')} />
-                <ActionCard icon="</>" title="Código para tu web" desc="Copia el script y pégalo en tu página" onClick={() => navigate('/configurar?tab=embed')} />
+                <ActionCard icon="⚙" title="Configurar asistente" desc="Actualiza el menu, horarios y datos de tu negocio" onClick={() => navigate('/configurar')} />
+                <ActionCard icon="o" title="Probar bot" desc="Habla con tu asistente antes de publicarlo" onClick={() => navigate('/preview')} />
+                <ActionCard icon="<>" title="Codigo para tu web" desc="Copia el script y pegalo en tu pagina" onClick={() => navigate('/configurar?tab=embed')} />
               </div>
             </div>
 
             <div className={s.section}>
-              <h2 className={s.sectionTitle}>Últimas conversaciones</h2>
+              <h2 className={s.sectionTitle}>Ultimas conversaciones</h2>
               <ConversacionesRecientes negocioId={negocio.id} />
             </div>
 
             <div className={s.section}>
-              <h2 className={s.sectionTitle}>Código para tu web</h2>
+              <h2 className={s.sectionTitle}>Codigo para tu web</h2>
               <div style={{ background: 'var(--bg-card)', border: '2px solid #16a34a', borderRadius: 14, padding: '28px 32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                   <span style={{ fontSize: 28 }}>🚀</span>
                   <div>
-                    <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>Tu widget está listo</p>
-                    <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>Copia este código y pégalo antes del {'</body>'} de tu página web</p>
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>Tu widget esta listo</p>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>Copia este codigo y pegalo antes del cierre body de tu pagina web</p>
                   </div>
                 </div>
                 <EmbedCode token={negocio.token} />
                 <div style={{ marginTop: 16, padding: '12px 16px', background: '#f0fdf4', borderRadius: 8, fontSize: 13, color: '#16a34a' }}>
-                  💡 <strong>¿No tienes web?</strong> Comparte el link directo con tus clientes y ellos podrán chatear contigo desde cualquier dispositivo.
+                  💡 <strong>No tienes web?</strong> Comparte este link directo con tus clientes:
+                  <br />
+                  <a href={`https://clienteai.vercel.app/chat/${negocio.token}`} target="_blank" rel="noreferrer" style={{ color: '#16a34a', fontWeight: 600, wordBreak: 'break-all' }}>
+                    {`https://clienteai.vercel.app/chat/${negocio.token}`}
+                  </a>
                 </div>
               </div>
             </div>
@@ -156,7 +157,7 @@ function EmbedCode({ token }) {
         {code}
       </pre>
       <button onClick={copy} style={{ position: 'absolute', top: 10, right: 10, background: copied ? '#16a34a' : 'var(--bg-card)', color: copied ? '#fff' : 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.15s' }}>
-        {copied ? '✓ Copiado' : 'Copiar'}
+        {copied ? 'Copiado' : 'Copiar'}
       </button>
     </div>
   )
@@ -171,7 +172,7 @@ function EmptyState({ navigate }) {
         Solo necesitas 10 minutos para tener un bot respondiendo por ti.
       </p>
       <button onClick={() => navigate('/configurar')} style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-        Configurar ahora →
+        Configurar ahora
       </button>
     </div>
   )
@@ -202,7 +203,7 @@ function ConversacionesRecientes({ negocioId }) {
   if (loading) return <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Cargando...</div>
   if (!mensajes.length) return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-      Aún no hay conversaciones. ¡Comparte tu widget para empezar!
+      Aun no hay conversaciones. Comparte tu widget para empezar!
     </div>
   )
 
