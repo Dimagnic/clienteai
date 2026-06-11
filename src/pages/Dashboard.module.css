@@ -1,6 +1,5 @@
 .page { display: flex; min-height: 100vh; background: var(--bg-secondary); }
 
-/* SIDEBAR */
 .sidebar { width: 220px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
 .sidebarLogo { font-size: 18px; font-weight: 700; color: #16a34a; padding: 0 20px; margin-bottom: 32px; }
 .sidebarNav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
@@ -15,7 +14,6 @@
 .signOutBtn { background: none; border: none; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 0; transition: color 0.15s; }
 .signOutBtn:hover { color: var(--text-primary); }
 
-/* MAIN */
 .main { flex: 1; padding: 36px; overflow-y: auto; max-width: 900px; }
 .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
 .greeting { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; margin: 0 0 4px; color: var(--text-primary); }
@@ -25,4 +23,12 @@
 .statsGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 32px; }
 .section { margin-bottom: 32px; }
 .sectionTitle { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
-.actionsGrid { display: grid; grid-template-columns: r
+.actionsGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.embedCard { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; }
+.embedDesc { font-size: 14px; color: var(--text-secondary); margin-bottom: 14px; }
+.embedDesc code { background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { padding: 20px 16px; }
+}
