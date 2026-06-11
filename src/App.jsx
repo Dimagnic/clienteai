@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard'
 import Configurar from './pages/Configurar'
 import Preview from './pages/Preview'
 import Precios from './pages/Precios'
-import ThemeToggle from './components/ThemeToggle'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -18,14 +17,12 @@ export default function App() {
   const [session, setSession] = useState(undefined)
 
   useEffect(() => {
-    // Tema claro por defecto
     if (!localStorage.getItem('theme')) {
       document.documentElement.setAttribute('data-theme', 'light')
       localStorage.setItem('theme', 'light')
     } else {
       document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'))
     }
-
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
     })
@@ -46,9 +43,6 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 99999 }}>
-        <ThemeToggle />
-      </div>
       <Routes>
         <Route path="/" element={<Landing session={session} />} />
         <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />

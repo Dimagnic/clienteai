@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import s from './Landing.module.css'
+import ThemeToggle from '../components/ThemeToggle'
 
 const FEATURES = [
   { icon: '⚡', title: 'Listo en 10 minutos', desc: 'Sin código. Sin complicaciones. Solo escribe la info de tu negocio y tu bot está listo.' },
@@ -30,8 +31,9 @@ export default function Landing({ session }) {
         <div className={s.navInner}>
           <div className={s.logo}>✦ ClienteAI</div>
           <div className={s.navLinks}>
-  <a href="#features">Funciones</a>
+            <a href="#features">Funciones</a>
             <a href="#precios" onClick={(e) => { e.preventDefault(); navigate('/precios') }}>Precios</a>
+            <ThemeToggle />
             {session
               ? <button className={s.btnPrimary} onClick={() => navigate('/dashboard')}>Mi dashboard</button>
               : <button className={s.btnPrimary} onClick={() => navigate('/login')}>Empezar gratis</button>
@@ -163,20 +165,19 @@ export default function Landing({ session }) {
 
       {/* FOOTER */}
       <footer className={s.footer}>
-  <div className={s.footerInner}>
-    <div className={s.logo}>✦ ClienteAI</div>
-    <p className={s.footerText}>© 2026 ClienteAI · Hecho en Puebla, México 🇲🇽</p>
-    <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Desarrollado por</span>
-      <img src="/cero-logo.png" alt="Cero+" style={{ height: 24, objectFit: 'contain' }} />
-    </div>
-  </div>
-</footer>
+        <div className={s.footerInner}>
+          <div className={s.logo}>✦ ClienteAI</div>
+          <p className={s.footerText}>© 2026 ClienteAI · Hecho en Puebla, México 🇲🇽</p>
+          <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Desarrollado por</span>
+            <img src="/cero-logo.png" alt="Cero+" style={{ height: 24, objectFit: 'contain' }} />
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
 
-// ── Demo chat animado ──
 function DemoChat() {
   const messages = [
     { role: 'user', text: '¿A qué hora abren mañana?' },
