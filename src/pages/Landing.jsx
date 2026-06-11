@@ -16,9 +16,9 @@ const TESTIMONIALS = [
 ]
 
 const PLANS = [
-  { name: 'Gratuito', price: '0', period: 'para siempre', features: ['100 conversaciones/mes', '1 negocio', 'Chat en tu web', 'Soporte por email'], cta: 'Empezar gratis', highlight: false },
-  { name: 'Starter', price: '299', period: 'por mes', features: ['1,000 conversaciones/mes', '1 negocio', 'Chat web + WhatsApp', 'Dashboard con métricas', 'Soporte prioritario'], cta: 'Empezar ahora', highlight: true },
-  { name: 'Pro', price: '699', period: 'por mes', features: ['Conversaciones ilimitadas', '3 negocios', 'Todos los canales', 'Métricas avanzadas', 'Soporte dedicado'], cta: 'Contactar', highlight: false },
+  { name: 'Gratuito', price: '0', period: 'para siempre', desc: 'Perfecto para probar ClienteAI', features: ['50 conversaciones al mes', '1 asistente virtual', 'Widget para tu web', 'Soporte por email'], cta: 'Empezar gratis', highlight: false },
+  { name: 'Pro', price: '299', period: 'MXN / mes', desc: 'Para negocios que quieren crecer', features: ['Conversaciones ilimitadas', '1 asistente virtual', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario'], cta: 'Empezar ahora', highlight: true },
+  { name: 'Negocio', price: '599', period: 'MXN / mes', desc: 'Para empresas con más necesidades', features: ['Conversaciones ilimitadas', '3 asistentes virtuales', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales'], cta: 'Contactar ventas', highlight: false },
 ]
 
 export default function Landing({ session }) {
@@ -31,8 +31,8 @@ export default function Landing({ session }) {
         <div className={s.navInner}>
           <div className={s.logo}>✦ ClienteAI</div>
           <div className={s.navLinks}>
-            <a href="#features">Funciones</a>
-            <a href="#precios" onClick={(e) => { e.preventDefault(); navigate('/precios') }}>Precios</a>
+            <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }) }}>Funciones</a>
+            <a href="#precios" onClick={(e) => { e.preventDefault(); document.getElementById('precios')?.scrollIntoView({ behavior: 'smooth' }) }}>Precios</a>
             <ThemeToggle />
             {session
               ? <button className={s.btnPrimary} onClick={() => navigate('/dashboard')}>Mi dashboard</button>
@@ -131,10 +131,11 @@ export default function Landing({ session }) {
             <div key={p.name} className={`${s.planCard} ${p.highlight ? s.planHighlight : ''}`}>
               {p.highlight && <div className={s.planBadge}>Más popular</div>}
               <h3 className={s.planName}>{p.name}</h3>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 12px' }}>{p.desc}</p>
               <div className={s.planPrice}>
                 <span className={s.planCurrency}>$</span>
                 <span className={s.planAmount}>{p.price}</span>
-                <span className={s.planPeriod}> MXN/{p.period}</span>
+                <span className={s.planPeriod}> {p.period}</span>
               </div>
               <ul className={s.planFeatures}>
                 {p.features.map(f => (

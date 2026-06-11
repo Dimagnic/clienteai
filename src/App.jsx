@@ -6,7 +6,6 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Configurar from './pages/Configurar'
 import Preview from './pages/Preview'
-import Precios from './pages/Precios'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -46,7 +45,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing session={session} />} />
         <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
-        <Route path="/precios" element={<Precios />} />
         <Route path="/dashboard" element={
           <ProtectedRoute session={session}>
             <Dashboard session={session} />
