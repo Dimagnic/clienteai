@@ -31,7 +31,7 @@ export default function Landing({ session }) {
           <div className={s.logo}>✦ ClienteAI</div>
           <div className={s.navLinks}>
             <a href="#features">Funciones</a>
-            <a href="#precios">Precios</a>
+            <a href="#precios" onClick={(e) => { e.preventDefault(); navigate('/precios') }}>Precios</a>
             {session
               ? <button className={s.btnPrimary} onClick={() => navigate('/dashboard')}>Mi dashboard</button>
               : <button className={s.btnPrimary} onClick={() => navigate('/login')}>Empezar gratis</button>
