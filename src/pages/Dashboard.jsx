@@ -125,18 +125,23 @@ export default function Dashboard({ session }) {
   <h2 className={s.sectionTitle}>Últimas conversaciones</h2>
   <ConversacionesRecientes negocioId={negocio.id} />
 </div>
-            {/* Embed snippet */}
-            <div className={s.section}>
-              <h2 className={s.sectionTitle}>Código para tu web</h2>
-              <div className={s.embedCard}>
-                <p className={s.embedDesc}>Copia este código y pégalo antes del <code>&lt;/body&gt;</code> de tu página web.</p>
-                <EmbedCode token={negocio.token} />
-              </div>
-            </div>
-          </>
-        )}
-      </main>
+           {/* Embed snippet */}
+<div className={s.section}>
+  <h2 className={s.sectionTitle}>Código para tu web</h2>
+  <div style={{ background: '#fff', border: '2px solid #16a34a', borderRadius: 14, padding: '28px 32px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+      <span style={{ fontSize: 28 }}>🚀</span>
+      <div>
+        <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: '#111' }}>Tu widget está listo</p>
+        <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>Copia este código y pégalo antes del {'</body>'} de tu página web</p>
+      </div>
     </div>
+    <EmbedCode token={negocio.token} />
+    <div style={{ marginTop: 16, padding: '12px 16px', background: '#f0fdf4', borderRadius: 8, fontSize: 13, color: '#16a34a' }}>
+      💡 <strong>¿No tienes web?</strong> Comparte el link directo con tus clientes y ellos podrán chatear contigo desde cualquier dispositivo.
+    </div>
+  </div>
+</div>
   )
 }
 
