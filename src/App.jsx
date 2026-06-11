@@ -36,19 +36,11 @@ export default function App() {
     )
   }
 
-  return (
+return (
     <BrowserRouter>
-      {/* Toggle global — solo visible en páginas que no tienen sidebar */}
-      <Routes>
-        <Route path="/dashboard" element={null} />
-        <Route path="/configurar" element={null} />
-        <Route path="/preview" element={null} />
-        <Route path="*" element={
-          <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 99999 }}>
-            <ThemeToggle />
-          </div>
-        } />
-      </Routes>
+      <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 99999 }}>
+        <ThemeToggle />
+      </div>
       <Routes>
         <Route path="/" element={<Landing session={session} />} />
         <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
