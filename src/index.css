@@ -18,25 +18,48 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Tema claro */
+  --bg: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-card: #ffffff;
+  --border: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --border: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --gray-50: #1e293b;
+  --gray-100: #334155;
+  --white: #1e293b;
+  --gray-900: #f1f5f9;
+  --gray-700: #cbd5e1;
+  --gray-500: #94a3b8;
+  --gray-300: #475569;
 }
 
 html { font-size: 16px; -webkit-font-smoothing: antialiased; }
-
 body {
   font-family: var(--font);
-  color: var(--gray-900);
-  background: var(--white);
+  color: var(--text-primary);
+  background: var(--bg);
   line-height: 1.6;
+  transition: background 0.2s, color 0.2s;
 }
-
 a { color: inherit; text-decoration: none; }
 button { font-family: var(--font); cursor: pointer; }
 input, textarea, select { font-family: var(--font); }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* Utilidades */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

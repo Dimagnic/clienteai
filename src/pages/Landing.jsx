@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle'
 import s from './Landing.module.css'
 
 const FEATURES = [
@@ -30,7 +31,8 @@ export default function Landing({ session }) {
         <div className={s.navInner}>
           <div className={s.logo}>✦ ClienteAI</div>
           <div className={s.navLinks}>
-            <a href="#features">Funciones</a>
+  <a href="#features">Funciones</a>
+  <ThemeToggle />
             <a href="#precios" onClick={(e) => { e.preventDefault(); navigate('/precios') }}>Precios</a>
             {session
               ? <button className={s.btnPrimary} onClick={() => navigate('/dashboard')}>Mi dashboard</button>
