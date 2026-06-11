@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
-import ThemeToggle from '../components/ThemeToggle'
+
 
 export default function Dashboard({ session }) {
   const navigate = useNavigate()
@@ -38,10 +38,9 @@ export default function Dashboard({ session }) {
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
-        <div className={s.sidebarLogo} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          ✦ ClienteAI
-          <ThemeToggle />
-        </div>
+        <div className={s.sidebarLogo}>
+  ✦ ClienteAI
+</div>
         <nav className={s.sidebarNav}>
           <button className={`${s.navItem} ${s.navItemActive}`}>
             <span className={s.navIcon}>⊞</span> Dashboard
