@@ -14,10 +14,8 @@ export default function Preview({ session }) {
   const [error, setError] = useState('')
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
-  const mainRef = useRef(null)
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' })
     loadNegocio()
   }, [])
 
@@ -109,7 +107,7 @@ export default function Preview({ session }) {
         </nav>
       </aside>
 
-      <main className={s.main} ref={mainRef}>
+      <main className={s.main}>
         <div className={s.header}>
           <div>
             <h1 className={s.title}>Vista previa</h1>

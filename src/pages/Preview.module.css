@@ -5,7 +5,7 @@
 .navItem { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; border: none; background: transparent; font-size: 14px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; }
 .navItem:hover { background: var(--bg-secondary); color: var(--text-primary); }
 .navItemActive { background: #f0fdf4; color: #16a34a; font-weight: 500; }
-.main { flex: 1; padding: 36px; }.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
+.main { flex: 1; padding: 36px; overflow-y: auto; max-width: 900px; }.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
 .title { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; margin: 0 0 6px; color: var(--text-primary); }
 .subtitle { font-size: 14px; color: var(--text-muted); margin: 0; }
 .headerActions { display: flex; gap: 10px; }
