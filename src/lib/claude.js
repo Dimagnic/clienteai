@@ -1,34 +1,14 @@
-// ─────────────────────────────────────────────
-// Llamada a Claude API
-// En producción: mover a Supabase Edge Function
-// ─────────────────────────────────────────────
+import { supabase } from './supabase'
 
 export async function askClaude({ systemPrompt, messages }) {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 400,
-      system: systemPrompt,
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
-    }),
+  const { data, error } = await supabase.functions.invoke('ask-claude', {
+    body: { systemPrompt, messages },
   })
 
-  if (!response.ok) {
-    const err = await response.json()
-    throw new Error(err.error?.message || 'Error al conectar con la IA')
-  }
+  if (error) throw new Error(error.message || 'Error al conectar con la IA')
+  if (data.error) throw new Error(data.error)
 
-  const data = await response.json()
-  return data.content[0].text
+  return data.text
 }
 
 export function buildSystemPrompt(negocio) {
@@ -45,3 +25,4 @@ ${negocio.extra ? `INFORMACIÓN ADICIONAL:\n${negocio.extra}` : ''}
 
 Siempre sé amable, breve y útil. Si el cliente quiere hacer un pedido o necesita ayuda urgente, indícale que puede llamar o escribir directamente.`
 }
+
