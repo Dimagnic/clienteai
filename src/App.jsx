@@ -5,7 +5,7 @@ import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Configurar from './pages/Configurar'
-import Preview from './pages/Preview'
+import Precios from './pages/Precios'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -54,7 +54,7 @@ export default function App() {
             <Preview session={session} />
           </ProtectedRoute>
         } />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/precios" element={<Precios />} />
       </Routes>
     </BrowserRouter>
   )
