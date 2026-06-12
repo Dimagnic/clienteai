@@ -34,6 +34,13 @@ export default function Dashboard({ session }) {
 
   if (loading) return <PageLoader />
 
+  const LIMITES = { gratuito: 50, pro: 999999, negocio: 999999 }
+  const plan = negocio?.plan || 'gratuito'
+  const limite = LIMITES[plan] || 50
+  const usadas = negocio?.conversaciones_mes || 0
+  const restantes = Math.max(0, limite - usadas)
+  const porcentaje = Math.min(100, (usadas / limite) * 100)
+
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
@@ -77,8 +84,27 @@ export default function Dashboard({ session }) {
               <StatCard label="Conversaciones hoy" value={stats.hoy} icon="💬" />
               <StatCard label="Esta semana" value={stats.semana} icon="📅" />
               <StatCard label="Total historico" value={stats.total} icon="📊" />
-              <StatCard label="Plan actual" value="Gratuito" icon="⭐" isText />
+              <StatCard label="Plan actual" value={plan.charAt(0).toUpperCase() + plan.slice(1)} icon="⭐" isText />
             </div>
+
+            {plan === 'gratuito' && (
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Conversaciones este mes</span>
+                  <span style={{ fontSize: 13, color: porcentaje >= 80 ? '#dc2626' : 'var(--text-muted)' }}>
+                    {usadas} / {limite}
+                  </span>
+                </div>
+                <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, height: 8, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 8, background: porcentaje >= 80 ? '#dc2626' : '#16a34a', width: `${porcentaje}%`, transition: 'width 0.3s' }} />
+                </div>
+                {porcentaje >= 80 && (
+                  <p style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>
+                    Te quedan {restantes} conversaciones. <button onClick={() => navigate('/legal')} style={{ background: 'none', border: 'none', color: '#16a34a', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: 0 }}>Actualiza tu plan</button>
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className={s.section}>
               <h2 className={s.sectionTitle}>Acciones rapidas</h2>
