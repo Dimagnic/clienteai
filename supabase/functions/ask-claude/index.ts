@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const LIMITES = { gratuito: 50, pro: 999999, negocio: 999999 }
+const LIMITES = { gratuito: 50, pro: 2000, negocio: 5000 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -32,7 +32,7 @@ serve(async (req) => {
         const limite = LIMITES[negocio.plan] || 50
         if (negocio.conversaciones_mes >= limite) {
           return new Response(
-            JSON.stringify({ error: 'Limite de conversaciones alcanzado. Actualiza tu plan para continuar.' }),
+            JSON.stringify({ error: `Limite de ${limite} conversaciones del mes alcanzado. Actualiza tu plan para continuar.` }),
             { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
@@ -60,7 +60,6 @@ serve(async (req) => {
     const reply = data.content[0].text
 
     if (negocio_id) {
-      await supabase.from('negocios').update({ conversaciones_mes: supabase.rpc('increment', { row_id: negocio_id }) }).eq('id', negocio_id)
       await supabase.from('conversaciones').insert([
         { negocio_id, mensaje: messages[messages.length - 1].content, rol: 'user' },
         { negocio_id, mensaje: reply, rol: 'assistant' },
