@@ -1,16 +1,27 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Configurar.module.css'
 
 const CAMPOS = [
   { key: 'nombre', label: 'Nombre del negocio', placeholder: 'Ej: Tacos El Gordo', required: true, type: 'input' },
-  { key: 'descripcion', label: '¿A qué se dedica tu negocio?', placeholder: 'Ej: Taquería de comida mexicana en Puebla', type: 'input' },
-  { key: 'menu', label: 'Menú o servicios con precios', placeholder: 'Ej:\nTaco de pastor: $25\nQuesadilla: $40\nAgua fresca: $20', type: 'textarea' },
-  { key: 'horario', label: 'Horario de atención', placeholder: 'Ej: Lunes a domingo de 9am a 11pm', type: 'input' },
-  { key: 'direccion', label: 'Dirección', placeholder: 'Ej: Blvd. Atlixcáyotl 2301, Puebla', type: 'input' },
-  { key: 'telefono', label: 'Teléfono / WhatsApp', placeholder: 'Ej: 222-555-0134', type: 'input' },
-  { key: 'extra', label: 'Información adicional (opcional)', placeholder: 'Ej: Aceptamos pedidos por WhatsApp, contamos con estacionamiento, etc.', type: 'textarea' },
+  { key: 'descripcion', label: 'A que se dedica tu negocio?', placeholder: 'Ej: Taqueria de comida mexicana en Puebla', type: 'input' },
+  { key: 'menu', label: 'Menu o servicios con precios', placeholder: 'Ej:\nTaco de pastor: $25\nQuesadilla: $40\nAgua fresca: $20', type: 'textarea' },
+  { key: 'horario', label: 'Horario de atencion', placeholder: 'Ej: Lunes a domingo de 9am a 11pm', type: 'input' },
+  { key: 'direccion', label: 'Direccion', placeholder: 'Ej: Blvd. Atlixcayotl 2301, Puebla', type: 'input' },
+  { key: 'telefono', label: 'Telefono / WhatsApp', placeholder: 'Ej: 222-555-0134', type: 'input' },
+  { key: 'extra', label: 'Informacion adicional (opcional)', placeholder: 'Ej: Aceptamos pedidos por WhatsApp, contamos con estacionamiento, etc.', type: 'textarea' },
+]
+
+const COLORES = [
+  { valor: '#16a34a', nombre: 'Verde' },
+  { valor: '#2563eb', nombre: 'Azul' },
+  { valor: '#dc2626', nombre: 'Rojo' },
+  { valor: '#9333ea', nombre: 'Morado' },
+  { valor: '#ea580c', nombre: 'Naranja' },
+  { valor: '#0891b2', nombre: 'Cyan' },
+  { valor: '#be185d', nombre: 'Rosa' },
+  { valor: '#111827', nombre: 'Negro' },
 ]
 
 function generateToken() {
@@ -19,24 +30,17 @@ function generateToken() {
 
 export default function Configurar({ session }) {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ nombre: '', descripcion: '', menu: '', horario: '', direccion: '', telefono: '', extra: '' })
+  const [form, setForm] = useState({ nombre: '', descripcion: '', menu: '', horario: '', direccion: '', telefono: '', extra: '', color: '#16a34a' })
   const [negocioId, setNegocioId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    loadNegocio()
-  }, [])
+  useEffect(() => { loadNegocio() }, [])
 
   async function loadNegocio() {
-    const { data } = await supabase
-      .from('negocios')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single()
-
+    const { data } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).single()
     if (data) {
       setNegocioId(data.id)
       setForm({
@@ -47,6 +51,7 @@ export default function Configurar({ session }) {
         direccion: data.direccion || '',
         telefono: data.telefono || '',
         extra: data.extra || '',
+        color: data.color || '#16a34a',
       })
     }
     setLoading(false)
@@ -62,20 +67,13 @@ export default function Configurar({ session }) {
     if (!form.nombre.trim()) { setError('El nombre del negocio es obligatorio.'); return }
     setSaving(true)
     setError('')
-
-    const payload = {
-      ...form,
-      user_id: session.user.id,
-      updated_at: new Date().toISOString(),
-    }
-
+    const payload = { ...form, user_id: session.user.id, updated_at: new Date().toISOString() }
     let result
     if (negocioId) {
       result = await supabase.from('negocios').update(payload).eq('id', negocioId).select().single()
     } else {
       result = await supabase.from('negocios').insert({ ...payload, token: generateToken() }).select().single()
     }
-
     if (result.error) {
       setError(result.error.message)
     } else {
@@ -96,11 +94,11 @@ export default function Configurar({ session }) {
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
-        <div className={s.sidebarLogo}>✦ ClienteAI</div>
+        <div className={s.sidebarLogo}>ClienteAI</div>
         <nav className={s.sidebarNav}>
-          <button className={s.navItem} onClick={() => navigate('/dashboard')}>⊞ Dashboard</button>
-          <button className={`${s.navItem} ${s.navItemActive}`}>⚙ Mi asistente</button>
-          <button className={s.navItem} onClick={() => navigate('/preview')}>◉ Vista previa</button>
+          <button className={s.navItem} onClick={() => navigate('/dashboard')}>Dashboard</button>
+          <button className={`${s.navItem} ${s.navItemActive}`}>Mi asistente</button>
+          <button className={s.navItem} onClick={() => navigate('/preview')}>Vista previa</button>
         </nav>
       </aside>
 
@@ -108,10 +106,10 @@ export default function Configurar({ session }) {
         <div className={s.header}>
           <div>
             <h1 className={s.title}>Configura tu asistente</h1>
-            <p className={s.subtitle}>Cuéntanos sobre tu negocio y la IA aprenderá a responder por ti</p>
+            <p className={s.subtitle}>Cuentanos sobre tu negocio y la IA aprendera a responder por ti</p>
           </div>
           <button className={s.previewBtn} onClick={() => navigate('/preview')}>
-            Vista previa →
+            Vista previa
           </button>
         </div>
 
@@ -124,43 +122,50 @@ export default function Configurar({ session }) {
                   {campo.required && <span className={s.required}> *</span>}
                 </label>
                 {campo.type === 'textarea' ? (
-                  <textarea
-                    className={s.textarea}
-                    placeholder={campo.placeholder}
-                    value={form[campo.key]}
-                    onChange={e => handleChange(campo.key, e.target.value)}
-                    rows={5}
-                  />
+                  <textarea className={s.textarea} placeholder={campo.placeholder} value={form[campo.key]} onChange={e => handleChange(campo.key, e.target.value)} rows={5} />
                 ) : (
-                  <input
-                    className={s.input}
-                    type="text"
-                    placeholder={campo.placeholder}
-                    value={form[campo.key]}
-                    onChange={e => handleChange(campo.key, e.target.value)}
-                    required={campo.required}
-                  />
+                  <input className={s.input} type="text" placeholder={campo.placeholder} value={form[campo.key]} onChange={e => handleChange(campo.key, e.target.value)} required={campo.required} />
                 )}
               </div>
             ))}
           </div>
 
+          <div style={{ marginBottom: 24 }}>
+            <label className={s.label} style={{ marginBottom: 12, display: 'block' }}>Color del widget</label>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {COLORES.map(c => (
+                <button
+                  key={c.valor}
+                  type="button"
+                  title={c.nombre}
+                  onClick={() => handleChange('color', c.valor)}
+                  style={{
+                    width: 36, height: 36, borderRadius: '50%', background: c.valor, border: form.color === c.valor ? '3px solid var(--text-primary)' : '3px solid transparent',
+                    cursor: 'pointer', transition: 'transform 0.15s', transform: form.color === c.valor ? 'scale(1.15)' : 'scale(1)'
+                  }}
+                />
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
+              Color seleccionado: <span style={{ color: form.color, fontWeight: 700 }}>{COLORES.find(c => c.valor === form.color)?.nombre || 'Personalizado'}</span>
+            </p>
+          </div>
+
           {error && <div className={s.error}>{error}</div>}
 
           <div className={s.formActions}>
-            {saved && <span className={s.savedMsg}>✓ Guardado correctamente</span>}
+            {saved && <span className={s.savedMsg}>Guardado correctamente</span>}
             <button type="submit" className={s.btnSave} disabled={saving}>
               {saving ? 'Guardando...' : negocioId ? 'Guardar cambios' : 'Crear asistente'}
             </button>
           </div>
         </form>
 
-        {/* Info box */}
         <div className={s.infoBox}>
           <div className={s.infoIcon}>💡</div>
           <div>
-            <p className={s.infoTitle}>¿Cómo funciona?</p>
-            <p className={s.infoText}>La IA usa la información que escribas aquí para responder a tus clientes. Mientras más completa sea, mejor responderá. Puedes actualizar esto cuando quieras.</p>
+            <p className={s.infoTitle}>Como funciona?</p>
+            <p className={s.infoText}>La IA usa la informacion que escribas aqui para responder a tus clientes. Mientras mas completa sea, mejor respondera. Puedes actualizar esto cuando quieras.</p>
           </div>
         </div>
       </main>
