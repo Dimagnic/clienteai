@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -6,15 +6,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const LIMITES = { gratuito: 50, pro: 999999, negocio: 999999 }
+
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
     const { systemPrompt, messages, negocio_id } = await req.json()
 
-    // Llamar a Claude
+    const supabase = createClient(
+      'https://hwdxqddkiheewirgbsor.supabase.co',
+      Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
+    )
+
+    if (negocio_id) {
+      const { data: negocio } = await supabase.from('negocios').select('plan, conversaciones_mes, mes_actual').eq('id', negocio_id).single()
+
+      if (negocio) {
+        const mesActual = new Date().toISOString().slice(0, 7)
+        if (negocio.mes_actual !== mesActual) {
+          await supabase.from('negocios').update({ conversaciones_mes: 0, mes_actual: mesActual }).eq('id', negocio_id)
+          negocio.conversaciones_mes = 0
+        }
+
+        const limite = LIMITES[negocio.plan] || 50
+        if (negocio.conversaciones_mes >= limite) {
+          return new Response(
+            JSON.stringify({ error: 'Limite de conversaciones alcanzado. Actualiza tu plan para continuar.' }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      }
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -26,34 +50,22 @@ serve(async (req) => {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 400,
         system: systemPrompt,
-        messages: messages.map((m: { role: string; content: string }) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
       }),
     })
 
     const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Error al conectar con Claude')
-    }
+    if (!response.ok) throw new Error(data.error?.message || 'Error al conectar con Claude')
 
     const reply = data.content[0].text
 
-    // Guardar conversación en Supabase
     if (negocio_id) {
-      const supabase = createClient(
-        'https://hwdxqddkiheewirgbsor.supabase.co',
-        Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
-      )
-
-      const lastUserMessage = messages[messages.length - 1]
-
+      await supabase.from('negocios').update({ conversaciones_mes: supabase.rpc('increment', { row_id: negocio_id }) }).eq('id', negocio_id)
       await supabase.from('conversaciones').insert([
-        { negocio_id, mensaje: lastUserMessage.content, rol: 'user' },
+        { negocio_id, mensaje: messages[messages.length - 1].content, rol: 'user' },
         { negocio_id, mensaje: reply, rol: 'assistant' },
       ])
+      await supabase.rpc('increment_conversaciones', { p_negocio_id: negocio_id })
     }
 
     return new Response(
