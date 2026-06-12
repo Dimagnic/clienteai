@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { askClaude, buildSystemPrompt } from '../lib/claude'
+import { askClaude, buildSystemPrompt, detectarIdioma } from '../lib/claude'
 import s from './Preview.module.css'
 
 export default function Preview({ session }) {
@@ -52,7 +52,7 @@ export default function Preview({ session }) {
     setError('')
     await supabase.from('conversaciones').insert({ negocio_id: negocio.id, mensaje: text, rol: 'user' })
     try {
-      const systemPrompt = buildSystemPrompt(negocio)
+      const systemPrompt = buildSystemPrompt(negocio, detectarIdioma())
       const reply = await askClaude({ systemPrompt, messages: newMessages })
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       await supabase.from('conversaciones').insert({ negocio_id: negocio.id, mensaje: reply, rol: 'assistant' })

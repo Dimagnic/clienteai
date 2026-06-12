@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 
 export async function askClaude({ systemPrompt, messages }) {
   const { data, error } = await supabase.functions.invoke('ask-claude', {
@@ -11,18 +11,26 @@ export async function askClaude({ systemPrompt, messages }) {
   return data.text
 }
 
-export function buildSystemPrompt(negocio) {
+export function buildSystemPrompt(negocio, idioma = 'es') {
+  const instruccionIdioma = idioma === 'es'
+    ? 'Responde siempre en español, de forma amable y concisa (maximo 3 lineas).'
+    : `Respond always in ${idioma === 'en' ? 'English' : idioma === 'fr' ? 'French' : idioma === 'pt' ? 'Portuguese' : 'the same language the user writes in'}, friendly and concise (max 3 lines).`
+
   return `Eres el asistente virtual de "${negocio.nombre}".
-Responde siempre en español, de forma amable y concisa (máximo 3 líneas).
-Solo responde sobre el negocio. Si te preguntan algo fuera de tu información, di amablemente que no tienes esa información.
+${instruccionIdioma}
+Solo responde sobre el negocio. Si te preguntan algo fuera de tu informacion, di amablemente que no tienes esa informacion.
 
-${negocio.descripcion ? `DESCRIPCIÓN: ${negocio.descripcion}` : ''}
-${negocio.menu ? `MENÚ / SERVICIOS:\n${negocio.menu}` : ''}
+${negocio.descripcion ? `DESCRIPCION: ${negocio.descripcion}` : ''}
+${negocio.menu ? `MENU / SERVICIOS:\n${negocio.menu}` : ''}
 ${negocio.horario ? `HORARIO: ${negocio.horario}` : ''}
-${negocio.direccion ? `DIRECCIÓN: ${negocio.direccion}` : ''}
-${negocio.telefono ? `TELÉFONO: ${negocio.telefono}` : ''}
-${negocio.extra ? `INFORMACIÓN ADICIONAL:\n${negocio.extra}` : ''}
+${negocio.direccion ? `DIRECCION: ${negocio.direccion}` : ''}
+${negocio.telefono ? `TELEFONO: ${negocio.telefono}` : ''}
+${negocio.extra ? `INFORMACION ADICIONAL:\n${negocio.extra}` : ''}
 
-Siempre sé amable, breve y útil. Si el cliente quiere hacer un pedido o necesita ayuda urgente, indícale que puede llamar o escribir directamente.`
+Siempre se amable, breve y util. Si el cliente quiere hacer un pedido o necesita ayuda urgente, indicale que puede llamar o escribir directamente.`
 }
 
+export function detectarIdioma() {
+  const lang = navigator.language || 'es'
+  return lang.split('-')[0]
+}

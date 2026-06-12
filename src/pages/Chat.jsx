@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { askClaude, buildSystemPrompt } from '../lib/claude'
+import { askClaude, buildSystemPrompt, detectarIdioma } from '../lib/claude'
 
 export default function Chat() {
   const { token } = useParams()
@@ -37,7 +37,7 @@ export default function Chat() {
     setError('')
     await supabase.from('conversaciones').insert({ negocio_id: negocio.id, mensaje: text, rol: 'user' })
     try {
-      const reply = await askClaude({ systemPrompt: buildSystemPrompt(negocio), messages: newMessages })
+      const reply = await askClaude({ systemPrompt: buildSystemPrompt(negocio, detectarIdioma()), messages: newMessages })
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       await supabase.from('conversaciones').insert({ negocio_id: negocio.id, mensaje: reply, rol: 'assistant' })
     } catch (err) {
