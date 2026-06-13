@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Configurar from './pages/Configurar'
 import Preview from './pages/Preview'
+import Precios from './pages/Precios'
 import Legal from './pages/Legal'
 import Chat from './pages/Chat'
 
@@ -64,6 +65,7 @@ export default function App() {
         } />
         <Route path="/chat/:token" element={<Chat />} />
         <Route path="/legal" element={<Legal />} />
+<Route path="/precios" element={<Precios session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
