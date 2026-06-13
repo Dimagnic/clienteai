@@ -159,7 +159,7 @@ Si tiene dudas sobre precios, menciona los planes disponibles.`;
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/ask-claude`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
         body: JSON.stringify({ systemPrompt: SISTEMA, messages }),
       });
       const data = await res.json();
