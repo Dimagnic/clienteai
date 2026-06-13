@@ -340,5 +340,3 @@ function ConversacionesRecientes({ negocioId }) {
     </div>
   )
 }
-'@
-[System.IO.File]::WriteAllText("$PWD\src\pages\Dashboard.jsx", $content, [System.Text.Encoding]::UTF8)
