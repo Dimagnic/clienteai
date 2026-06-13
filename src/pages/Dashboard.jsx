@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from 'react'
+$content = @'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
@@ -39,6 +40,23 @@ export default function Dashboard({ session }) {
     await supabase.from('negocios').update({ plan: nuevoPlan }).eq('id', negocioId)
     const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
     setClientes(todos || [])
+  }
+
+  async function handlePago(plan) {
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          plan,
+          negocio_id: negocio.id,
+          success_url: 'https://clienteai.site/dashboard',
+          cancel_url: 'https://clienteai.site/dashboard',
+        }
+      })
+      if (error) throw error
+      if (data.url) window.location.href = data.url
+    } catch (err) {
+      alert('Error al procesar el pago. Intenta de nuevo.')
+    }
   }
 
   async function handleSignOut() {
@@ -90,6 +108,23 @@ export default function Dashboard({ session }) {
 
         {!negocio ? <EmptyState navigate={navigate} /> : (
           <>
+            {plan === 'gratuito' && (
+              <div style={{ background: '#16a34a', borderRadius: 14, padding: '20px 28px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: '#fff' }}>Mejora tu plan y atiende mas clientes</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>Plan Pro desde $299 MXN/mes - 2,000 conversaciones al mes</p>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => handlePago('pro')} style={{ background: '#fff', color: '#16a34a', border: 'none', padding: '10px 20px', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                    Pro $299/mes
+                  </button>
+                  <button onClick={() => handlePago('negocio')} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)', padding: '10px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                    Negocio $599/mes
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className={s.statsGrid}>
               <StatCard label="Conversaciones hoy" value={stats.hoy} icon="💬" />
               <StatCard label="Esta semana" value={stats.semana} icon="📅" />
@@ -106,9 +141,7 @@ export default function Dashboard({ session }) {
                 <div style={{ height: '100%', borderRadius: 8, background: porcentaje >= 80 ? '#dc2626' : '#16a34a', width: `${porcentaje}%`, transition: 'width 0.3s' }} />
               </div>
               {porcentaje >= 80 && (
-                <p style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>
-                  Te quedan {restantes} conversaciones este mes.
-                </p>
+                <p style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>Te quedan {restantes} conversaciones este mes.</p>
               )}
             </div>
 
@@ -170,11 +203,7 @@ export default function Dashboard({ session }) {
                         </span>
                       </td>
                       <td style={{ padding: '10px 16px' }}>
-                        <select
-                          value={c.plan || 'gratuito'}
-                          onChange={e => cambiarPlan(c.id, e.target.value)}
-                          style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', fontSize: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}
-                        >
+                        <select value={c.plan || 'gratuito'} onChange={e => cambiarPlan(c.id, e.target.value)} style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', fontSize: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>
                           <option value="gratuito">Gratuito</option>
                           <option value="pro">Pro</option>
                           <option value="negocio">Negocio</option>
@@ -312,3 +341,5 @@ function ConversacionesRecientes({ negocioId }) {
     </div>
   )
 }
+'@
+[System.IO.File]::WriteAllText("$PWD\src\pages\Dashboard.jsx", $content, [System.Text.Encoding]::UTF8)
