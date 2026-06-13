@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
 
+const ADMIN_EMAIL = 'nicolas.gontaro3@gmail.com'
+
 export default function Dashboard({ session }) {
   const navigate = useNavigate()
   const [negocio, setNegocio] = useState(null)
   const [stats, setStats] = useState({ hoy: 0, semana: 0, total: 0 })
   const [loading, setLoading] = useState(true)
+  const [clientes, setClientes] = useState([])
+  const isAdmin = session.user.email === ADMIN_EMAIL
 
   useEffect(() => { loadData() }, [])
 
@@ -24,7 +28,17 @@ export default function Dashboard({ session }) {
       ])
       setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
     }
+    if (isAdmin) {
+      const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
+      setClientes(todos || [])
+    }
     setLoading(false)
+  }
+
+  async function cambiarPlan(negocioId, nuevoPlan) {
+    await supabase.from('negocios').update({ plan: nuevoPlan }).eq('id', negocioId)
+    const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
+    setClientes(todos || [])
   }
 
   async function handleSignOut() {
@@ -34,12 +48,12 @@ export default function Dashboard({ session }) {
 
   if (loading) return <PageLoader />
 
-  const LIMITES = { gratuito: 50, pro: 999999, negocio: 999999 }
+  const LIMITES = { gratuito: 50, pro: 2000, negocio: 5000 }
   const plan = negocio?.plan || 'gratuito'
   const limite = LIMITES[plan] || 50
   const usadas = negocio?.conversaciones_mes || 0
-  const restantes = Math.max(0, limite - usadas)
   const porcentaje = Math.min(100, (usadas / limite) * 100)
+  const restantes = Math.max(0, limite - usadas)
 
   return (
     <div className={s.page}>
@@ -71,11 +85,7 @@ export default function Dashboard({ session }) {
             <h1 className={s.greeting}>Hola{negocio ? `, ${negocio.nombre}` : ''}</h1>
             <p className={s.subGreeting}>Aqui esta el resumen de tu asistente</p>
           </div>
-          {negocio && (
-            <div className={s.statusBadge}>
-              <span className={s.statusDot} /> Bot activo
-            </div>
-          )}
+          {negocio && <div className={s.statusBadge}><span className={s.statusDot} /> Bot activo</div>}
         </div>
 
         {!negocio ? <EmptyState navigate={navigate} /> : (
@@ -87,24 +97,20 @@ export default function Dashboard({ session }) {
               <StatCard label="Plan actual" value={plan.charAt(0).toUpperCase() + plan.slice(1)} icon="⭐" isText />
             </div>
 
-            {plan === 'gratuito' && (
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px', marginBottom: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Conversaciones este mes</span>
-                  <span style={{ fontSize: 13, color: porcentaje >= 80 ? '#dc2626' : 'var(--text-muted)' }}>
-                    {usadas} / {limite}
-                  </span>
-                </div>
-                <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, height: 8, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 8, background: porcentaje >= 80 ? '#dc2626' : '#16a34a', width: `${porcentaje}%`, transition: 'width 0.3s' }} />
-                </div>
-                {porcentaje >= 80 && (
-                  <p style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>
-                    Te quedan {restantes} conversaciones. <button onClick={() => navigate('/legal')} style={{ background: 'none', border: 'none', color: '#16a34a', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: 0 }}>Actualiza tu plan</button>
-                  </p>
-                )}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px', marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Conversaciones este mes</span>
+                <span style={{ fontSize: 13, color: porcentaje >= 80 ? '#dc2626' : 'var(--text-muted)' }}>{usadas} / {limite}</span>
               </div>
-            )}
+              <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, height: 8, overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: 8, background: porcentaje >= 80 ? '#dc2626' : '#16a34a', width: `${porcentaje}%`, transition: 'width 0.3s' }} />
+              </div>
+              {porcentaje >= 80 && (
+                <p style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>
+                  Te quedan {restantes} conversaciones este mes.
+                </p>
+              )}
+            </div>
 
             <div className={s.section}>
               <h2 className={s.sectionTitle}>Acciones rapidas</h2>
@@ -139,6 +145,48 @@ export default function Dashboard({ session }) {
             </div>
           </>
         )}
+
+        {isAdmin && (
+          <div className={s.section}>
+            <h2 className={s.sectionTitle} style={{ color: '#dc2626' }}>Panel de Administracion</h2>
+            <div style={{ background: 'var(--bg-card)', border: '2px solid #dc2626', borderRadius: 14, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#dc2626', color: '#fff' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Negocio</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Conv. mes</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Plan actual</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Cambiar plan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientes.map((c, i) => (
+                    <tr key={c.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-card)' }}>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>{c.nombre || 'Sin nombre'}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{c.conversaciones_mes || 0}</td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <span style={{ background: c.plan === 'pro' ? '#dbeafe' : c.plan === 'negocio' ? '#fef9c3' : '#dcfce7', color: c.plan === 'pro' ? '#1d4ed8' : c.plan === 'negocio' ? '#854d0e' : '#15803d', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+                          {c.plan || 'gratuito'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <select
+                          value={c.plan || 'gratuito'}
+                          onChange={e => cambiarPlan(c.id, e.target.value)}
+                          style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', fontSize: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}
+                        >
+                          <option value="gratuito">Gratuito</option>
+                          <option value="pro">Pro</option>
+                          <option value="negocio">Negocio</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
@@ -166,7 +214,7 @@ function ActionCard({ icon, title, desc, onClick }) {
 
 function EmbedCode({ token }) {
   const [copied, setCopied] = useState(false)
-  const code = `<script src="https://clienteai.vercel.app/widget.js" data-token="${token}"></script>`
+  const code = `<script src="https://clienteai.site/widget.js" data-token="${token}"></script>`
   function copy() {
     navigator.clipboard.writeText(code)
     setCopied(true)
@@ -186,7 +234,7 @@ function EmbedCode({ token }) {
 
 function ChatLink({ token }) {
   const [copied, setCopied] = useState(false)
-  const url = `https://clienteai.vercel.app/chat/${token}`
+  const url = `https://clienteai.site/chat/${token}`
   function copy() {
     navigator.clipboard.writeText(url)
     setCopied(true)
