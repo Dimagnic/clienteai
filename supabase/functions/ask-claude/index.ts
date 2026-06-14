@@ -1,4 +1,5 @@
-﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+﻿$content = @'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -12,7 +13,10 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { systemPrompt, messages, negocio_id } = await req.json()
+    const body = await req.json()
+    const systemPrompt = body.systemPrompt || ''
+    const messages = body.messages || []
+    const negocio_id = body.negocio_id || null
 
     const supabase = createClient(
       'https://hwdxqddkiheewirgbsor.supabase.co',
@@ -21,14 +25,12 @@ serve(async (req) => {
 
     if (negocio_id) {
       const { data: negocio } = await supabase.from('negocios').select('plan, conversaciones_mes, mes_actual').eq('id', negocio_id).single()
-
       if (negocio) {
         const mesActual = new Date().toISOString().slice(0, 7)
         if (negocio.mes_actual !== mesActual) {
           await supabase.from('negocios').update({ conversaciones_mes: 0, mes_actual: mesActual }).eq('id', negocio_id)
           negocio.conversaciones_mes = 0
         }
-
         const limite = LIMITES[negocio.plan] || 50
         if (negocio.conversaciones_mes >= limite) {
           return new Response(
@@ -50,7 +52,7 @@ serve(async (req) => {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 400,
         system: systemPrompt,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        messages: messages.length > 0 ? messages.map((m) => ({ role: m.role, content: m.content })) : [{ role: 'user', content: 'hola' }],
       }),
     })
 
@@ -59,7 +61,7 @@ serve(async (req) => {
 
     const reply = data.content[0].text
 
-    if (negocio_id) {
+    if (negocio_id && messages.length > 0) {
       await supabase.from('conversaciones').insert([
         { negocio_id, mensaje: messages[messages.length - 1].content, rol: 'user' },
         { negocio_id, mensaje: reply, rol: 'assistant' },
@@ -79,3 +81,5 @@ serve(async (req) => {
     )
   }
 })
+'@
+[System.IO.File]::WriteAllText("$PWD\supabase\functions\ask-claude\index.ts", $content, [System.Text.Encoding]::UTF8)
