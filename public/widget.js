@@ -3,8 +3,8 @@
   const token = scriptTag?.getAttribute('data-token');
   if (!token) return;
 
-  const SUPABASE_URL = 'https://hwdxqddkiheewirgbsor.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3ZHhxZGRraWhlZXdpcmdic29yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNTQyOTYsImV4cCI6MjA5NjczMDI5Nn0.7ap1FDEa8OY1PJ_6SNYkVPlVLjNThVm965JRUX5a2fw';
+  const SUPABASE_URL = 'https://eevflmyoqwndobjkjuov.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldmZsbXlvcXduZG9iamtqdW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MzI5MjMsImV4cCI6MjA5NzEwODkyM30.3GomP52oNTWL8sdttwHaF2NyfjklKKO9eucmgFe2x_E';
 
   let color = '#16a34a';
 

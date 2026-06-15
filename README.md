@@ -20,7 +20,7 @@ npm install
 
 ### 2. Crear archivo `.env` en la raíz
 ```
-VITE_SUPABASE_URL=https://hwdxqddkiheewirgbsor.supabase.co
+VITE_SUPABASE_URL=https://eevflmyoqwndobjkjuov.supabase.co
 VITE_SUPABASE_ANON_KEY=tu_anon_key_aqui
 ```
 
@@ -72,7 +72,7 @@ npm run dev
 Para que el plan se actualice automáticamente después del pago:
 
 1. En Stripe Dashboard → Developers → Webhooks → Add endpoint
-2. URL: `https://hwdxqddkiheewirgbsor.supabase.co/functions/v1/stripe-webhook`
+2. URL: `https://eevflmyoqwndobjkjuov.supabase.co/functions/v1/stripe-webhook`
 3. Eventos a escuchar:
    - `checkout.session.completed`
    - `customer.subscription.deleted`
