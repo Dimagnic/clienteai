@@ -1,4 +1,7 @@
 ﻿(function () {
+  // Solo cargar el widget de demo en la landing page (raíz del sitio)
+  if (window.location.pathname !== '/') return;
+
   const SUPABASE_URL = 'https://eevflmyoqwndobjkjuov.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldmZsbXlvcXduZG9iamtqdW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MzI5MjMsImV4cCI6MjA5NzEwODkyM30.3GomP52oNTWL8sdttwHaF2NyfjklKKO9eucmgFe2x_E';
   const TOKEN = 'rpb944k2yp3e87s6';
