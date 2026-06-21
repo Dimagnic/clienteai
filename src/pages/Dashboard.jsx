@@ -21,7 +21,8 @@ export default function Dashboard({ session }) {
     setNegocio(data)
     // Verificar rol admin desde la base de datos (no expuesto en el cliente)
     const { data: perfil } = await supabase.from('perfiles').select('is_admin').eq('user_id', session.user.id).single()
-    setIsAdmin(perfil?.is_admin === true)
+    const esAdmin = perfil?.is_admin === true
+    setIsAdmin(esAdmin)
     if (data) {
       const hoy = new Date().toISOString().split('T')[0]
       const semana = new Date(Date.now() - 7 * 86400000).toISOString()
@@ -32,7 +33,7 @@ export default function Dashboard({ session }) {
       ])
       setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
     }
-    if (isAdmin) {
+    if (esAdmin) {
       const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
       setClientes(todos || [])
       const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
