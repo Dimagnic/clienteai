@@ -269,13 +269,18 @@ export default function Dashboard({ session }) {
 
             {credencialesGeneradas && (
               <div style={{ background: '#faf5ff', border: '2px solid #7c3aed', borderRadius: 14, padding: 20, marginBottom: 16 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#6b21a8', marginBottom: 10 }}>✅ Asesor "{credencialesGeneradas.nombreCompleto}" creado. Comparte estas credenciales con él (solo se muestran una vez):</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#6b21a8', marginBottom: 10 }}>
+                  ✅ Asesor "{credencialesGeneradas.nombreCompleto}" registrado.
+                  {credencialesGeneradas.correoEnviado
+                    ? ' Se le envió un correo con su código y el enlace para activar su cuenta.'
+                    : ' ⚠️ No se pudo confirmar el envío del correo — comparte estos datos manualmente:'}
+                </p>
                 <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2 }}>
-                  <p style={{ margin: 0 }}><strong>Código de usuario:</strong> {credencialesGeneradas.codigo}</p>
-                  <p style={{ margin: 0 }}><strong>Contraseña:</strong> {credencialesGeneradas.password}</p>
-                  <p style={{ margin: 0 }}><strong>Enlace de referido:</strong> {window.location.origin}/?ref={credencialesGeneradas.codigo}</p>
+                  <p style={{ margin: 0 }}><strong>Código de asesor:</strong> {credencialesGeneradas.codigo}</p>
+                  <p style={{ margin: 0 }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-asesor?codigo={credencialesGeneradas.codigo}</p>
+                  <p style={{ margin: 0 }}><strong>Estado:</strong> Pendiente (se activa cuando el asesor crea su contraseña)</p>
                 </div>
-                <button onClick={() => setCredencialesGeneradas(null)} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontSize: 13 }}>Entendido, ya las guardé</button>
+                <button onClick={() => setCredencialesGeneradas(null)} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontSize: 13 }}>Entendido</button>
               </div>
             )}
 
@@ -302,7 +307,7 @@ export default function Dashboard({ session }) {
                   style={{ flex: 1, minWidth: 180, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                 />
                 <input
-                  placeholder="Teléfono (opcional)"
+                  placeholder="Teléfono"
                   value={nuevoAsesor.telefono}
                   onChange={e => setNuevoAsesor({ ...nuevoAsesor, telefono: e.target.value })}
                   style={{ flex: 1, minWidth: 140, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
@@ -320,7 +325,7 @@ export default function Dashboard({ session }) {
                   {creandoAsesor ? 'Creando...' : 'Crear asesor'}
                 </button>
               </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>El código de acceso se genera automáticamente (formato CAI2026-XXNNNNNN) a partir del nombre, apellido y fecha de nacimiento.</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>El código de acceso se genera automáticamente (formato CAI2026-XXNNNNNN). Se le enviará un correo con sus instrucciones de activación.</p>
             </div>
 
             <div style={{ background: 'var(--bg-card)', border: '2px solid #7c3aed', borderRadius: 14, overflow: 'hidden' }}>
@@ -329,6 +334,8 @@ export default function Dashboard({ session }) {
                   <tr style={{ background: '#7c3aed', color: '#fff' }}>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Asesor</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Código</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Teléfono</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>F. Nacimiento</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comisión 1er mes</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comisión recurrente</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Estado</th>
@@ -336,16 +343,18 @@ export default function Dashboard({ session }) {
                 </thead>
                 <tbody>
                   {asesores.length === 0 ? (
-                    <tr><td colSpan={5} style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>Aún no hay asesores registrados.</td></tr>
+                    <tr><td colSpan={7} style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>Aún no hay asesores registrados.</td></tr>
                   ) : asesores.map((a, i) => (
                     <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-card)' }}>
                       <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>{a.nombre}<br /><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.email}</span></td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{a.codigo}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.telefono || '—'}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.fecha_nacimiento ? new Date(a.fecha_nacimiento + 'T00:00:00').toLocaleDateString('es-MX') : '—'}</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.comision_primer_mes}%</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.comision_recurrente}%</td>
                       <td style={{ padding: '10px 16px' }}>
-                        <span style={{ background: a.activo ? '#dcfce7' : '#fee2e2', color: a.activo ? '#15803d' : '#dc2626', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
-                          {a.activo ? 'Activo' : 'Inactivo'}
+                        <span style={{ background: a.estado === 'activo' ? '#dcfce7' : '#fef3c7', color: a.estado === 'activo' ? '#15803d' : '#92400e', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+                          {a.estado === 'activo' ? 'Activo' : 'Pendiente'}
                         </span>
                       </td>
                     </tr>

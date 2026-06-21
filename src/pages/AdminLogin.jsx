@@ -5,7 +5,7 @@ import s from './Login.module.css'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const [modo, setModo] = useState(null) // null | 'admin' | 'asesor'
+  const [modo, setModo] = useState('asesor') // 'admin' | 'asesor' — asesor es el modo por defecto
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -57,19 +57,8 @@ export default function AdminLogin() {
   return (
     <div className={s.page}>
       <div className={s.card}>
-        <button className={s.backLink} onClick={() => modo ? setModo(null) : navigate('/')}>← {modo ? 'Volver' : 'Inicio'}</button>
+        <button className={s.backLink} onClick={() => navigate('/')}>← Inicio</button>
         <div className={s.logo}>ClienteAI</div>
-
-        {!modo && (
-          <>
-            <h1 className={s.title}>Acceso administrativo</h1>
-            <p className={s.subtitle}>Selecciona tu tipo de acceso</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <button className={s.btnSubmit} onClick={() => setModo('admin')}>Soy administrador</button>
-              <button className={s.btnGoogle} onClick={() => setModo('asesor')} style={{ fontWeight: 600 }}>Soy asesor</button>
-            </div>
-          </>
-        )}
 
         {modo === 'admin' && (
           <>
@@ -87,6 +76,7 @@ export default function AdminLogin() {
               {error && <div className={s.error}>{error}</div>}
               <button className={s.btnSubmit} type="submit" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
             </form>
+            <p className={s.toggle}>¿Eres asesor? <button className={s.toggleBtn} onClick={() => { setModo('asesor'); setError('') }}>Entra aquí</button></p>
           </>
         )}
 
@@ -104,8 +94,9 @@ export default function AdminLogin() {
                 <input className={s.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} />
               </div>
               {error && <div className={s.error}>{error}</div>}
-              <button className={s.btnSubmit} type="submit" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
+              <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#7c3aed' }}>{loading ? 'Entrando...' : 'Entrar'}</button>
             </form>
+            <p className={s.toggle}>¿Eres administrador? <button className={s.toggleBtn} onClick={() => { setModo('admin'); setError('') }}>Entra aquí</button></p>
           </>
         )}
       </div>

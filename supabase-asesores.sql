@@ -17,11 +17,17 @@ create table if not exists asesores (
   titular_cuenta text,
   banco text,
   telefono text,
+  fecha_nacimiento date,
+  estado text check (estado in ('pendiente', 'activo', 'suspendido')) default 'pendiente',
+  activado_en timestamptz,
   created_at timestamptz default now()
 );
 
--- Si la tabla asesores ya existía sin la columna telefono, esto la agrega sin error
+-- Si la tabla asesores ya existía sin estas columnas, esto las agrega sin error
 alter table asesores add column if not exists telefono text;
+alter table asesores add column if not exists fecha_nacimiento date;
+alter table asesores add column if not exists estado text check (estado in ('pendiente', 'activo', 'suspendido')) default 'pendiente';
+alter table asesores add column if not exists activado_en timestamptz;
 
 -- 2. Vincular negocios con el asesor que los refirió
 alter table negocios add column if not exists asesor_id uuid references asesores(id) on delete set null;
