@@ -72,7 +72,20 @@ export default function Configurar({ session }) {
     if (negocioId) {
       result = await supabase.from('negocios').update(payload).eq('id', negocioId).select().single()
     } else {
-      result = await supabase.from('negocios').insert({ ...payload, token: generateToken() }).select().single()
+      // Si el usuario llegó con un enlace de referido (?ref=codigo), lo asociamos al asesor
+      const refCodigo = localStorage.getItem('cai_ref')
+      let asesorId = null
+      if (refCodigo) {
+        const { data: asesor } = await supabase.from('asesores').select('id').eq('codigo', refCodigo).eq('activo', true).maybeSingle()
+        if (asesor) asesorId = asesor.id
+      }
+      result = await supabase.from('negocios').insert({
+        ...payload,
+        token: generateToken(),
+        asesor_id: asesorId,
+        referido_en: asesorId ? new Date().toISOString() : null,
+      }).select().single()
+      if (asesorId) localStorage.removeItem('cai_ref')
     }
     if (result.error) {
       setError(result.error.message)

@@ -1,4 +1,5 @@
 ﻿import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import s from './Landing.module.css'
 import ThemeToggle from '../components/ThemeToggle'
 
@@ -23,6 +24,15 @@ const PLANS = [
 
 export default function Landing({ session }) {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref) {
+      localStorage.setItem('cai_ref', ref)
+      localStorage.setItem('cai_ref_fecha', new Date().toISOString())
+    }
+  }, [])
 
   return (
     <div className={s.page}>

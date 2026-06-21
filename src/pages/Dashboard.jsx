@@ -10,6 +10,9 @@ export default function Dashboard({ session }) {
   const [loading, setLoading] = useState(true)
   const [clientes, setClientes] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
+  const [asesores, setAsesores] = useState([])
+  const [nuevoAsesor, setNuevoAsesor] = useState({ nombre: '', email: '' })
+  const [creandoAsesor, setCreandoAsesor] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
@@ -32,8 +35,43 @@ export default function Dashboard({ session }) {
     if (isAdmin) {
       const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
       setClientes(todos || [])
+      const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
+      setAsesores(todosAsesores || [])
     }
     setLoading(false)
+  }
+
+  function generarCodigo(nombre) {
+    const base = nombre.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)
+    const random = Math.random().toString(36).slice(2, 6)
+    return `${base}${random}`
+  }
+
+  async function crearAsesor() {
+    if (!nuevoAsesor.nombre.trim() || !nuevoAsesor.email.trim()) {
+      alert('Completa nombre y correo del asesor')
+      return
+    }
+    setCreandoAsesor(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('crear-asesor', {
+        body: {
+          nombre: nuevoAsesor.nombre,
+          email: nuevoAsesor.email,
+          codigo: generarCodigo(nuevoAsesor.nombre),
+        }
+      })
+      if (error) throw error
+      if (data.error) throw new Error(data.error)
+      alert(`Asesor creado. Se envió invitación a ${nuevoAsesor.email}`)
+      setNuevoAsesor({ nombre: '', email: '' })
+      const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
+      setAsesores(todosAsesores || [])
+    } catch (err) {
+      alert('Error al crear asesor: ' + err.message)
+    } finally {
+      setCreandoAsesor(false)
+    }
   }
 
   async function cambiarPlan(negocioId, nuevoPlan) {
@@ -208,6 +246,65 @@ export default function Dashboard({ session }) {
                           <option value="pro">Pro</option>
                           <option value="negocio">Negocio</option>
                         </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div className={s.section}>
+            <h2 className={s.sectionTitle} style={{ color: '#7c3aed' }}>Asesores</h2>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary)' }}>Registrar nuevo asesor</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <input
+                  placeholder="Nombre completo"
+                  value={nuevoAsesor.nombre}
+                  onChange={e => setNuevoAsesor({ ...nuevoAsesor, nombre: e.target.value })}
+                  style={{ flex: 1, minWidth: 180, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                />
+                <input
+                  placeholder="Correo electrónico"
+                  type="email"
+                  value={nuevoAsesor.email}
+                  onChange={e => setNuevoAsesor({ ...nuevoAsesor, email: e.target.value })}
+                  style={{ flex: 1, minWidth: 180, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                />
+                <button onClick={crearAsesor} disabled={creandoAsesor} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
+                  {creandoAsesor ? 'Creando...' : 'Crear asesor'}
+                </button>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Se enviará un correo de invitación al asesor para que active su cuenta y acceda a su dashboard.</p>
+            </div>
+
+            <div style={{ background: 'var(--bg-card)', border: '2px solid #7c3aed', borderRadius: 14, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#7c3aed', color: '#fff' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Asesor</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Código</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comisión 1er mes</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comisión recurrente</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {asesores.length === 0 ? (
+                    <tr><td colSpan={5} style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>Aún no hay asesores registrados.</td></tr>
+                  ) : asesores.map((a, i) => (
+                    <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-card)' }}>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>{a.nombre}<br /><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.email}</span></td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{a.codigo}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.comision_primer_mes}%</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.comision_recurrente}%</td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <span style={{ background: a.activo ? '#dcfce7' : '#fee2e2', color: a.activo ? '#15803d' : '#dc2626', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+                          {a.activo ? 'Activo' : 'Inactivo'}
+                        </span>
                       </td>
                     </tr>
                   ))}

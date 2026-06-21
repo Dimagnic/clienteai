@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 }
 
+const PRECIOS: Record<string, number> = { pro: 299, negocio: 599 }
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -22,8 +24,19 @@ serve(async (req) => {
       const session = event.data.object
       const negocio_id = session.metadata?.negocio_id
       const plan = session.metadata?.plan
+
       if (negocio_id && plan) {
         await supabase.from('negocios').update({ plan, updated_at: new Date().toISOString() }).eq('id', negocio_id)
+        await registrarComision(supabase, negocio_id, plan, 'primer_mes')
+      }
+    }
+
+    if (event.type === 'invoice.paid') {
+      const invoice = event.data.object
+      const negocio_id = invoice.subscription_details?.metadata?.negocio_id || invoice.lines?.data?.[0]?.metadata?.negocio_id
+      const plan = invoice.subscription_details?.metadata?.plan || invoice.lines?.data?.[0]?.metadata?.plan
+      if (negocio_id && plan && invoice.billing_reason === 'subscription_cycle') {
+        await registrarComision(supabase, negocio_id, plan, 'recurrente')
       }
     }
 
@@ -46,3 +59,40 @@ serve(async (req) => {
     )
   }
 })
+
+async function registrarComision(supabase: any, negocio_id: string, plan: string, tipo: 'primer_mes' | 'recurrente') {
+  const { data: negocio } = await supabase
+    .from('negocios')
+    .select('asesor_id')
+    .eq('id', negocio_id)
+    .single()
+
+  if (!negocio?.asesor_id) return
+
+  const { data: asesor } = await supabase
+    .from('asesores')
+    .select('comision_primer_mes, comision_recurrente, activo')
+    .eq('id', negocio.asesor_id)
+    .single()
+
+  if (!asesor || !asesor.activo) return
+
+  const montoPago = PRECIOS[plan] || 0
+  if (montoPago === 0) return
+
+  const porcentaje = tipo === 'primer_mes' ? asesor.comision_primer_mes : asesor.comision_recurrente
+  const montoComision = Math.round((montoPago * porcentaje / 100) * 100) / 100
+  const periodo = new Date().toISOString().slice(0, 7)
+
+  await supabase.from('comisiones').insert({
+    asesor_id: negocio.asesor_id,
+    negocio_id,
+    monto_pago: montoPago,
+    tipo,
+    porcentaje,
+    monto_comision: montoComision,
+    periodo,
+    elegible: false,
+    estado: 'pendiente',
+  })
+}

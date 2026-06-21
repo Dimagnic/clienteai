@@ -9,6 +9,7 @@ import Preview from './pages/Preview'
 import Precios from './pages/Precios'
 import Legal from './pages/Legal'
 import Chat from './pages/Chat'
+import AsesorDashboard from './pages/AsesorDashboard'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -64,6 +65,11 @@ export default function App() {
           </ProtectedRoute>
         } />
         <Route path="/chat/:token" element={<Chat />} />
+        <Route path="/asesor" element={
+          <ProtectedRoute session={session}>
+            <AsesorDashboard session={session} />
+          </ProtectedRoute>
+        } />
         <Route path="/legal" element={<Legal />} />
 <Route path="/precios" element={<Precios session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
