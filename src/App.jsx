@@ -10,6 +10,7 @@ import Precios from './pages/Precios'
 import Legal from './pages/Legal'
 import Chat from './pages/Chat'
 import AsesorDashboard from './pages/AsesorDashboard'
+import AdminLogin from './pages/AdminLogin'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -70,6 +71,7 @@ export default function App() {
             <AsesorDashboard session={session} />
           </ProtectedRoute>
         } />
+        <Route path="/admin" element={session ? <Navigate to="/dashboard" replace /> : <AdminLogin />} />
         <Route path="/legal" element={<Legal />} />
 <Route path="/precios" element={<Precios session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />

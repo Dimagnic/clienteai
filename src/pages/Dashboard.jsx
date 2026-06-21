@@ -11,8 +11,9 @@ export default function Dashboard({ session }) {
   const [clientes, setClientes] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [asesores, setAsesores] = useState([])
-  const [nuevoAsesor, setNuevoAsesor] = useState({ nombre: '', email: '' })
+  const [nuevoAsesor, setNuevoAsesor] = useState({ nombre: '', apellido: '', email: '', telefono: '', fechaNacimiento: '' })
   const [creandoAsesor, setCreandoAsesor] = useState(false)
+  const [credencialesGeneradas, setCredencialesGeneradas] = useState(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -52,15 +53,9 @@ export default function Dashboard({ session }) {
     setLoading(false)
   }
 
-  function generarCodigo(nombre) {
-    const base = nombre.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)
-    const random = Math.random().toString(36).slice(2, 6)
-    return `${base}${random}`
-  }
-
   async function crearAsesor() {
-    if (!nuevoAsesor.nombre.trim() || !nuevoAsesor.email.trim()) {
-      alert('Completa nombre y correo del asesor')
+    if (!nuevoAsesor.nombre.trim() || !nuevoAsesor.apellido.trim() || !nuevoAsesor.email.trim() || !nuevoAsesor.fechaNacimiento) {
+      alert('Completa nombre, apellido, correo y fecha de nacimiento del asesor')
       return
     }
     setCreandoAsesor(true)
@@ -68,14 +63,16 @@ export default function Dashboard({ session }) {
       const { data, error } = await supabase.functions.invoke('crear-asesor', {
         body: {
           nombre: nuevoAsesor.nombre,
+          apellido: nuevoAsesor.apellido,
           email: nuevoAsesor.email,
-          codigo: generarCodigo(nuevoAsesor.nombre),
+          telefono: nuevoAsesor.telefono,
+          fechaNacimiento: nuevoAsesor.fechaNacimiento,
         }
       })
       if (error) throw error
       if (data.error) throw new Error(data.error)
-      alert(`Asesor creado. Se envió invitación a ${nuevoAsesor.email}`)
-      setNuevoAsesor({ nombre: '', email: '' })
+      setCredencialesGeneradas(data)
+      setNuevoAsesor({ nombre: '', apellido: '', email: '', telefono: '', fechaNacimiento: '' })
       const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
       setAsesores(todosAsesores || [])
     } catch (err) {
@@ -269,14 +266,33 @@ export default function Dashboard({ session }) {
         {isAdmin && (
           <div className={s.section}>
             <h2 className={s.sectionTitle} style={{ color: '#7c3aed' }}>Asesores</h2>
+
+            {credencialesGeneradas && (
+              <div style={{ background: '#faf5ff', border: '2px solid #7c3aed', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#6b21a8', marginBottom: 10 }}>✅ Asesor "{credencialesGeneradas.nombreCompleto}" creado. Comparte estas credenciales con él (solo se muestran una vez):</p>
+                <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2 }}>
+                  <p style={{ margin: 0 }}><strong>Código de usuario:</strong> {credencialesGeneradas.codigo}</p>
+                  <p style={{ margin: 0 }}><strong>Contraseña:</strong> {credencialesGeneradas.password}</p>
+                  <p style={{ margin: 0 }}><strong>Enlace de referido:</strong> {window.location.origin}/?ref={credencialesGeneradas.codigo}</p>
+                </div>
+                <button onClick={() => setCredencialesGeneradas(null)} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontSize: 13 }}>Entendido, ya las guardé</button>
+              </div>
+            )}
+
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 20, marginBottom: 16 }}>
               <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary)' }}>Registrar nuevo asesor</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <input
-                  placeholder="Nombre completo"
+                  placeholder="Nombre"
                   value={nuevoAsesor.nombre}
                   onChange={e => setNuevoAsesor({ ...nuevoAsesor, nombre: e.target.value })}
-                  style={{ flex: 1, minWidth: 180, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                  style={{ flex: 1, minWidth: 140, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                />
+                <input
+                  placeholder="Apellido"
+                  value={nuevoAsesor.apellido}
+                  onChange={e => setNuevoAsesor({ ...nuevoAsesor, apellido: e.target.value })}
+                  style={{ flex: 1, minWidth: 140, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                 />
                 <input
                   placeholder="Correo electrónico"
@@ -285,11 +301,26 @@ export default function Dashboard({ session }) {
                   onChange={e => setNuevoAsesor({ ...nuevoAsesor, email: e.target.value })}
                   style={{ flex: 1, minWidth: 180, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                 />
-                <button onClick={crearAsesor} disabled={creandoAsesor} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
+                <input
+                  placeholder="Teléfono (opcional)"
+                  value={nuevoAsesor.telefono}
+                  onChange={e => setNuevoAsesor({ ...nuevoAsesor, telefono: e.target.value })}
+                  style={{ flex: 1, minWidth: 140, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                />
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>Fecha de nacimiento</label>
+                  <input
+                    type="date"
+                    value={nuevoAsesor.fechaNacimiento}
+                    onChange={e => setNuevoAsesor({ ...nuevoAsesor, fechaNacimiento: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+                <button onClick={crearAsesor} disabled={creandoAsesor} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', fontWeight: 600, cursor: 'pointer', height: 'fit-content', alignSelf: 'flex-end' }}>
                   {creandoAsesor ? 'Creando...' : 'Crear asesor'}
                 </button>
               </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Se enviará un correo de invitación al asesor para que active su cuenta y acceda a su dashboard.</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>El código de acceso se genera automáticamente (formato CAI2026-XXNNNNNN) a partir del nombre, apellido y fecha de nacimiento.</p>
             </div>
 
             <div style={{ background: 'var(--bg-card)', border: '2px solid #7c3aed', borderRadius: 14, overflow: 'hidden' }}>
