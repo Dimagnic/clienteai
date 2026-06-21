@@ -26,7 +26,9 @@ serve(async (req) => {
       const plan = session.metadata?.plan
 
       if (negocio_id && plan) {
-        await supabase.from('negocios').update({ plan, updated_at: new Date().toISOString() }).eq('id', negocio_id)
+        const renuevaEn = new Date()
+        renuevaEn.setMonth(renuevaEn.getMonth() + 1)
+        await supabase.from('negocios').update({ plan, plan_renueva_en: renuevaEn.toISOString(), updated_at: new Date().toISOString() }).eq('id', negocio_id)
         await registrarComision(supabase, negocio_id, plan, 'primer_mes')
       }
     }
@@ -36,6 +38,9 @@ serve(async (req) => {
       const negocio_id = invoice.subscription_details?.metadata?.negocio_id || invoice.lines?.data?.[0]?.metadata?.negocio_id
       const plan = invoice.subscription_details?.metadata?.plan || invoice.lines?.data?.[0]?.metadata?.plan
       if (negocio_id && plan && invoice.billing_reason === 'subscription_cycle') {
+        const renuevaEn = new Date()
+        renuevaEn.setMonth(renuevaEn.getMonth() + 1)
+        await supabase.from('negocios').update({ plan_renueva_en: renuevaEn.toISOString() }).eq('id', negocio_id)
         await registrarComision(supabase, negocio_id, plan, 'recurrente')
       }
     }

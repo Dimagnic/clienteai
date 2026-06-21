@@ -16,12 +16,17 @@ create table if not exists asesores (
   cuenta_banco text,                         -- CLABE o referencia para transferencia (opcional, lo llena el asesor)
   titular_cuenta text,
   banco text,
+  telefono text,
   created_at timestamptz default now()
 );
+
+-- Si la tabla asesores ya existía sin la columna telefono, esto la agrega sin error
+alter table asesores add column if not exists telefono text;
 
 -- 2. Vincular negocios con el asesor que los refirió
 alter table negocios add column if not exists asesor_id uuid references asesores(id) on delete set null;
 alter table negocios add column if not exists referido_en timestamptz;
+alter table negocios add column if not exists plan_renueva_en timestamptz;
 
 -- 3. Tabla de comisiones (un registro por cada pago de cliente)
 create table if not exists comisiones (

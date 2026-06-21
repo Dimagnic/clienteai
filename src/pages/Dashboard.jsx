@@ -17,12 +17,22 @@ export default function Dashboard({ session }) {
   useEffect(() => { loadData() }, [])
 
   async function loadData() {
-    const { data } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).single()
-    setNegocio(data)
     // Verificar rol admin desde la base de datos (no expuesto en el cliente)
     const { data: perfil } = await supabase.from('perfiles').select('is_admin').eq('user_id', session.user.id).single()
     const esAdmin = perfil?.is_admin === true
     setIsAdmin(esAdmin)
+
+    // Si es asesor (y no admin), redirigir a su panel personal
+    if (!esAdmin) {
+      const { data: esAsesor } = await supabase.from('asesores').select('id').eq('user_id', session.user.id).maybeSingle()
+      if (esAsesor) {
+        navigate('/asesor', { replace: true })
+        return
+      }
+    }
+
+    const { data } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).single()
+    setNegocio(data)
     if (data) {
       const hoy = new Date().toISOString().split('T')[0]
       const semana = new Date(Date.now() - 7 * 86400000).toISOString()
