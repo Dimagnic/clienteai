@@ -13,7 +13,7 @@ export default function AsesorDashboard({ session }) {
   const [loading, setLoading] = useState(true)
   const [editandoCuenta, setEditandoCuenta] = useState(false)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
-  const [cuentaForm, setCuentaForm] = useState({ numero_cuenta: '', clabe: '', titular_cuenta: '', banco: '' })
+  const [cuentaForm, setCuentaForm] = useState({ cuenta_banco: '', titular_cuenta: '', banco: '' })
   const [perfilForm, setPerfilForm] = useState({ nombre: '', telefono: '' })
   const [guardando, setGuardando] = useState(false)
   const [tabActivo, setTabActivo] = useState('resumen')
@@ -30,8 +30,7 @@ export default function AsesorDashboard({ session }) {
     if (!asesorData) { setLoading(false); return }
     setAsesor(asesorData)
     setCuentaForm({
-      numero_cuenta: asesorData.numero_cuenta || '',
-      clabe: asesorData.clabe || '',
+      cuenta_banco: asesorData.cuenta_banco || '',
       titular_cuenta: asesorData.titular_cuenta || '',
       banco: asesorData.banco || '',
     })
@@ -139,7 +138,6 @@ export default function AsesorDashboard({ session }) {
           <button className={`${s.navItem} ${tabActivo === 'referidos' ? s.navItemActive : ''}`} onClick={() => setTabActivo('referidos')}>Mis referidos</button>
           <button className={`${s.navItem} ${tabActivo === 'comisiones' ? s.navItemActive : ''}`} onClick={() => setTabActivo('comisiones')}>Comisiones</button>
           <button className={`${s.navItem} ${tabActivo === 'marketing' ? s.navItemActive : ''}`} onClick={() => setTabActivo('marketing')}>Material publicitario</button>
-          <button className={`${s.navItem} ${tabActivo === 'banco' ? s.navItemActive : ''}`} onClick={() => setTabActivo('banco')}>Datos bancarios</button>
           <button className={`${s.navItem} ${tabActivo === 'perfil' ? s.navItemActive : ''}`} onClick={() => setTabActivo('perfil')}>Mi perfil</button>
           {!tieneNegocioPropio && (
             <button className={s.navItem} onClick={() => navigate('/configurar')} style={{ color: '#16a34a', fontWeight: 700 }}>+ Crear mi propio bot</button>
@@ -322,6 +320,34 @@ export default function AsesorDashboard({ session }) {
               )}
             </div>
 
+            {/* Datos bancarios */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Datos para transferencia</h3>
+                {!editandoCuenta && <button onClick={() => setEditandoCuenta(true)} style={{ fontSize: 13, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Editar</button>}
+              </div>
+              {editandoCuenta ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <input placeholder="Banco" value={cuentaForm.banco} onChange={e => setCuentaForm({ ...cuentaForm, banco: e.target.value })} style={inputStyle} />
+                  <input placeholder="Titular de la cuenta" value={cuentaForm.titular_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, titular_cuenta: e.target.value })} style={inputStyle} />
+                  <input placeholder="CLABE interbancaria" value={cuentaForm.cuenta_banco} onChange={e => setCuentaForm({ ...cuentaForm, cuenta_banco: e.target.value })} style={inputStyle} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={guardarCuenta} disabled={guardando} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer' }}>{guardando ? 'Guardando...' : 'Guardar'}</button>
+                    <button onClick={() => setEditandoCuenta(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancelar</button>
+                  </div>
+                </div>
+              ) : (
+                asesor.cuenta_banco ? (
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+                    <p><strong>Banco:</strong> {asesor.banco}</p>
+                    <p><strong>Titular:</strong> {asesor.titular_cuenta}</p>
+                    <p><strong>CLABE:</strong> {asesor.cuenta_banco}</p>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aún no has registrado tus datos bancarios. Agrégalos para recibir tus pagos por transferencia.</p>
+                )
+              )}
+            </div>
           </>
         )}
 
@@ -341,72 +367,6 @@ export default function AsesorDashboard({ session }) {
               <TextoSugerido texto={`¿Tu negocio pierde clientes por no contestar rápido? 🤖 Crea tu asistente de WhatsApp con IA en minutos. Pruébalo gratis 👉 ${enlaceReferido}`} />
               <TextoSugerido texto={`Deja de contestar lo mismo todo el día. Automatiza horarios, precios y dudas frecuentes con IA. Empieza gratis aquí: ${enlaceReferido}`} />
             </div>
-          </div>
-        )}
-
-        {tabActivo === 'banco' && (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 520 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>🏦 Datos bancarios</h3>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, marginBottom: 0 }}>Usamos esta información para pagarte tus comisiones por transferencia.</p>
-              </div>
-              {!editandoCuenta && <button onClick={() => setEditandoCuenta(true)} style={{ fontSize: 13, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Editar</button>}
-            </div>
-            <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '16px 0' }} />
-            {editandoCuenta ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Banco</label>
-                  <input placeholder="Ej. BBVA, Banorte, HSBC..." value={cuentaForm.banco} onChange={e => setCuentaForm({ ...cuentaForm, banco: e.target.value })} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Titular de la cuenta</label>
-                  <input placeholder="Nombre completo del titular" value={cuentaForm.titular_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, titular_cuenta: e.target.value })} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Número de cuenta</label>
-                  <input placeholder="10 dígitos" maxLength={11} value={cuentaForm.numero_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, numero_cuenta: e.target.value.replace(/\D/g, '') })} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>CLABE interbancaria</label>
-                  <input placeholder="18 dígitos" maxLength={18} value={cuentaForm.clabe} onChange={e => setCuentaForm({ ...cuentaForm, clabe: e.target.value.replace(/\D/g, '') })} style={inputStyle} />
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>La CLABE tiene 18 dígitos y es necesaria para recibir transferencias interbancarias.</p>
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                  <button onClick={guardarCuenta} disabled={guardando} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>{guardando ? 'Guardando...' : 'Guardar datos'}</button>
-                  <button onClick={() => setEditandoCuenta(false)} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancelar</button>
-                </div>
-              </div>
-            ) : (
-              asesor.clabe || asesor.numero_cuenta ? (
-                <div style={{ fontSize: 14, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Banco</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{asesor.banco || '—'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Titular</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{asesor.titular_cuenta || '—'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Número de cuenta</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{asesor.numero_cuenta || '—'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>CLABE interbancaria</span>
-                    <span style={{ fontWeight: 700, color: '#7c3aed', fontFamily: 'monospace', letterSpacing: 1 }}>{asesor.clabe || '—'}</span>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                  <p style={{ fontSize: 32, marginBottom: 8 }}>🏦</p>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Sin datos bancarios aún</p>
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Agrega tu cuenta para recibir el pago de tus comisiones.</p>
-                  <button onClick={() => setEditandoCuenta(true)} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Agregar datos bancarios</button>
-                </div>
-              )
-            )}
           </div>
         )}
 
@@ -477,90 +437,68 @@ function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
     canvas.height = dims.h
     const ctx = canvas.getContext('2d')
 
-    // Fondo blanco (JPG no soporta transparencia)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, dims.w, dims.h)
-
-    // Fondo degradado principal
+    // Fondo degradado
     const grad = ctx.createLinearGradient(0, 0, dims.w, dims.h)
     grad.addColorStop(0, color)
     grad.addColorStop(1, '#1e1b4b')
     ctx.fillStyle = grad
-    ctx.beginPath()
-    ctx.roundRect(0, 0, dims.w, dims.h, 0)
+    ctx.roundRect(0, 0, dims.w, dims.h, 40)
     ctx.fill()
-
-    // Círculos decorativos de fondo
-    ctx.globalAlpha = 0.08
-    ctx.fillStyle = '#ffffff'
-    ctx.beginPath()
-    ctx.arc(dims.w * 0.85, dims.h * 0.15, dims.w * 0.28, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.beginPath()
-    ctx.arc(dims.w * 0.1, dims.h * 0.88, dims.w * 0.2, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.globalAlpha = 1
 
     // Logo ClienteAI
     ctx.fillStyle = '#ffffff'
-    ctx.font = `900 ${Math.round(dims.w * 0.085)}px Arial`
+    ctx.font = `900 ${Math.round(dims.w * 0.1)}px Arial`
     ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('ClienteAI', dims.w / 2, dims.h * 0.26)
+    ctx.fillText('ClienteAI', dims.w / 2, dims.h * 0.28)
 
-    // Subtítulo línea 1
-    ctx.font = `400 ${Math.round(dims.w * 0.038)}px Arial`
-    ctx.fillStyle = 'rgba(255,255,255,0.9)'
-    ctx.fillText('Asistente de WhatsApp con', dims.w / 2, dims.h * 0.36)
-    ctx.fillText('Inteligencia Artificial para tu negocio', dims.w / 2, dims.h * 0.42)
+    // Subtítulo
+    ctx.font = `400 ${Math.round(dims.w * 0.042)}px Arial`
+    ctx.fillStyle = 'rgba(255,255,255,0.92)'
+    ctx.fillText('Asistente de WhatsApp con', dims.w / 2, dims.h * 0.38)
+    ctx.fillText('Inteligencia Artificial', dims.w / 2, dims.h * 0.44)
 
     // Línea separadora
     ctx.strokeStyle = 'rgba(255,255,255,0.3)'
-    ctx.lineWidth = Math.max(2, dims.w * 0.002)
+    ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.moveTo(dims.w * 0.2, dims.h * 0.50)
-    ctx.lineTo(dims.w * 0.8, dims.h * 0.50)
+    ctx.moveTo(dims.w * 0.2, dims.h * 0.52)
+    ctx.lineTo(dims.w * 0.8, dims.h * 0.52)
     ctx.stroke()
 
-    // Botón "Pruébalo GRATIS" — perfectamente centrado
-    const btnW = dims.w * 0.58
-    const btnH = dims.h * 0.085
-    const btnX = (dims.w - btnW) / 2   // centrado exacto
-    const btnY = dims.h * 0.545
+    // Botón "Pruébalo GRATIS" — centrado
+    const btnW = dims.w * 0.6
+    const btnH = dims.h * 0.09
+    const btnX = (dims.w - btnW) / 2
+    const btnY = dims.h * 0.57
     const btnRadius = btnH / 2
-
     ctx.fillStyle = '#ffffff'
     ctx.beginPath()
     ctx.roundRect(btnX, btnY, btnW, btnH, btnRadius)
     ctx.fill()
-
-    // Texto del botón — centrado dentro del botón
     ctx.fillStyle = color
-    ctx.font = `700 ${Math.round(dims.w * 0.038)}px Arial`
+    ctx.font = `700 ${Math.round(dims.w * 0.04)}px Arial`
     ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('✅ Pruébalo GRATIS', dims.w / 2, btnY + btnH / 2)
+    ctx.fillText('Pruébalo GRATIS', dims.w / 2, btnY + btnH * 0.65)
 
     // URL del asesor
-    ctx.fillStyle = 'rgba(255,255,255,0.75)'
-    ctx.font = `400 ${Math.round(dims.w * 0.024)}px Arial`
-    ctx.textBaseline = 'middle'
-    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * 0.725)
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.font = `400 ${Math.round(dims.w * 0.025)}px Arial`
+    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * 0.73)
 
     // Código de referido
-    ctx.fillStyle = 'rgba(255,255,255,0.5)'
-    ctx.font = `400 ${Math.round(dims.w * 0.020)}px monospace`
-    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * 0.775)
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.font = `400 ${Math.round(dims.w * 0.022)}px monospace`
+    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * 0.78)
 
-    // Descargar como JPG
+    // Descargar como PNG
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `clienteai-banner-${formato}-${codigo}.jpg`
+      a.download = `clienteai-banner-${formato}-${codigo}.png`
       a.click()
       URL.revokeObjectURL(url)
-    }, 'image/jpeg', 0.95)
+    }, 'image/png')
   }
 
   // Preview del banner
@@ -576,7 +514,7 @@ function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
       </div>
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px' }}>{titulo}</p>
       <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 10px' }}>{desc}</p>
-      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⬇ Descargar JPG</button>
+      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⬇ Descargar PNG</button>
     </div>
   )
 }
