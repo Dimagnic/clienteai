@@ -13,7 +13,7 @@ export default function AsesorDashboard({ session }) {
   const [loading, setLoading] = useState(true)
   const [editandoCuenta, setEditandoCuenta] = useState(false)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
-  const [cuentaForm, setCuentaForm] = useState({ cuenta_banco: '', titular_cuenta: '', banco: '' })
+  const [cuentaForm, setCuentaForm] = useState({ numero_cuenta: '', clabe: '', titular_cuenta: '', banco: '' })
   const [perfilForm, setPerfilForm] = useState({ nombre: '', telefono: '' })
   const [guardando, setGuardando] = useState(false)
   const [tabActivo, setTabActivo] = useState('resumen')
@@ -30,7 +30,8 @@ export default function AsesorDashboard({ session }) {
     if (!asesorData) { setLoading(false); return }
     setAsesor(asesorData)
     setCuentaForm({
-      cuenta_banco: asesorData.cuenta_banco || '',
+      numero_cuenta: asesorData.numero_cuenta || '',
+      clabe: asesorData.clabe || '',
       titular_cuenta: asesorData.titular_cuenta || '',
       banco: asesorData.banco || '',
     })
@@ -138,6 +139,7 @@ export default function AsesorDashboard({ session }) {
           <button className={`${s.navItem} ${tabActivo === 'referidos' ? s.navItemActive : ''}`} onClick={() => setTabActivo('referidos')}>Mis referidos</button>
           <button className={`${s.navItem} ${tabActivo === 'comisiones' ? s.navItemActive : ''}`} onClick={() => setTabActivo('comisiones')}>Comisiones</button>
           <button className={`${s.navItem} ${tabActivo === 'marketing' ? s.navItemActive : ''}`} onClick={() => setTabActivo('marketing')}>Material publicitario</button>
+          <button className={`${s.navItem} ${tabActivo === 'banco' ? s.navItemActive : ''}`} onClick={() => setTabActivo('banco')}>Datos bancarios</button>
           <button className={`${s.navItem} ${tabActivo === 'perfil' ? s.navItemActive : ''}`} onClick={() => setTabActivo('perfil')}>Mi perfil</button>
           {!tieneNegocioPropio && (
             <button className={s.navItem} onClick={() => navigate('/configurar')} style={{ color: '#16a34a', fontWeight: 700 }}>+ Crear mi propio bot</button>
@@ -320,34 +322,6 @@ export default function AsesorDashboard({ session }) {
               )}
             </div>
 
-            {/* Datos bancarios */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Datos para transferencia</h3>
-                {!editandoCuenta && <button onClick={() => setEditandoCuenta(true)} style={{ fontSize: 13, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Editar</button>}
-              </div>
-              {editandoCuenta ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input placeholder="Banco" value={cuentaForm.banco} onChange={e => setCuentaForm({ ...cuentaForm, banco: e.target.value })} style={inputStyle} />
-                  <input placeholder="Titular de la cuenta" value={cuentaForm.titular_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, titular_cuenta: e.target.value })} style={inputStyle} />
-                  <input placeholder="CLABE interbancaria" value={cuentaForm.cuenta_banco} onChange={e => setCuentaForm({ ...cuentaForm, cuenta_banco: e.target.value })} style={inputStyle} />
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={guardarCuenta} disabled={guardando} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer' }}>{guardando ? 'Guardando...' : 'Guardar'}</button>
-                    <button onClick={() => setEditandoCuenta(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancelar</button>
-                  </div>
-                </div>
-              ) : (
-                asesor.cuenta_banco ? (
-                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.8 }}>
-                    <p><strong>Banco:</strong> {asesor.banco}</p>
-                    <p><strong>Titular:</strong> {asesor.titular_cuenta}</p>
-                    <p><strong>CLABE:</strong> {asesor.cuenta_banco}</p>
-                  </div>
-                ) : (
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aún no has registrado tus datos bancarios. Agrégalos para recibir tus pagos por transferencia.</p>
-                )
-              )}
-            </div>
           </>
         )}
 
@@ -357,9 +331,9 @@ export default function AsesorDashboard({ session }) {
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Usa estos banners para promocionar tu enlace en Facebook, Instagram y WhatsApp. Cada uno ya incluye tu código de referido.</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 20 }}>
-              <BannerCard titulo="Historia (9:16)" desc="Para Instagram/Facebook Stories" color="#7c3aed" codigo={asesor.codigo} formato="story" />
-              <BannerCard titulo="Post cuadrado (1:1)" desc="Para feed de Instagram/Facebook" color="#2563eb" codigo={asesor.codigo} formato="post" />
-              <BannerCard titulo="WhatsApp (4:3)" desc="Para enviar directo por WhatsApp" color="#16a34a" codigo={asesor.codigo} formato="whatsapp" />
+              <BannerCard titulo="Historia (9:16)" desc="Para Instagram/Facebook Stories" color="#7c3aed" codigo={asesor.codigo} formato="story" enlaceReferido={enlaceReferido} />
+              <BannerCard titulo="Post cuadrado (1:1)" desc="Para feed de Instagram/Facebook" color="#2563eb" codigo={asesor.codigo} formato="post" enlaceReferido={enlaceReferido} />
+              <BannerCard titulo="WhatsApp (4:3)" desc="Para enviar directo por WhatsApp" color="#16a34a" codigo={asesor.codigo} formato="whatsapp" enlaceReferido={enlaceReferido} />
             </div>
 
             <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 12, padding: 16 }}>
@@ -367,6 +341,72 @@ export default function AsesorDashboard({ session }) {
               <TextoSugerido texto={`¿Tu negocio pierde clientes por no contestar rápido? 🤖 Crea tu asistente de WhatsApp con IA en minutos. Pruébalo gratis 👉 ${enlaceReferido}`} />
               <TextoSugerido texto={`Deja de contestar lo mismo todo el día. Automatiza horarios, precios y dudas frecuentes con IA. Empieza gratis aquí: ${enlaceReferido}`} />
             </div>
+          </div>
+        )}
+
+        {tabActivo === 'banco' && (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 520 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>🏦 Datos bancarios</h3>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, marginBottom: 0 }}>Usamos esta información para pagarte tus comisiones por transferencia.</p>
+              </div>
+              {!editandoCuenta && <button onClick={() => setEditandoCuenta(true)} style={{ fontSize: 13, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Editar</button>}
+            </div>
+            <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '16px 0' }} />
+            {editandoCuenta ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Banco</label>
+                  <input placeholder="Ej. BBVA, Banorte, HSBC..." value={cuentaForm.banco} onChange={e => setCuentaForm({ ...cuentaForm, banco: e.target.value })} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Titular de la cuenta</label>
+                  <input placeholder="Nombre completo del titular" value={cuentaForm.titular_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, titular_cuenta: e.target.value })} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Número de cuenta</label>
+                  <input placeholder="10 dígitos" maxLength={11} value={cuentaForm.numero_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, numero_cuenta: e.target.value.replace(/\D/g, '') })} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>CLABE interbancaria</label>
+                  <input placeholder="18 dígitos" maxLength={18} value={cuentaForm.clabe} onChange={e => setCuentaForm({ ...cuentaForm, clabe: e.target.value.replace(/\D/g, '') })} style={inputStyle} />
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>La CLABE tiene 18 dígitos y es necesaria para recibir transferencias interbancarias.</p>
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <button onClick={guardarCuenta} disabled={guardando} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>{guardando ? 'Guardando...' : 'Guardar datos'}</button>
+                  <button onClick={() => setEditandoCuenta(false)} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancelar</button>
+                </div>
+              </div>
+            ) : (
+              asesor.clabe || asesor.numero_cuenta ? (
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Banco</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{asesor.banco || '—'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Titular</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{asesor.titular_cuenta || '—'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Número de cuenta</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{asesor.numero_cuenta || '—'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>CLABE interbancaria</span>
+                    <span style={{ fontWeight: 700, color: '#7c3aed', fontFamily: 'monospace', letterSpacing: 1 }}>{asesor.clabe || '—'}</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <p style={{ fontSize: 32, marginBottom: 8 }}>🏦</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Sin datos bancarios aún</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Agrega tu cuenta para recibir el pago de tus comisiones.</p>
+                  <button onClick={() => setEditandoCuenta(true)} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Agregar datos bancarios</button>
+                </div>
+              )
+            )}
           </div>
         )}
 
@@ -428,47 +468,115 @@ function TextoSugerido({ texto }) {
   )
 }
 
-function BannerCard({ titulo, desc, color, codigo, formato }) {
-  const dims = formato === 'story' ? { w: 270, h: 480 } : formato === 'post' ? { w: 320, h: 320 } : { w: 320, h: 240 }
+function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
+  const dims = formato === 'story' ? { w: 1080, h: 1920 } : formato === 'post' ? { w: 1080, h: 1080 } : { w: 1280, h: 720 }
 
   function descargar() {
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${dims.w * 3}" height="${dims.h * 3}" viewBox="0 0 ${dims.w * 3} ${dims.h * 3}">
-        <defs>
-          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="${color}" />
-            <stop offset="100%" stop-color="#1e1b4b" />
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#bg)" rx="24" />
-        <text x="50%" y="35%" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="#fff">ClienteAI</text>
-        <text x="50%" y="48%" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#fff" opacity="0.95">Asistente de WhatsApp</text>
-        <text x="50%" y="55%" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#fff" opacity="0.95">con Inteligencia Artificial</text>
-        <rect x="15%" y="68%" width="70%" height="60" rx="30" fill="#fff" />
-        <text x="50%" y="73%" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="${color}">Pruébalo GRATIS</text>
-        <text x="50%" y="88%" text-anchor="middle" font-family="monospace" font-size="22" fill="#fff" opacity="0.85">Código: ${codigo}</text>
-      </svg>
-    `
-    const blob = new Blob([svg], { type: 'image/svg+xml' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `clienteai-banner-${formato}-${codigo}.svg`
-    a.click()
-    URL.revokeObjectURL(url)
+    const canvas = document.createElement('canvas')
+    canvas.width = dims.w
+    canvas.height = dims.h
+    const ctx = canvas.getContext('2d')
+
+    // Fondo blanco (JPG no soporta transparencia)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, dims.w, dims.h)
+
+    // Fondo degradado principal
+    const grad = ctx.createLinearGradient(0, 0, dims.w, dims.h)
+    grad.addColorStop(0, color)
+    grad.addColorStop(1, '#1e1b4b')
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.roundRect(0, 0, dims.w, dims.h, 0)
+    ctx.fill()
+
+    // Círculos decorativos de fondo
+    ctx.globalAlpha = 0.08
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(dims.w * 0.85, dims.h * 0.15, dims.w * 0.28, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(dims.w * 0.1, dims.h * 0.88, dims.w * 0.2, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.globalAlpha = 1
+
+    // Logo ClienteAI
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `900 ${Math.round(dims.w * 0.085)}px Arial`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('ClienteAI', dims.w / 2, dims.h * 0.26)
+
+    // Subtítulo línea 1
+    ctx.font = `400 ${Math.round(dims.w * 0.038)}px Arial`
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'
+    ctx.fillText('Asistente de WhatsApp con', dims.w / 2, dims.h * 0.36)
+    ctx.fillText('Inteligencia Artificial para tu negocio', dims.w / 2, dims.h * 0.42)
+
+    // Línea separadora
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'
+    ctx.lineWidth = Math.max(2, dims.w * 0.002)
+    ctx.beginPath()
+    ctx.moveTo(dims.w * 0.2, dims.h * 0.50)
+    ctx.lineTo(dims.w * 0.8, dims.h * 0.50)
+    ctx.stroke()
+
+    // Botón "Pruébalo GRATIS" — perfectamente centrado
+    const btnW = dims.w * 0.58
+    const btnH = dims.h * 0.085
+    const btnX = (dims.w - btnW) / 2   // centrado exacto
+    const btnY = dims.h * 0.545
+    const btnRadius = btnH / 2
+
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.roundRect(btnX, btnY, btnW, btnH, btnRadius)
+    ctx.fill()
+
+    // Texto del botón — centrado dentro del botón
+    ctx.fillStyle = color
+    ctx.font = `700 ${Math.round(dims.w * 0.038)}px Arial`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('✅ Pruébalo GRATIS', dims.w / 2, btnY + btnH / 2)
+
+    // URL del asesor
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'
+    ctx.font = `400 ${Math.round(dims.w * 0.024)}px Arial`
+    ctx.textBaseline = 'middle'
+    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * 0.725)
+
+    // Código de referido
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'
+    ctx.font = `400 ${Math.round(dims.w * 0.020)}px monospace`
+    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * 0.775)
+
+    // Descargar como JPG
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `clienteai-banner-${formato}-${codigo}.jpg`
+      a.click()
+      URL.revokeObjectURL(url)
+    }, 'image/jpeg', 0.95)
   }
+
+  // Preview del banner
+  const previewH = formato === 'story' ? 280 : formato === 'post' ? 200 : 160
 
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
-      <div style={{ width: '100%', aspectRatio: `${dims.w}/${dims.h}`, background: `linear-gradient(135deg, ${color}, #1e1b4b)`, borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: 10, padding: 12 }}>
-        <p style={{ fontWeight: 900, fontSize: 18, margin: 0 }}>ClienteAI</p>
-        <p style={{ fontSize: 11, opacity: 0.9, margin: '4px 0 12px', textAlign: 'center' }}>Asistente de WhatsApp con IA</p>
-        <div style={{ background: '#fff', color, borderRadius: 14, padding: '5px 12px', fontSize: 11, fontWeight: 700 }}>Pruébalo GRATIS</div>
-        <p style={{ fontSize: 9, opacity: 0.8, marginTop: 8, fontFamily: 'monospace' }}>Código: {codigo}</p>
+      <div style={{ width: '100%', height: previewH, background: `linear-gradient(135deg, ${color}, #1e1b4b)`, borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: 10, padding: 16, gap: 8 }}>
+        <p style={{ fontWeight: 900, fontSize: 22, margin: 0, letterSpacing: -0.5 }}>ClienteAI</p>
+        <p style={{ fontSize: 12, opacity: 0.9, margin: 0, textAlign: 'center', lineHeight: 1.4 }}>Asistente de WhatsApp con<br/>Inteligencia Artificial</p>
+        <div style={{ background: '#fff', color, borderRadius: 20, padding: '7px 20px', fontSize: 12, fontWeight: 700, marginTop: 4 }}>Pruébalo GRATIS</div>
+        <p style={{ fontSize: 9, opacity: 0.65, margin: 0, fontFamily: 'monospace' }}>Código: {codigo}</p>
       </div>
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px' }}>{titulo}</p>
       <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 10px' }}>{desc}</p>
-      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Descargar</button>
+      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⬇ Descargar JPG</button>
     </div>
   )
 }

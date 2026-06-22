@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
@@ -336,6 +336,10 @@ export default function Dashboard({ session }) {
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Código</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Teléfono</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>F. Nacimiento</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Banco</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Titular</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>N° Cuenta</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>CLABE</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comisión 1er mes</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comisión recurrente</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Estado</th>
@@ -343,13 +347,17 @@ export default function Dashboard({ session }) {
                 </thead>
                 <tbody>
                   {asesores.length === 0 ? (
-                    <tr><td colSpan={7} style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>Aún no hay asesores registrados.</td></tr>
+                    <tr><td colSpan={11} style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>Aún no hay asesores registrados.</td></tr>
                   ) : asesores.map((a, i) => (
                     <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-card)' }}>
                       <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>{a.nombre}<br /><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.email}</span></td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{a.codigo}</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.telefono || '—'}</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.fecha_nacimiento ? new Date(a.fecha_nacimiento + 'T00:00:00').toLocaleDateString('es-MX') : '—'}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.banco || '—'}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.titular_cuenta || '—'}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{a.numero_cuenta || '—'}</td>
+                      <td style={{ padding: '10px 16px', color: '#7c3aed', fontFamily: 'monospace', fontWeight: 600 }}>{a.clabe || '—'}</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.comision_primer_mes}%</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{a.comision_recurrente}%</td>
                       <td style={{ padding: '10px 16px' }}>
