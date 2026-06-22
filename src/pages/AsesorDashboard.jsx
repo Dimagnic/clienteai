@@ -17,6 +17,8 @@ export default function AsesorDashboard({ session }) {
   const [perfilForm, setPerfilForm] = useState({ nombre: '', telefono: '' })
   const [guardando, setGuardando] = useState(false)
   const [tabActivo, setTabActivo] = useState('resumen')
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const [fotoUrl, setFotoUrl] = useState(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -29,6 +31,7 @@ export default function AsesorDashboard({ session }) {
 
     if (!asesorData) { setLoading(false); return }
     setAsesor(asesorData)
+    setFotoUrl(asesorData.foto_url || null)
     setCuentaForm({
       numero_cuenta: asesorData.numero_cuenta || '',
       clabe: asesorData.clabe || '',
@@ -85,6 +88,25 @@ export default function AsesorDashboard({ session }) {
     setGuardando(false)
     setEditandoPerfil(false)
     loadData()
+  }
+
+  async function subirFoto(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const ext = file.name.split('.').pop().toLowerCase()
+    if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+      alert('Solo se permiten imágenes JPG o PNG')
+      return
+    }
+    setSubiendoFoto(true)
+    const path = `asesores/${asesor.id}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('fotos-asesores').upload(path, file, { upsert: true })
+    if (uploadError) { alert('Error al subir la foto: ' + uploadError.message); setSubiendoFoto(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('fotos-asesores').getPublicUrl(path)
+    await supabase.from('asesores').update({ foto_url: publicUrl }).eq('id', asesor.id)
+    setFotoUrl(publicUrl)
+    setAsesor({ ...asesor, foto_url: publicUrl })
+    setSubiendoFoto(false)
   }
 
   if (loading) return (
@@ -154,8 +176,10 @@ export default function AsesorDashboard({ session }) {
         {/* Header con datos personales */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 22, fontWeight: 800 }}>
-              {asesor.nombre?.[0]?.toUpperCase() || 'A'}
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 22, fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
+              {fotoUrl
+                ? <img src={fotoUrl} alt="foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : asesor.nombre?.[0]?.toUpperCase() || 'A'}
             </div>
             <div>
               <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{asesor.nombre}</h1>
@@ -445,6 +469,24 @@ export default function AsesorDashboard({ session }) {
               <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Mi perfil</h3>
               {!editandoPerfil && <button onClick={() => setEditandoPerfil(true)} style={{ fontSize: 13, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Editar</button>}
             </div>
+
+            {/* Foto de perfil */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 32, fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
+                {fotoUrl
+                  ? <img src={fotoUrl} alt="foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : asesor.nombre?.[0]?.toUpperCase() || 'A'}
+              </div>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>Foto de perfil</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px' }}>JPG o PNG, máx. 2MB</p>
+                <label style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid #7c3aed', color: '#7c3aed', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: 'transparent' }}>
+                  {subiendoFoto ? 'Subiendo...' : fotoUrl ? '📷 Cambiar foto' : '📷 Subir foto'}
+                  <input type="file" accept="image/jpeg,image/png" onChange={subirFoto} style={{ display: 'none' }} disabled={subiendoFoto} />
+                </label>
+              </div>
+            </div>
+
             {editandoPerfil ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>Nombre completo</label>
