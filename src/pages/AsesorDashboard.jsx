@@ -357,9 +357,9 @@ export default function AsesorDashboard({ session }) {
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Usa estos banners para promocionar tu enlace en Facebook, Instagram y WhatsApp. Cada uno ya incluye tu código de referido.</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 20 }}>
-              <BannerCard titulo="Historia (9:16)" desc="Para Instagram/Facebook Stories" color="#7c3aed" codigo={asesor.codigo} formato="story" />
-              <BannerCard titulo="Post cuadrado (1:1)" desc="Para feed de Instagram/Facebook" color="#2563eb" codigo={asesor.codigo} formato="post" />
-              <BannerCard titulo="WhatsApp (4:3)" desc="Para enviar directo por WhatsApp" color="#16a34a" codigo={asesor.codigo} formato="whatsapp" />
+              <BannerCard titulo="Historia (9:16)" desc="Para Instagram/Facebook Stories" color="#7c3aed" codigo={asesor.codigo} formato="story" enlaceReferido={enlaceReferido} />
+              <BannerCard titulo="Post cuadrado (1:1)" desc="Para feed de Instagram/Facebook" color="#2563eb" codigo={asesor.codigo} formato="post" enlaceReferido={enlaceReferido} />
+              <BannerCard titulo="WhatsApp (4:3)" desc="Para enviar directo por WhatsApp" color="#16a34a" codigo={asesor.codigo} formato="whatsapp" enlaceReferido={enlaceReferido} />
             </div>
 
             <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 12, padding: 16 }}>
@@ -428,47 +428,93 @@ function TextoSugerido({ texto }) {
   )
 }
 
-function BannerCard({ titulo, desc, color, codigo, formato }) {
-  const dims = formato === 'story' ? { w: 270, h: 480 } : formato === 'post' ? { w: 320, h: 320 } : { w: 320, h: 240 }
+function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
+  const dims = formato === 'story' ? { w: 1080, h: 1920 } : formato === 'post' ? { w: 1080, h: 1080 } : { w: 1280, h: 720 }
 
   function descargar() {
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${dims.w * 3}" height="${dims.h * 3}" viewBox="0 0 ${dims.w * 3} ${dims.h * 3}">
-        <defs>
-          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="${color}" />
-            <stop offset="100%" stop-color="#1e1b4b" />
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#bg)" rx="24" />
-        <text x="50%" y="35%" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="#fff">ClienteAI</text>
-        <text x="50%" y="48%" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#fff" opacity="0.95">Asistente de WhatsApp</text>
-        <text x="50%" y="55%" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#fff" opacity="0.95">con Inteligencia Artificial</text>
-        <rect x="15%" y="68%" width="70%" height="60" rx="30" fill="#fff" />
-        <text x="50%" y="73%" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="${color}">Pruébalo GRATIS</text>
-        <text x="50%" y="88%" text-anchor="middle" font-family="monospace" font-size="22" fill="#fff" opacity="0.85">Código: ${codigo}</text>
-      </svg>
-    `
-    const blob = new Blob([svg], { type: 'image/svg+xml' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `clienteai-banner-${formato}-${codigo}.svg`
-    a.click()
-    URL.revokeObjectURL(url)
+    const canvas = document.createElement('canvas')
+    canvas.width = dims.w
+    canvas.height = dims.h
+    const ctx = canvas.getContext('2d')
+
+    // Fondo degradado
+    const grad = ctx.createLinearGradient(0, 0, dims.w, dims.h)
+    grad.addColorStop(0, color)
+    grad.addColorStop(1, '#1e1b4b')
+    ctx.fillStyle = grad
+    ctx.roundRect(0, 0, dims.w, dims.h, 40)
+    ctx.fill()
+
+    // Logo ClienteAI
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `900 ${Math.round(dims.w * 0.1)}px Arial`
+    ctx.textAlign = 'center'
+    ctx.fillText('ClienteAI', dims.w / 2, dims.h * 0.28)
+
+    // Subtítulo
+    ctx.font = `400 ${Math.round(dims.w * 0.042)}px Arial`
+    ctx.fillStyle = 'rgba(255,255,255,0.92)'
+    ctx.fillText('Asistente de WhatsApp con', dims.w / 2, dims.h * 0.38)
+    ctx.fillText('Inteligencia Artificial', dims.w / 2, dims.h * 0.44)
+
+    // Línea separadora
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(dims.w * 0.2, dims.h * 0.52)
+    ctx.lineTo(dims.w * 0.8, dims.h * 0.52)
+    ctx.stroke()
+
+    // Botón "Pruébalo GRATIS" — centrado
+    const btnW = dims.w * 0.6
+    const btnH = dims.h * 0.09
+    const btnX = (dims.w - btnW) / 2
+    const btnY = dims.h * 0.57
+    const btnRadius = btnH / 2
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.roundRect(btnX, btnY, btnW, btnH, btnRadius)
+    ctx.fill()
+    ctx.fillStyle = color
+    ctx.font = `700 ${Math.round(dims.w * 0.04)}px Arial`
+    ctx.textAlign = 'center'
+    ctx.fillText('Pruébalo GRATIS', dims.w / 2, btnY + btnH * 0.65)
+
+    // URL del asesor
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.font = `400 ${Math.round(dims.w * 0.025)}px Arial`
+    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * 0.73)
+
+    // Código de referido
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.font = `400 ${Math.round(dims.w * 0.022)}px monospace`
+    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * 0.78)
+
+    // Descargar como PNG
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `clienteai-banner-${formato}-${codigo}.png`
+      a.click()
+      URL.revokeObjectURL(url)
+    }, 'image/png')
   }
+
+  // Preview del banner
+  const previewH = formato === 'story' ? 280 : formato === 'post' ? 200 : 160
 
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
-      <div style={{ width: '100%', aspectRatio: `${dims.w}/${dims.h}`, background: `linear-gradient(135deg, ${color}, #1e1b4b)`, borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: 10, padding: 12 }}>
-        <p style={{ fontWeight: 900, fontSize: 18, margin: 0 }}>ClienteAI</p>
-        <p style={{ fontSize: 11, opacity: 0.9, margin: '4px 0 12px', textAlign: 'center' }}>Asistente de WhatsApp con IA</p>
-        <div style={{ background: '#fff', color, borderRadius: 14, padding: '5px 12px', fontSize: 11, fontWeight: 700 }}>Pruébalo GRATIS</div>
-        <p style={{ fontSize: 9, opacity: 0.8, marginTop: 8, fontFamily: 'monospace' }}>Código: {codigo}</p>
+      <div style={{ width: '100%', height: previewH, background: `linear-gradient(135deg, ${color}, #1e1b4b)`, borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: 10, padding: 16, gap: 8 }}>
+        <p style={{ fontWeight: 900, fontSize: 22, margin: 0, letterSpacing: -0.5 }}>ClienteAI</p>
+        <p style={{ fontSize: 12, opacity: 0.9, margin: 0, textAlign: 'center', lineHeight: 1.4 }}>Asistente de WhatsApp con<br/>Inteligencia Artificial</p>
+        <div style={{ background: '#fff', color, borderRadius: 20, padding: '7px 20px', fontSize: 12, fontWeight: 700, marginTop: 4 }}>Pruébalo GRATIS</div>
+        <p style={{ fontSize: 9, opacity: 0.65, margin: 0, fontFamily: 'monospace' }}>Código: {codigo}</p>
       </div>
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px' }}>{titulo}</p>
       <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 10px' }}>{desc}</p>
-      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Descargar</button>
+      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⬇ Descargar PNG</button>
     </div>
   )
 }
