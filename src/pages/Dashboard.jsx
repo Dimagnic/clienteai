@@ -328,8 +328,8 @@ export default function Dashboard({ session }) {
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>El código de acceso se genera automáticamente (formato CAI2026-XXNNNNNN). Se le enviará un correo con sus instrucciones de activación.</p>
             </div>
 
-            <div style={{ background: 'var(--bg-card)', border: '2px solid #7c3aed', borderRadius: 14, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <div style={{ background: 'var(--bg-card)', border: '2px solid #7c3aed', borderRadius: 14, overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 1000 }}>
                 <thead>
                   <tr style={{ background: '#7c3aed', color: '#fff' }}>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Asesor</th>
