@@ -45,9 +45,12 @@ export default function Dashboard({ session }) {
       setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
     }
     if (esAdmin) {
-      const { data: todos } = await supabase.from('negocios').select('*, asesores(nombre, codigo)').order('created_at', { ascending: false })
-      setClientes(todos || [])
+      const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
       const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
+      // Mapear asesor a cada negocio manualmente
+      const asesoresMap = Object.fromEntries((todosAsesores || []).map(a => [a.id, a]))
+      const clientesConAsesor = (todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null }))
+      setClientes(clientesConAsesor)
       setAsesores(todosAsesores || [])
     }
     setLoading(false)
@@ -84,23 +87,22 @@ export default function Dashboard({ session }) {
 
   async function cambiarPlan(negocioId, nuevoPlan) {
     await supabase.from('negocios').update({ plan: nuevoPlan }).eq('id', negocioId)
-    const { data: todos } = await supabase.from('negocios').select('*, asesores(nombre, codigo)').order('created_at', { ascending: false })
-    setClientes(todos || [])
+    const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
+    const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
+    setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
   }
 
   async function eliminarAsesor(asesor) {
     if (!confirm(`¿Eliminar al asesor "${asesor.nombre}"? Su enlace de referido dejará de funcionar y se desvinculará de sus clientes.`)) return
-    // Desvincular negocios referidos (no se borran, solo pierden el asesor)
     await supabase.from('negocios').update({ asesor_id: null }).eq('asesor_id', asesor.id)
-    // Eliminar comisiones del asesor
     await supabase.from('comisiones').delete().eq('asesor_id', asesor.id)
     await supabase.from('cortes_comisiones').delete().eq('asesor_id', asesor.id)
-    // Eliminar el asesor
     await supabase.from('asesores').delete().eq('id', asesor.id)
     const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
     setAsesores(todosAsesores || [])
-    const { data: todos } = await supabase.from('negocios').select('*, asesores(nombre, codigo)').order('created_at', { ascending: false })
-    setClientes(todos || [])
+    const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
+    const asesoresMap = Object.fromEntries((todosAsesores || []).map(a => [a.id, a]))
+    setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
   }
 
   async function eliminarCliente(cliente) {
@@ -108,8 +110,9 @@ export default function Dashboard({ session }) {
     await supabase.from('conversaciones').delete().eq('negocio_id', cliente.id)
     await supabase.from('comisiones').delete().eq('negocio_id', cliente.id)
     await supabase.from('negocios').delete().eq('id', cliente.id)
-    const { data: todos } = await supabase.from('negocios').select('*, asesores(nombre, codigo)').order('created_at', { ascending: false })
-    setClientes(todos || [])
+    const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
+    const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
+    setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
   }
 
   async function handlePago(plan) {
@@ -269,8 +272,8 @@ export default function Dashboard({ session }) {
                     <tr key={c.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-card)' }}>
                       <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>{c.nombre || 'Sin nombre'}</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>
-                        {c.asesores ? (
-                          <span>{c.asesores.nombre}<br /><span style={{ fontSize: 11, fontFamily: 'monospace', color: '#7c3aed' }}>{c.asesores.codigo}</span></span>
+                        {c.asesor ? (
+                          <span>{c.asesor.nombre}<br /><span style={{ fontSize: 11, fontFamily: 'monospace', color: '#7c3aed' }}>{c.asesor.codigo}</span></span>
                         ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                       </td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{c.conversaciones_mes || 0}</td>
