@@ -105,6 +105,115 @@ export default function AsesorDashboard({ session }) {
   const comisionesMesActual = comisiones.filter(c => c.periodo === mesActual)
   const totalMesActual = comisionesMesActual.reduce((acc, c) => acc + Number(c.monto_comision), 0)
   const totalPagado = cortes.filter(c => c.estado === 'pagado').reduce((acc, c) => acc + Number(c.total_comision), 0)
+
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import s from './Dashboard.module.css'
+
+export default function AsesorDashboard({ session }) {
+  const navigate = useNavigate()
+  const [asesor, setAsesor] = useState(null)
+  const [comisiones, setComisiones] = useState([])
+  const [cortes, setCortes] = useState([])
+  const [referidos, setReferidos] = useState([])
+  const [tieneNegocioPropio, setTieneNegocioPropio] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [editandoCuenta, setEditandoCuenta] = useState(false)
+  const [editandoPerfil, setEditandoPerfil] = useState(false)
+  const [cuentaForm, setCuentaForm] = useState({ numero_cuenta: '', clabe: '', titular_cuenta: '', banco: '' })
+  const [perfilForm, setPerfilForm] = useState({ nombre: '', telefono: '' })
+  const [guardando, setGuardando] = useState(false)
+  const [tabActivo, setTabActivo] = useState('resumen')
+
+  useEffect(() => { loadData() }, [])
+
+  async function loadData() {
+    const { data: asesorData } = await supabase
+      .from('asesores')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single()
+
+    if (!asesorData) { setLoading(false); return }
+    setAsesor(asesorData)
+    setCuentaForm({
+      numero_cuenta: asesorData.numero_cuenta || '',
+      clabe: asesorData.clabe || '',
+      titular_cuenta: asesorData.titular_cuenta || '',
+      banco: asesorData.banco || '',
+    })
+    setPerfilForm({
+      nombre: asesorData.nombre || '',
+      telefono: asesorData.telefono || '',
+    })
+
+    const { data: comisionesData } = await supabase
+      .from('comisiones')
+      .select('*, negocios(nombre)')
+      .eq('asesor_id', asesorData.id)
+      .order('created_at', { ascending: false })
+    setComisiones(comisionesData || [])
+
+    const { data: cortesData } = await supabase
+      .from('cortes_comisiones')
+      .select('*')
+      .eq('asesor_id', asesorData.id)
+      .order('periodo', { ascending: false })
+    setCortes(cortesData || [])
+
+    const { data: referidosData } = await supabase
+      .from('negocios')
+      .select('id, nombre, plan, created_at, referido_en, plan_renueva_en, activo')
+      .eq('asesor_id', asesorData.id)
+      .order('created_at', { ascending: false })
+    setReferidos(referidosData || [])
+
+    const { data: negocioPropio } = await supabase
+      .from('negocios')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+    setTieneNegocioPropio(!!negocioPropio)
+
+    setLoading(false)
+  }
+
+  async function guardarCuenta() {
+    setGuardando(true)
+    await supabase.from('asesores').update(cuentaForm).eq('id', asesor.id)
+    setGuardando(false)
+    setEditandoCuenta(false)
+    loadData()
+  }
+
+  async function guardarPerfil() {
+    setGuardando(true)
+    await supabase.from('asesores').update(perfilForm).eq('id', asesor.id)
+    setGuardando(false)
+    setEditandoPerfil(false)
+    loadData()
+  }
+
+  if (loading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 32, height: 32, border: '3px solid #ede9fe', borderTopColor: '#7c3aed', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+
+  if (!asesor) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, fontFamily: 'sans-serif' }}>
+      <p style={{ fontSize: 18, fontWeight: 700 }}>No tienes acceso de asesor</p>
+      <p style={{ color: '#6b7280', fontSize: 14 }}>Contacta al administrador para que te dé de alta.</p>
+      <button onClick={() => navigate('/')} style={{ marginTop: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer' }}>Ir al inicio</button>
+    </div>
+  )
+
+  const mesActual = new Date().toISOString().slice(0, 7)
+  const comisionesMesActual = comisiones.filter(c => c.periodo === mesActual)
+  const totalMesActual = comisionesMesActual.reduce((acc, c) => acc + Number(c.monto_comision), 0)
+  const totalPagado = cortes.filter(c => c.estado === 'pagado').reduce((acc, c) => acc + Number(c.total_comision), 0)
   const totalPendiente = cortes.filter(c => c.estado === 'abierto').reduce((acc, c) => acc + Number(c.total_comision), 0)
   const referidosActivos = referidos.filter(r => r.plan !== 'gratuito').length
   const referidosGratuitos = referidos.filter(r => r.plan === 'gratuito').length
@@ -138,6 +247,7 @@ export default function AsesorDashboard({ session }) {
           <button className={`${s.navItem} ${tabActivo === 'referidos' ? s.navItemActive : ''}`} onClick={() => setTabActivo('referidos')}>Mis referidos</button>
           <button className={`${s.navItem} ${tabActivo === 'comisiones' ? s.navItemActive : ''}`} onClick={() => setTabActivo('comisiones')}>Comisiones</button>
           <button className={`${s.navItem} ${tabActivo === 'marketing' ? s.navItemActive : ''}`} onClick={() => setTabActivo('marketing')}>Material publicitario</button>
+          <button className={`${s.navItem} ${tabActivo === 'banco' ? s.navItemActive : ''}`} onClick={() => setTabActivo('banco')}>Datos bancarios</button>
           <button className={`${s.navItem} ${tabActivo === 'perfil' ? s.navItemActive : ''}`} onClick={() => setTabActivo('perfil')}>Mi perfil</button>
           {!tieneNegocioPropio && (
             <button className={s.navItem} onClick={() => navigate('/configurar')} style={{ color: '#16a34a', fontWeight: 700 }}>+ Crear mi propio bot</button>
@@ -320,34 +430,6 @@ export default function AsesorDashboard({ session }) {
               )}
             </div>
 
-            {/* Datos bancarios */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Datos para transferencia</h3>
-                {!editandoCuenta && <button onClick={() => setEditandoCuenta(true)} style={{ fontSize: 13, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Editar</button>}
-              </div>
-              {editandoCuenta ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input placeholder="Banco" value={cuentaForm.banco} onChange={e => setCuentaForm({ ...cuentaForm, banco: e.target.value })} style={inputStyle} />
-                  <input placeholder="Titular de la cuenta" value={cuentaForm.titular_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, titular_cuenta: e.target.value })} style={inputStyle} />
-                  <input placeholder="CLABE interbancaria" value={cuentaForm.cuenta_banco} onChange={e => setCuentaForm({ ...cuentaForm, cuenta_banco: e.target.value })} style={inputStyle} />
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={guardarCuenta} disabled={guardando} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer' }}>{guardando ? 'Guardando...' : 'Guardar'}</button>
-                    <button onClick={() => setEditandoCuenta(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancelar</button>
-                  </div>
-                </div>
-              ) : (
-                asesor.cuenta_banco ? (
-                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.8 }}>
-                    <p><strong>Banco:</strong> {asesor.banco}</p>
-                    <p><strong>Titular:</strong> {asesor.titular_cuenta}</p>
-                    <p><strong>CLABE:</strong> {asesor.cuenta_banco}</p>
-                  </div>
-                ) : (
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aún no has registrado tus datos bancarios. Agrégalos para recibir tus pagos por transferencia.</p>
-                )
-              )}
-            </div>
           </>
         )}
 
@@ -367,6 +449,101 @@ export default function AsesorDashboard({ session }) {
               <TextoSugerido texto={`¿Tu negocio pierde clientes por no contestar rápido? 🤖 Crea tu asistente de WhatsApp con IA en minutos. Pruébalo gratis 👉 ${enlaceReferido}`} />
               <TextoSugerido texto={`Deja de contestar lo mismo todo el día. Automatiza horarios, precios y dudas frecuentes con IA. Empieza gratis aquí: ${enlaceReferido}`} />
             </div>
+          </div>
+        )}
+
+        {tabActivo === 'banco' && (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 520 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>🏦 Datos bancarios</h3>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, marginBottom: 0 }}>Usamos esta información para pagarte tus comisiones por transferencia.</p>
+              </div>
+              {!editandoCuenta && <button onClick={() => setEditandoCuenta(true)} style={{ fontSize: 13, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Editar</button>}
+            </div>
+            <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '16px 0' }} />
+            {editandoCuenta ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Banco</label>
+                  <select value={cuentaForm.banco} onChange={e => setCuentaForm({ ...cuentaForm, banco: e.target.value })} style={inputStyle}>
+                    <option value="">-- Selecciona tu banco --</option>
+                    <option>BBVA</option>
+                    <option>Banorte</option>
+                    <option>HSBC</option>
+                    <option>Santander</option>
+                    <option>Citibanamex</option>
+                    <option>Scotiabank</option>
+                    <option>Inbursa</option>
+                    <option>Banco Azteca</option>
+                    <option>BanBajío</option>
+                    <option>Afirme</option>
+                    <option>Bansí</option>
+                    <option>Banregio</option>
+                    <option>CIBanco</option>
+                    <option>Consubanco</option>
+                    <option>Famsa</option>
+                    <option>Invex</option>
+                    <option>Ixe</option>
+                    <option>Mifel</option>
+                    <option>Monexcb</option>
+                    <option>Multiva</option>
+                    <option>Sabadell</option>
+                    <option>Ve por Más (BX+)</option>
+                    <option>Coppel</option>
+                    <option>Nu (Nubank)</option>
+                    <option>Hey Banco</option>
+                    <option>Spin by OXXO</option>
+                    <option>Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Titular de la cuenta</label>
+                  <input placeholder="Nombre completo del titular" value={cuentaForm.titular_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, titular_cuenta: e.target.value })} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Número de cuenta</label>
+                  <input placeholder="10 dígitos" maxLength={11} value={cuentaForm.numero_cuenta} onChange={e => setCuentaForm({ ...cuentaForm, numero_cuenta: e.target.value.replace(/\D/g, '') })} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>CLABE interbancaria</label>
+                  <input placeholder="18 dígitos" maxLength={18} value={cuentaForm.clabe} onChange={e => setCuentaForm({ ...cuentaForm, clabe: e.target.value.replace(/\D/g, '') })} style={inputStyle} />
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>La CLABE tiene 18 dígitos y es necesaria para recibir transferencias interbancarias.</p>
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <button onClick={guardarCuenta} disabled={guardando} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>{guardando ? 'Guardando...' : 'Guardar datos'}</button>
+                  <button onClick={() => setEditandoCuenta(false)} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancelar</button>
+                </div>
+              </div>
+            ) : (
+              asesor.clabe || asesor.numero_cuenta ? (
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Banco</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{asesor.banco || '—'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Titular</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{asesor.titular_cuenta || '—'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Número de cuenta</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{asesor.numero_cuenta || '—'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>CLABE interbancaria</span>
+                    <span style={{ fontWeight: 700, color: '#7c3aed', fontFamily: 'monospace', letterSpacing: 1 }}>{asesor.clabe || '—'}</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <p style={{ fontSize: 32, marginBottom: 8 }}>🏦</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Sin datos bancarios aún</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Agrega tu cuenta para recibir el pago de tus comisiones.</p>
+                  <button onClick={() => setEditandoCuenta(true)} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Agregar datos bancarios</button>
+                </div>
+              )
+            )}
           </div>
         )}
 
@@ -437,68 +614,90 @@ function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
     canvas.height = dims.h
     const ctx = canvas.getContext('2d')
 
-    // Fondo degradado
+    // Fondo blanco (JPG no soporta transparencia)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, dims.w, dims.h)
+
+    // Fondo degradado principal
     const grad = ctx.createLinearGradient(0, 0, dims.w, dims.h)
     grad.addColorStop(0, color)
     grad.addColorStop(1, '#1e1b4b')
     ctx.fillStyle = grad
-    ctx.roundRect(0, 0, dims.w, dims.h, 40)
+    ctx.beginPath()
+    ctx.roundRect(0, 0, dims.w, dims.h, 0)
     ctx.fill()
+
+    // Círculos decorativos de fondo
+    ctx.globalAlpha = 0.08
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(dims.w * 0.85, dims.h * 0.15, dims.w * 0.28, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(dims.w * 0.1, dims.h * 0.88, dims.w * 0.2, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.globalAlpha = 1
 
     // Logo ClienteAI
     ctx.fillStyle = '#ffffff'
-    ctx.font = `900 ${Math.round(dims.w * 0.1)}px Arial`
+    ctx.font = `900 ${Math.round(dims.w * 0.085)}px Arial`
     ctx.textAlign = 'center'
-    ctx.fillText('ClienteAI', dims.w / 2, dims.h * 0.28)
+    ctx.textBaseline = 'middle'
+    ctx.fillText('ClienteAI', dims.w / 2, dims.h * 0.26)
 
-    // Subtítulo
-    ctx.font = `400 ${Math.round(dims.w * 0.042)}px Arial`
-    ctx.fillStyle = 'rgba(255,255,255,0.92)'
-    ctx.fillText('Asistente de WhatsApp con', dims.w / 2, dims.h * 0.38)
-    ctx.fillText('Inteligencia Artificial', dims.w / 2, dims.h * 0.44)
+    // Subtítulo línea 1
+    ctx.font = `400 ${Math.round(dims.w * 0.038)}px Arial`
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'
+    ctx.fillText('Asistente de WhatsApp con', dims.w / 2, dims.h * 0.36)
+    ctx.fillText('Inteligencia Artificial para tu negocio', dims.w / 2, dims.h * 0.42)
 
     // Línea separadora
     ctx.strokeStyle = 'rgba(255,255,255,0.3)'
-    ctx.lineWidth = 2
+    ctx.lineWidth = Math.max(2, dims.w * 0.002)
     ctx.beginPath()
-    ctx.moveTo(dims.w * 0.2, dims.h * 0.52)
-    ctx.lineTo(dims.w * 0.8, dims.h * 0.52)
+    ctx.moveTo(dims.w * 0.2, dims.h * 0.50)
+    ctx.lineTo(dims.w * 0.8, dims.h * 0.50)
     ctx.stroke()
 
-    // Botón "Pruébalo GRATIS" — centrado
-    const btnW = dims.w * 0.6
-    const btnH = dims.h * 0.09
-    const btnX = (dims.w - btnW) / 2
-    const btnY = dims.h * 0.57
+    // Botón "Pruébalo GRATIS" — perfectamente centrado
+    const btnW = dims.w * 0.58
+    const btnH = dims.h * 0.085
+    const btnX = (dims.w - btnW) / 2   // centrado exacto
+    const btnY = dims.h * 0.545
     const btnRadius = btnH / 2
+
     ctx.fillStyle = '#ffffff'
     ctx.beginPath()
     ctx.roundRect(btnX, btnY, btnW, btnH, btnRadius)
     ctx.fill()
+
+    // Texto del botón — centrado dentro del botón
     ctx.fillStyle = color
-    ctx.font = `700 ${Math.round(dims.w * 0.04)}px Arial`
+    ctx.font = `700 ${Math.round(dims.w * 0.038)}px Arial`
     ctx.textAlign = 'center'
-    ctx.fillText('Pruébalo GRATIS', dims.w / 2, btnY + btnH * 0.65)
+    ctx.textBaseline = 'middle'
+    ctx.fillText('✅ Pruébalo GRATIS', dims.w / 2, btnY + btnH / 2)
 
     // URL del asesor
-    ctx.fillStyle = 'rgba(255,255,255,0.7)'
-    ctx.font = `400 ${Math.round(dims.w * 0.025)}px Arial`
-    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * 0.73)
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'
+    ctx.font = `400 ${Math.round(dims.w * 0.024)}px Arial`
+    ctx.textBaseline = 'middle'
+    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * 0.725)
 
     // Código de referido
-    ctx.fillStyle = 'rgba(255,255,255,0.55)'
-    ctx.font = `400 ${Math.round(dims.w * 0.022)}px monospace`
-    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * 0.78)
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'
+    ctx.font = `400 ${Math.round(dims.w * 0.020)}px monospace`
+    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * 0.775)
 
-    // Descargar como PNG
+    // Descargar como JPG
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `clienteai-banner-${formato}-${codigo}.png`
+      a.download = `clienteai-banner-${formato}-${codigo}.jpg`
       a.click()
       URL.revokeObjectURL(url)
-    }, 'image/png')
+    }, 'image/jpeg', 0.95)
   }
 
   // Preview del banner
@@ -514,7 +713,7 @@ function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
       </div>
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px' }}>{titulo}</p>
       <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 10px' }}>{desc}</p>
-      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⬇ Descargar PNG</button>
+      <button onClick={descargar} style={{ width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⬇ Descargar JPG</button>
     </div>
   )
 }
