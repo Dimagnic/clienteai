@@ -403,7 +403,6 @@ export default function Dashboard({ session }) {
                       <td style={{ padding: '10px 16px' }}>
                         <button onClick={() => eliminarAsesor(a)} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: '#fee2e2', color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🗑 Eliminar</button>
                       </td>
-                    </tr>
                   ))}
                 </tbody>
               </table>
