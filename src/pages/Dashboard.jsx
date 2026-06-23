@@ -17,8 +17,6 @@ export default function Dashboard({ session }) {
   const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', email: '', telefono: '', plan: 'gratuito', asesor_id: '' })
   const [creandoCliente, setCreandoCliente] = useState(false)
   const [clienteCreado, setClienteCreado] = useState(null)
-  const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', email: '', telefono: '', plan: 'gratuito' })
-  const [creandoCliente, setCreandoCliente] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
@@ -115,6 +113,8 @@ export default function Dashboard({ session }) {
       setCreandoCliente(false)
     }
   }
+
+  async function cambiarPlan(negocioId, nuevoPlan) {
     await supabase.from('negocios').update({ plan: nuevoPlan }).eq('id', negocioId)
     const { data: todos } = await supabase.from('negocios').select('*, asesores(nombre, codigo)').order('created_at', { ascending: false })
     setClientes(todos || [])
