@@ -74,7 +74,7 @@ export default function AdminLogin() {
                 <input className={s.input} type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} required disabled={loading} />
               </div>
               {error && <div className={s.error}>{error}</div>}
-              <button className={s.btnSubmit} type="submit" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
+              <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#111827' }}>{loading ? 'Entrando...' : 'Entrar'}</button>
             </form>
             <p className={s.toggle}>¿Eres asesor? <button className={s.toggleBtn} onClick={() => { setModo('asesor'); setError('') }}>Entra aquí</button></p>
             <p className={s.toggle}>¿Eres cliente? <button className={s.toggleBtn} onClick={() => { setModo('cliente'); setError('') }}>Entra aquí</button></p>
