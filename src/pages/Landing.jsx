@@ -1,4 +1,4 @@
-﻿import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import s from './Landing.module.css'
 import ThemeToggle from '../components/ThemeToggle'

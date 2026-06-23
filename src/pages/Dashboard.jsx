@@ -503,7 +503,7 @@ function ConversacionesRecientes({ negocioId, plan }) {
   const [mensajes, setMensajes] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const limite = plan === 'negocio' ? 1000 : plan === 'pro' ? 20 : 5
+  const limite = 1000
 
   useEffect(() => {
     async function load() {
@@ -522,38 +522,18 @@ function ConversacionesRecientes({ negocioId, plan }) {
   )
 
   return (
-    <div>
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-        {mensajes.map((m, i) => (
-          <div key={m.id} style={{ padding: '14px 20px', borderBottom: i < mensajes.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: m.rol === 'user' ? '#dbeafe' : '#dcfce7', color: m.rol === 'user' ? '#1d4ed8' : '#16a34a', whiteSpace: 'nowrap', marginTop: 2 }}>
-              {m.rol === 'user' ? 'Cliente' : 'Bot'}
-            </span>
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: 0, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.5 }}>{m.mensaje}</p>
-              <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>{new Date(m.created_at).toLocaleString('es-MX')}</p>
-            </div>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+      {mensajes.map((m, i) => (
+        <div key={m.id} style={{ padding: '14px 20px', borderBottom: i < mensajes.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: m.rol === 'user' ? '#dbeafe' : '#dcfce7', color: m.rol === 'user' ? '#1d4ed8' : '#16a34a', whiteSpace: 'nowrap', marginTop: 2 }}>
+            {m.rol === 'user' ? 'Cliente' : 'Bot'}
+          </span>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.5 }}>{m.mensaje}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>{new Date(m.created_at).toLocaleString('es-MX')}</p>
           </div>
-        ))}
-      </div>
-      {(!plan || plan === 'gratuito') && (
-        <div style={{ marginTop: 12, padding: '14px 20px', background: '#fefce8', border: '1px solid #fde047', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#854d0e' }}>⚠️ Plan Gratuito: solo ves las últimas 5 conversaciones</p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#92400e' }}>Actualiza al Plan Pro para ver las últimas 20, o al Plan Negocio para historial completo.</p>
-          </div>
-          <a href="/precios" style={{ padding: '8px 20px', borderRadius: 8, background: '#7c3aed', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>Ver planes</a>
         </div>
-      )}
-      {plan === 'pro' && (
-        <div style={{ marginTop: 12, padding: '14px 20px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#0c4a6e' }}>📋 Plan Pro: ves las últimas 20 conversaciones</p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#075985' }}>Actualiza al Plan Negocio para acceder al historial completo sin límite.</p>
-          </div>
-          <a href="/precios" style={{ padding: '8px 20px', borderRadius: 8, background: '#7c3aed', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>Ver Plan Negocio</a>
-        </div>
-      )}
+      ))}
     </div>
   )
 }
