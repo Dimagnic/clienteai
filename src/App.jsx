@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Landing from './pages/Landing'
@@ -12,6 +12,7 @@ import Chat from './pages/Chat'
 import AsesorDashboard from './pages/AsesorDashboard'
 import AdminLogin from './pages/AdminLogin'
 import ActivarAsesor from './pages/ActivarAsesor'
+import ActivarCliente from './pages/ActivarCliente'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -74,6 +75,7 @@ export default function App() {
         } />
         <Route path="/admin" element={session ? <Navigate to="/dashboard" replace /> : <AdminLogin />} />
         <Route path="/activar-asesor" element={<ActivarAsesor />} />
+        <Route path="/activar-cliente" element={<ActivarCliente />} />
         <Route path="/legal" element={<Legal />} />
 <Route path="/precios" element={<Precios session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />

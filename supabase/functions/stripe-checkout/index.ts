@@ -7,8 +7,8 @@ const corsHeaders = {
 }
 
 const PRICES = {
-  pro: 'price_1ThjecCqQfIqmSiIoPBi16SD',
-  negocio: 'price_1ThjhfCqQfIqmSiIsphE7UNT',
+  pro: 'price_1Tl2eDAu44j0iikUgex1aLMr',
+  negocio: 'price_1Tl2g0Au44j0iikUR8K6taWt',
 }
 
 serve(async (req) => {

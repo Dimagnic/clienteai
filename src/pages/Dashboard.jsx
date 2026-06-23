@@ -14,6 +14,11 @@ export default function Dashboard({ session }) {
   const [nuevoAsesor, setNuevoAsesor] = useState({ nombre: '', apellido: '', email: '', telefono: '', fechaNacimiento: '' })
   const [creandoAsesor, setCreandoAsesor] = useState(false)
   const [credencialesGeneradas, setCredencialesGeneradas] = useState(null)
+  const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', email: '', telefono: '', plan: 'gratuito', asesor_id: '' })
+  const [creandoCliente, setCreandoCliente] = useState(false)
+  const [clienteCreado, setClienteCreado] = useState(null)
+  const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', email: '', telefono: '', plan: 'gratuito' })
+  const [creandoCliente, setCreandoCliente] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
@@ -82,7 +87,34 @@ export default function Dashboard({ session }) {
     }
   }
 
-  async function cambiarPlan(negocioId, nuevoPlan) {
+  async function crearCliente() {
+    if (!nuevoCliente.nombre.trim() || !nuevoCliente.email.trim()) {
+      alert('Completa nombre y correo del cliente')
+      return
+    }
+    setCreandoCliente(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('crear-cliente', {
+        body: {
+          nombre: nuevoCliente.nombre,
+          email: nuevoCliente.email,
+          telefono: nuevoCliente.telefono,
+          plan: nuevoCliente.plan,
+          asesor_id: nuevoCliente.asesor_id || null,
+        }
+      })
+      if (error) throw error
+      if (data.error) throw new Error(data.error)
+      setClienteCreado(data)
+      setNuevoCliente({ nombre: '', email: '', telefono: '', plan: 'gratuito', asesor_id: '' })
+      const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
+      setClientes(todos || [])
+    } catch (err) {
+      alert('Error al crear cliente: ' + err.message)
+    } finally {
+      setCreandoCliente(false)
+    }
+  }
     await supabase.from('negocios').update({ plan: nuevoPlan }).eq('id', negocioId)
     const { data: todos } = await supabase.from('negocios').select('*, asesores(nombre, codigo)').order('created_at', { ascending: false })
     setClientes(todos || [])
@@ -252,6 +284,45 @@ export default function Dashboard({ session }) {
         {isAdmin && (
           <div className={s.section}>
             <h2 className={s.sectionTitle} style={{ color: '#dc2626' }}>Panel de Administracion</h2>
+
+            {clienteCreado && (
+              <div style={{ background: '#f0fdf4', border: '2px solid #16a34a', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#15803d', marginBottom: 10 }}>
+                  ✅ Cliente "{clienteCreado.nombre}" registrado.
+                  {clienteCreado.correoEnviado
+                    ? ' Se le envió un correo con su código y enlace de activación.'
+                    : ' ⚠️ No se pudo confirmar el envío del correo — comparte estos datos manualmente:'}
+                </p>
+                <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2 }}>
+                  <p style={{ margin: 0 }}><strong>Código de cliente:</strong> {clienteCreado.codigo}</p>
+                  <p style={{ margin: 0 }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-cliente?codigo={clienteCreado.codigo}</p>
+                  <p style={{ margin: 0 }}><strong>Estado:</strong> Pendiente (se activa cuando el cliente crea su contraseña)</p>
+                </div>
+                <button onClick={() => setClienteCreado(null)} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', cursor: 'pointer', fontSize: 13 }}>Entendido</button>
+              </div>
+            )}
+
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary)' }}>Registrar nuevo cliente</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <input placeholder="Nombre del negocio" value={nuevoCliente.nombre} onChange={e => setNuevoCliente({ ...nuevoCliente, nombre: e.target.value })} style={{ flex: 1, minWidth: 160, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
+                <input placeholder="Correo electrónico" type="email" value={nuevoCliente.email} onChange={e => setNuevoCliente({ ...nuevoCliente, email: e.target.value })} style={{ flex: 1, minWidth: 180, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
+                <input placeholder="Teléfono (opcional)" value={nuevoCliente.telefono} onChange={e => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })} style={{ flex: 1, minWidth: 140, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
+                <select value={nuevoCliente.plan} onChange={e => setNuevoCliente({ ...nuevoCliente, plan: e.target.value })} style={{ flex: 1, minWidth: 130, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                  <option value="gratuito">Plan Gratuito</option>
+                  <option value="pro">Plan Pro $299</option>
+                  <option value="negocio">Plan Negocio $599</option>
+                </select>
+                <select value={nuevoCliente.asesor_id} onChange={e => setNuevoCliente({ ...nuevoCliente, asesor_id: e.target.value })} style={{ flex: 1, minWidth: 160, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                  <option value="">Sin asesor</option>
+                  {asesores.map(a => <option key={a.id} value={a.id}>{a.nombre} ({a.codigo})</option>)}
+                </select>
+                <button onClick={crearCliente} disabled={creandoCliente} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontWeight: 600, cursor: 'pointer', height: 'fit-content', alignSelf: 'flex-end' }}>
+                  {creandoCliente ? 'Creando...' : 'Crear cliente'}
+                </button>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>El código se genera automáticamente (formato CAI2026-CL000001). Se enviará un correo al cliente para que active su cuenta.</p>
+            </div>
             <div style={{ background: 'var(--bg-card)', border: '2px solid #dc2626', borderRadius: 14, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
                 <thead>
