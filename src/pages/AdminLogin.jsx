@@ -5,7 +5,7 @@ import s from './Login.module.css'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const [modo, setModo] = useState('asesor') // 'admin' | 'asesor' | 'cliente'
+  const [modo, setModo] = useState('cliente') // 'admin' | 'asesor' | 'cliente'
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
