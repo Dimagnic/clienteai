@@ -1,102 +1,123 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import s from './Login.module.css'
 
-export default function ActivarAsesor() {
+export default function ActivarCliente() {
+  const [params] = useSearchParams()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [codigo, setCodigo] = useState('')
+  const codigoUrl = params.get('codigo') || ''
+
+  const [codigo, setCodigo] = useState(codigoUrl)
   const [password, setPassword] = useState('')
-  const [password2, setPassword2] = useState('')
-  const [aceptaTerminos, setAceptaTerminos] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [exito, setExito] = useState(false)
 
-  useEffect(() => {
-    const codigoUrl = searchParams.get('codigo')
-    if (codigoUrl) setCodigo(codigoUrl.toUpperCase())
-  }, [searchParams])
-
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function activar() {
     setError('')
-
-    if (!codigo.trim()) { setError('Ingresa tu código de asesor.'); return }
+    if (!codigo.trim()) { setError('Ingresa tu código de cliente.'); return }
     if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return }
-    if (password !== password2) { setError('Las contraseñas no coinciden.'); return }
-    if (!aceptaTerminos) { setError('Debes aceptar los términos y condiciones.'); return }
+    if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); return }
 
     setLoading(true)
     try {
-      const { data, error: err } = await supabase.functions.invoke('activar-asesor', {
-        body: { codigo: codigo.trim().toUpperCase(), password }
+      const codigoNormalizado = codigo.trim().toUpperCase()
+      const emailSintetico = `${codigoNormalizado.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
+
+      // Buscar el negocio con ese código
+      const { data: negocio } = await supabase
+        .from('negocios')
+        .select('id, estado_cuenta')
+        .eq('codigo_cliente', codigoNormalizado)
+        .maybeSingle()
+
+      if (!negocio) { setError('Código de cliente no encontrado.'); setLoading(false); return }
+      if (negocio.estado_cuenta === 'activo') { setError('Esta cuenta ya fue activada. Inicia sesión normalmente.'); setLoading(false); return }
+
+      // Iniciar sesión con el email sintético y password temporal para actualizar
+      const { error: fnError } = await supabase.functions.invoke('activar-cliente', {
+        body: { codigo: codigoNormalizado, nuevaPassword: password }
       })
-      if (err) throw err
-      if (data.error) throw new Error(data.error)
+
+      if (fnError) throw fnError
+
       setExito(true)
-      setTimeout(() => navigate('/admin'), 2500)
+      setTimeout(() => navigate('/login'), 3000)
     } catch (err) {
-      setError(err.message || 'No se pudo activar la cuenta.')
+      setError('Error al activar la cuenta: ' + (err.message || 'intenta de nuevo'))
     } finally {
       setLoading(false)
     }
   }
 
-  if (exito) {
-    return (
-      <div className={s.page}>
-        <div className={s.card} style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-          <h1 className={s.title}>¡Cuenta activada!</h1>
-          <p className={s.subtitle}>Tu contraseña fue creada correctamente. Te llevaremos al inicio de sesión...</p>
-        </div>
-      </div>
-    )
+  const inputStyle = {
+    width: '100%', padding: '11px 14px', borderRadius: 8,
+    border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none',
+    boxSizing: 'border-box', marginTop: 4,
   }
 
+  if (exito) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0fdf4' }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: '40px 36px', maxWidth: 400, textAlign: 'center', border: '1px solid #bbf7d0' }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+        <h2 style={{ color: '#16a34a', marginBottom: 8 }}>¡Cuenta activada!</h2>
+        <p style={{ color: '#374151', fontSize: 14 }}>Tu cuenta está lista. Redirigiendo al inicio de sesión...</p>
+      </div>
+    </div>
+  )
+
   return (
-    <div className={s.page}>
-      <div className={s.card}>
-        <button className={s.backLink} onClick={() => navigate('/')}>← Inicio</button>
-        <div className={s.logo}>ClienteAI</div>
-        <h1 className={s.title}>Activa tu cuenta de asesor</h1>
-        <p className={s.subtitle}>Crea tu contraseña para empezar a usar tu panel</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: '40px 36px', width: '100%', maxWidth: 400, border: '1px solid #e5e7eb', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+        <a href="/" style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none' }}>← Inicio</a>
+        <div style={{ margin: '16px 0 24px' }}>
+          <p style={{ color: '#16a34a', fontWeight: 900, fontSize: 20, margin: '0 0 4px' }}>ClienteAI</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>Activa tu cuenta</h1>
+          <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Crea tu contraseña para acceder</p>
+        </div>
 
-        <form className={s.form} onSubmit={handleSubmit}>
-          <div className={s.field}>
-            <label className={s.label}>Código de asesor</label>
-            <input
-              className={s.input}
-              value={codigo}
-              onChange={e => setCodigo(e.target.value)}
-              placeholder="CAI2026-XXNNNNNN"
-              style={{ textTransform: 'uppercase', fontFamily: 'monospace' }}
-              required
-              disabled={loading}
-            />
-          </div>
-          <div className={s.field}>
-            <label className={s.label}>Crea tu contraseña</label>
-            <input className={s.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={8} />
-          </div>
-          <div className={s.field}>
-            <label className={s.label}>Confirma tu contraseña</label>
-            <input className={s.input} type="password" value={password2} onChange={e => setPassword2(e.target.value)} required disabled={loading} minLength={8} />
-          </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Código de cliente</label>
+          <input
+            value={codigo}
+            onChange={e => setCodigo(e.target.value.toUpperCase())}
+            placeholder="CAI2026-CL000001"
+            style={inputStyle}
+          />
+        </div>
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#374151', cursor: 'pointer' }}>
-            <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} disabled={loading} style={{ marginTop: 3 }} />
-            <span>No soy un robot. Acepto los <a href="/legal" target="_blank" rel="noreferrer" style={{ color: '#7c3aed', fontWeight: 600 }}>términos y condiciones</a> y la política de comisiones del Programa de Asesores ClienteAI.</span>
-          </label>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Nueva contraseña</label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Mínimo 8 caracteres"
+            style={inputStyle}
+          />
+        </div>
 
-          {error && <div className={s.error}>{error}</div>}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Confirmar contraseña</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            placeholder="Repite tu contraseña"
+            style={inputStyle}
+          />
+        </div>
 
-          <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#7c3aed' }}>
-            {loading ? 'Activando...' : 'Crear contraseña y activar mi cuenta'}
-          </button>
-        </form>
+        {error && <p style={{ color: '#dc2626', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+
+        <button
+          onClick={activar}
+          disabled={loading}
+          style={{ width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? 'Activando...' : 'Activar mi cuenta'}
+        </button>
       </div>
     </div>
   )
