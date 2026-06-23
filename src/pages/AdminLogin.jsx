@@ -77,6 +77,7 @@ export default function AdminLogin() {
               <button className={s.btnSubmit} type="submit" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
             </form>
             <p className={s.toggle}>¿Eres asesor? <button className={s.toggleBtn} onClick={() => { setModo('asesor'); setError('') }}>Entra aquí</button></p>
+            <p className={s.toggle}>¿Eres cliente? <button className={s.toggleBtn} onClick={() => { setModo('cliente'); setError('') }}>Entra aquí</button></p>
           </>
         )}
 
