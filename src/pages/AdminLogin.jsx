@@ -5,28 +5,28 @@ import s from './Login.module.css'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const [modo, setModo] = useState('asesor') // 'admin' | 'asesor' — asesor es el modo por defecto
+  const [modo, setModo] = useState('asesor') // 'admin' | 'asesor' | 'cliente'
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Admin (correo normal)
+  // Admin
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
 
-  // Asesor (código + contraseña)
+  // Asesor
   const [codigo, setCodigo] = useState('')
   const [password, setPassword] = useState('')
+
+  // Cliente
+  const [codigoCliente, setCodigoCliente] = useState('')
+  const [passwordCliente, setPasswordCliente] = useState('')
 
   async function loginAdmin(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
     const { error: err } = await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPassword })
-    if (err) {
-      setError('Correo o contraseña incorrectos.')
-      setLoading(false)
-      return
-    }
+    if (err) { setError('Correo o contraseña incorrectos.'); setLoading(false); return }
     navigate('/dashboard')
   }
 
@@ -34,24 +34,24 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     const codigoNormalizado = codigo.trim().toUpperCase()
-    if (!codigoNormalizado) {
-      setError('Ingresa tu código de asesor.')
-      setLoading(false)
-      return
-    }
-
-    // El código se traduce a un correo sintético interno (el asesor nunca lo ve ni lo usa)
+    if (!codigoNormalizado) { setError('Ingresa tu código de asesor.'); setLoading(false); return }
     const emailSintetico = `${codigoNormalizado.toLowerCase()}@asesores.clienteai.site`
-
     const { error: err } = await supabase.auth.signInWithPassword({ email: emailSintetico, password })
-    if (err) {
-      setError('Código o contraseña incorrectos.')
-      setLoading(false)
-      return
-    }
+    if (err) { setError('Código o contraseña incorrectos.'); setLoading(false); return }
     navigate('/asesor')
+  }
+
+  async function loginCliente(e) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const codigoNormalizado = codigoCliente.trim().toUpperCase()
+    if (!codigoNormalizado) { setError('Ingresa tu código de cliente.'); setLoading(false); return }
+    const emailSintetico = `${codigoNormalizado.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
+    const { error: err } = await supabase.auth.signInWithPassword({ email: emailSintetico, password: passwordCliente })
+    if (err) { setError('Código o contraseña incorrectos.'); setLoading(false); return }
+    navigate('/dashboard')
   }
 
   return (
@@ -96,7 +96,28 @@ export default function AdminLogin() {
               {error && <div className={s.error}>{error}</div>}
               <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#7c3aed' }}>{loading ? 'Entrando...' : 'Entrar'}</button>
             </form>
+            <p className={s.toggle}>¿Eres cliente? <button className={s.toggleBtn} onClick={() => { setModo('cliente'); setError('') }}>Entra aquí</button></p>
             <p className={s.toggle}>¿Eres administrador? <button className={s.toggleBtn} onClick={() => { setModo('admin'); setError('') }}>Entra aquí</button></p>
+          </>
+        )}
+
+        {modo === 'cliente' && (
+          <>
+            <h1 className={s.title}>Acceso de cliente</h1>
+            <p className={s.subtitle}>Entra con tu código y contraseña</p>
+            <form className={s.form} onSubmit={loginCliente}>
+              <div className={s.field}>
+                <label className={s.label}>Código de cliente</label>
+                <input className={s.input} placeholder="CAI2026-CL000001" value={codigoCliente} onChange={e => setCodigoCliente(e.target.value)} required disabled={loading} style={{ textTransform: 'uppercase', fontFamily: 'monospace' }} />
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Contraseña</label>
+                <input className={s.input} type="password" value={passwordCliente} onChange={e => setPasswordCliente(e.target.value)} required disabled={loading} />
+              </div>
+              {error && <div className={s.error}>{error}</div>}
+              <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#16a34a' }}>{loading ? 'Entrando...' : 'Entrar'}</button>
+            </form>
+            <p className={s.toggle}>¿Eres asesor? <button className={s.toggleBtn} onClick={() => { setModo('asesor'); setError('') }}>Entra aquí</button></p>
           </>
         )}
       </div>
