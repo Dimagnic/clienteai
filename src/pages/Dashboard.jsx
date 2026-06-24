@@ -182,6 +182,140 @@ export default function Dashboard({ session }) {
     navigate('/')
   }
 
+  function generarReportePDF() {
+    const fecha = new Date()
+    const mes = fecha.toLocaleString('es-MX', { month: 'long', year: 'numeric' })
+    const fechaStr = fecha.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const planNombre = plan === 'negocio' ? 'Negocio' : plan === 'pro' ? 'Pro' : 'Gratuito'
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #fff; color: #111; }
+  .page { width: 794px; min-height: 1123px; padding: 48px; background: #fff; }
+  .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; border-bottom: 3px solid #16a34a; margin-bottom: 32px; }
+  .logo-clienteai { font-size: 28px; font-weight: 900; color: #16a34a; }
+  .logo-cero { font-size: 14px; font-weight: 700; color: #374151; text-align: right; }
+  .logo-cero span { display: block; font-size: 11px; color: #6b7280; font-weight: 400; }
+  .titulo { font-size: 22px; font-weight: 800; color: #111; margin-bottom: 6px; }
+  .subtitulo { font-size: 14px; color: #6b7280; margin-bottom: 32px; }
+  .seccion { margin-bottom: 28px; }
+  .seccion-titulo { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+  .datos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dato { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
+  .dato-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .dato-valor { font-size: 22px; font-weight: 800; color: #111; }
+  .dato-verde { border-left: 4px solid #16a34a; }
+  .dato-azul { border-left: 4px solid #2563eb; }
+  .dato-morado { border-left: 4px solid #7c3aed; }
+  .dato-naranja { border-left: 4px solid #f59e0b; }
+  .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+  .info-label { color: #6b7280; }
+  .info-valor { font-weight: 600; color: #111; }
+  .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .badge-negocio { background: #fef9c3; color: #854d0e; }
+  .badge-pro { background: #dbeafe; color: #1d4ed8; }
+  .badge-gratuito { background: #dcfce7; color: #15803d; }
+  .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+  .footer-left { font-size: 12px; color: #9ca3af; }
+  .footer-right { font-size: 12px; color: #9ca3af; text-align: right; }
+  .verde { color: #16a34a; }
+  .ilimitado { font-size: 16px; color: #16a34a; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="logo-clienteai">ClienteAI</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:2px;">Asistente virtual con Inteligencia Artificial</div>
+    </div>
+    <div class="logo-cero">
+      Desarrollado por Cero+ Software
+      <span>Código que transforma negocios</span>
+      <span style="margin-top:2px;">cero.plus · Puebla, México</span>
+    </div>
+  </div>
+
+  <div class="titulo">Reporte Mensual de Actividad</div>
+  <div class="subtitulo">Período: ${mes} &nbsp;·&nbsp; Generado el ${fechaStr}</div>
+
+  <div class="seccion">
+    <div class="seccion-titulo">Información del negocio</div>
+    <div class="info-row"><span class="info-label">Nombre del negocio</span><span class="info-valor">${negocio?.nombre || '—'}</span></div>
+    <div class="info-row"><span class="info-label">Plan activo</span><span class="info-valor"><span class="badge badge-${plan}">${planNombre}</span></span></div>
+    <div class="info-row"><span class="info-label">Token del widget</span><span class="info-valor" style="font-family:monospace;font-size:12px;">${negocio?.token || '—'}</span></div>
+    <div class="info-row"><span class="info-label">Miembro desde</span><span class="info-valor">${negocio?.created_at ? new Date(negocio.created_at).toLocaleDateString('es-MX') : '—'}</span></div>
+  </div>
+
+  <div class="seccion">
+    <div class="seccion-titulo">Resumen de conversaciones</div>
+    <div class="datos-grid">
+      <div class="dato dato-verde">
+        <div class="dato-label">Conversaciones hoy</div>
+        <div class="dato-valor">${stats.hoy}</div>
+      </div>
+      <div class="dato dato-azul">
+        <div class="dato-label">Esta semana</div>
+        <div class="dato-valor">${stats.semana}</div>
+      </div>
+      <div class="dato dato-morado">
+        <div class="dato-label">Total histórico</div>
+        <div class="dato-valor">${stats.total}</div>
+      </div>
+      <div class="dato dato-naranja">
+        <div class="dato-label">Este mes</div>
+        <div class="dato-valor">${plan === 'negocio' ? '<span class="ilimitado">Ilimitadas ♾</span>' : `${usadas} / ${limite}`}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="seccion">
+    <div class="seccion-titulo">Beneficios de tu plan ${planNombre}</div>
+    ${plan === 'negocio' ? `
+    <div class="info-row"><span class="info-label">✅ Conversaciones</span><span class="info-valor verde">Ilimitadas</span></div>
+    <div class="info-row"><span class="info-label">✅ Asistentes virtuales</span><span class="info-valor">3 asistentes</span></div>
+    <div class="info-row"><span class="info-label">✅ Widget personalizable</span><span class="info-valor">Incluido</span></div>
+    <div class="info-row"><span class="info-label">✅ Historial de conversaciones</span><span class="info-valor">Completo</span></div>
+    <div class="info-row"><span class="info-label">✅ Soporte prioritario</span><span class="info-valor">Incluido</span></div>
+    <div class="info-row"><span class="info-label">✅ Reportes mensuales</span><span class="info-valor verde">Incluido</span></div>
+    ` : plan === 'pro' ? `
+    <div class="info-row"><span class="info-label">✅ Conversaciones</span><span class="info-valor">Hasta 2,000/mes</span></div>
+    <div class="info-row"><span class="info-label">✅ Asistentes virtuales</span><span class="info-valor">1 asistente</span></div>
+    <div class="info-row"><span class="info-label">✅ Widget personalizable</span><span class="info-valor">Incluido</span></div>
+    <div class="info-row"><span class="info-label">✅ Historial de conversaciones</span><span class="info-valor">Incluido</span></div>
+    <div class="info-row"><span class="info-label">✅ Soporte prioritario</span><span class="info-valor">Incluido</span></div>
+    ` : `
+    <div class="info-row"><span class="info-label">✅ Conversaciones</span><span class="info-valor">Hasta 50/mes</span></div>
+    <div class="info-row"><span class="info-label">✅ Asistentes virtuales</span><span class="info-valor">1 asistente</span></div>
+    <div class="info-row"><span class="info-label">✅ Widget para tu web</span><span class="info-valor">Incluido</span></div>
+    <div class="info-row"><span class="info-label">✅ Soporte por email</span><span class="info-valor">Incluido</span></div>
+    `}
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">
+      ClienteAI · clienteai.site<br/>
+      Reporte generado automáticamente
+    </div>
+    <div class="footer-right">
+      Cero+ Software · Puebla, México<br/>
+      Código que transforma negocios
+    </div>
+  </div>
+</div>
+</body>
+</html>`
+
+    const ventana = window.open('', '_blank', 'width=900,height=1100')
+    ventana.document.write(html)
+    ventana.document.close()
+    ventana.onload = () => ventana.print()
+  }
+
   if (loading) return <PageLoader />
 
   const LIMITES = { gratuito: 50, pro: 2000, negocio: null }
@@ -267,10 +401,13 @@ export default function Dashboard({ session }) {
 
             <div className={s.section}>
               <h2 className={s.sectionTitle}>Acciones rapidas</h2>
-              <div className={s.actionsGrid}>
+              <div className={s.actionGrid}>
                 <ActionCard icon="⚙" title="Configurar asistente" desc="Actualiza el menu, horarios y datos de tu negocio" onClick={() => navigate('/configurar')} />
-                <ActionCard icon="o" title="Probar bot" desc="Habla con tu asistente antes de publicarlo" onClick={() => navigate('/preview')} />
-                <ActionCard icon="<>" title="Codigo para tu web" desc="Copia el script y pegalo en tu pagina" onClick={() => navigate('/configurar?tab=embed')} />
+                <ActionCard icon="💬" title="Probar bot" desc="Habla con tu asistente antes de publicarlo" onClick={() => navigate('/preview')} />
+                <ActionCard icon="<>" title="Codigo para tu web" desc="Copia el script y pegalo en tu pagina" onClick={() => document.getElementById('codigo-widget')?.scrollIntoView({ behavior: 'smooth' })} />
+                {(plan === 'negocio' || plan === 'pro') && (
+                  <ActionCard icon="📊" title="Reporte mensual" desc="Descarga tu reporte de actividad en PDF" onClick={generarReportePDF} />
+                )}
               </div>
             </div>
 
