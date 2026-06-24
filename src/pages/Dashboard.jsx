@@ -340,13 +340,16 @@ export default function Dashboard({ session }) {
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>El código se genera automáticamente (formato CAI2026-CL000001). Se enviará un correo al cliente para que active su cuenta.</p>
             </div>
             <div style={{ background: 'var(--bg-card)', border: '2px solid #dc2626', borderRadius: 14, overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
                 <thead>
                   <tr style={{ background: '#dc2626', color: '#fff' }}>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Negocio</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Correo</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Teléfono</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Asesor</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Conv. mes</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Plan actual</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Estado</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>F. Activación</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Cambiar plan</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Acciones</th>
                   </tr>
@@ -354,17 +357,32 @@ export default function Dashboard({ session }) {
                 <tbody>
                   {clientes.map((c, i) => (
                     <tr key={c.id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-card)' }}>
-                      <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>{c.nombre || 'Sin nombre'}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                        {c.nombre || 'Sin nombre'}
+                        {c.codigo_cliente && <br />}
+                        {c.codigo_cliente && <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#16a34a' }}>{c.codigo_cliente}</span>}
+                      </td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)', fontSize: 12 }}>{c.email_contacto || '—'}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{c.telefono || '—'}</td>
                       <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>
                         {c.asesor ? (
                           <span>{c.asesor.nombre}<br /><span style={{ fontSize: 11, fontFamily: 'monospace', color: '#7c3aed' }}>{c.asesor.codigo}</span></span>
                         ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                       </td>
-                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>{c.conversaciones_mes || 0}</td>
                       <td style={{ padding: '10px 16px' }}>
                         <span style={{ background: c.plan === 'pro' ? '#dbeafe' : c.plan === 'negocio' ? '#fef9c3' : '#dcfce7', color: c.plan === 'pro' ? '#1d4ed8' : c.plan === 'negocio' ? '#854d0e' : '#15803d', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
                           {c.plan || 'gratuito'}
                         </span>
+                      </td>
+                      <td style={{ padding: '10px 16px' }}>
+                        {c.codigo_cliente ? (
+                          <span style={{ background: c.estado_cuenta === 'activo' ? '#dcfce7' : '#fef3c7', color: c.estado_cuenta === 'activo' ? '#15803d' : '#92400e', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+                            {c.estado_cuenta === 'activo' ? 'Activo' : 'Pendiente'}
+                          </span>
+                        ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Directo</span>}
+                      </td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)', fontSize: 12 }}>
+                        {c.activado_en ? new Date(c.activado_en).toLocaleDateString('es-MX') : '—'}
                       </td>
                       <td style={{ padding: '10px 16px' }}>
                         <select value={c.plan || 'gratuito'} onChange={e => cambiarPlan(c.id, e.target.value)} style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', fontSize: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer' }}>
