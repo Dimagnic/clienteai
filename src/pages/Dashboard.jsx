@@ -416,7 +416,7 @@ export default function Dashboard({ session }) {
               <ConversacionesRecientes negocioId={negocio.id} plan={negocio.plan} />
             </div>
 
-            <div className={s.section}>
+            <div className={s.section} id="codigo-widget">
               <h2 className={s.sectionTitle}>Codigo para tu web</h2>
               <div style={{ background: 'var(--bg-card)', border: '2px solid #16a34a', borderRadius: 14, padding: '28px 32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
