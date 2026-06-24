@@ -184,12 +184,12 @@ export default function Dashboard({ session }) {
 
   if (loading) return <PageLoader />
 
-  const LIMITES = { gratuito: 50, pro: 2000, negocio: 5000 }
+  const LIMITES = { gratuito: 50, pro: 2000, negocio: null }
   const plan = negocio?.plan || 'gratuito'
-  const limite = LIMITES[plan] || 50
+  const limite = LIMITES[plan] ?? null
   const usadas = negocio?.conversaciones_mes || 0
-  const porcentaje = Math.min(100, (usadas / limite) * 100)
-  const restantes = Math.max(0, limite - usadas)
+  const porcentaje = limite ? Math.min(100, (usadas / limite) * 100) : 0
+  const restantes = limite ? Math.max(0, limite - usadas) : null
 
   return (
     <div className={s.page}>
@@ -253,12 +253,14 @@ export default function Dashboard({ session }) {
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px', marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Conversaciones este mes</span>
-                <span style={{ fontSize: 13, color: porcentaje >= 80 ? '#dc2626' : 'var(--text-muted)' }}>{usadas} / {limite}</span>
+                <span style={{ fontSize: 13, color: porcentaje >= 80 ? '#dc2626' : 'var(--text-muted)' }}>
+                  {limite === null ? <span style={{ color: '#16a34a', fontWeight: 700 }}>{usadas} — Ilimitadas ♾️</span> : `${usadas} / ${limite}`}
+                </span>
               </div>
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, height: 8, overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 8, background: porcentaje >= 80 ? '#dc2626' : '#16a34a', width: `${porcentaje}%`, transition: 'width 0.3s' }} />
+                <div style={{ height: '100%', borderRadius: 8, background: porcentaje >= 80 ? '#dc2626' : '#16a34a', width: limite === null ? '100%' : `${porcentaje}%`, transition: 'width 0.3s', opacity: limite === null ? 0.3 : 1 }} />
               </div>
-              {porcentaje >= 80 && (
+              {limite !== null && porcentaje >= 80 && (
                 <p style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>Te quedan {restantes} conversaciones este mes.</p>
               )}
             </div>
