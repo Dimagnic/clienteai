@@ -129,6 +129,7 @@ export default function Landing({ session }) {
       <section className={s.pricing} id="precios">
         <h2 className={s.sectionTitle}>Precios simples y claros</h2>
         <p className={s.sectionSub}>En pesos mexicanos. Sin sorpresas.</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '-8px 0 16px', textAlign: 'center' }}>Precios en MXN. IVA incluido.</p>
         <div className={s.planGrid}>
           {PLANS.map(p => (
             <div key={p.name} className={`${s.planCard} ${p.highlight ? s.planHighlight : ''}`}>
