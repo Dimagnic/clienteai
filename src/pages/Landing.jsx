@@ -45,7 +45,7 @@ export default function Landing({ session }) {
             <ThemeToggle />
             {session
               ? <button className={s.btnPrimary} onClick={() => navigate('/dashboard')}>Mi dashboard</button>
-              : <button className={s.btnPrimary} onClick={() => navigate('/admin')}>Admin</button>
+              : <button className={s.btnSecondary} onClick={() => navigate('/admin')}>No soy un bot 🤖</button>
             }
           </div>
         </div>
@@ -148,10 +148,17 @@ export default function Landing({ session }) {
                 ))}
               </ul>
               <button
-                className={p.highlight ? s.btnPrimary : s.btnOutline}
-                onClick={() => navigate(session ? '/dashboard' : '/login?mode=register')}
+                className={p.highlight ? s.btnPrimary : p.name === 'Negocio' ? s.btnPrimary : s.btnOutline}
+                onClick={() => {
+                  if (session) { navigate('/dashboard'); return }
+                  if (p.name === 'Gratuito') {
+                    navigate('/login?mode=register')
+                  } else {
+                    navigate(`/login?mode=register&plan=${p.name.toLowerCase()}`)
+                  }
+                }}
               >
-                {p.cta}
+                {p.name === 'Negocio' ? 'Empezar ahora' : p.cta}
               </button>
             </div>
           ))}

@@ -7,6 +7,7 @@ export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const ref = searchParams.get('ref')
+  const planParam = searchParams.get('plan')
   const [mode, setMode] = useState(searchParams.get('mode') === 'register' ? 'register' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,6 +36,16 @@ export default function Login() {
 
         setCodigoGenerado(data.codigo)
         setSuccess(`¡Cuenta creada! Tu código de cliente es: ${data.codigo}. Te lo enviamos también por correo.`)
+
+        // Si eligió un plan de pago, iniciar sesión y redirigir al dashboard para pagar
+        if (planParam && planParam !== 'gratuito') {
+          const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password })
+          if (!loginErr) {
+            navigate(`/dashboard?plan=${planParam}`)
+            return
+          }
+        }
+
         setMode('login')
         setPassword('')
         setConfirmPassword('')

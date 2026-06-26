@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
 
 export default function Dashboard({ session }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const planParam = searchParams.get('plan')
   const [negocio, setNegocio] = useState(null)
   const [negocioActivo, setNegocioActivo] = useState(null)
   const [misAsistentes, setMisAsistentes] = useState([])
@@ -21,6 +23,11 @@ export default function Dashboard({ session }) {
   const [clienteCreado, setClienteCreado] = useState(null)
 
   useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    if (planParam && !loading && negocio) {
+      handlePago(planParam)
+    }
+  }, [planParam, loading, negocio])
 
   async function loadData() {
     const { data: perfil } = await supabase.from('perfiles').select('is_admin').eq('user_id', session.user.id).single()
