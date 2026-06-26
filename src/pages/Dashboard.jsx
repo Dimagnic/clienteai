@@ -38,7 +38,7 @@ export default function Dashboard({ session }) {
     if (esAdmin) {
       // Admin: cargar clientes y asesores sin buscar negocio propio
       const [clientesRes, asesoresRes] = await Promise.all([
-        supabase.from('negocios').select('*').order('created_at', { ascending: false }),
+        supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false }),
         supabase.from('asesores').select('*').order('created_at', { ascending: false }),
       ])
       const asesoresMap = Object.fromEntries((asesoresRes.data || []).map(a => [a.id, a]))
@@ -161,7 +161,7 @@ export default function Dashboard({ session }) {
 
   async function cambiarPlan(negocioId, nuevoPlan) {
     await supabase.from('negocios').update({ plan: nuevoPlan }).eq('id', negocioId)
-    const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
+    const { data: todos } = await supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false })
     const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
     setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
   }
