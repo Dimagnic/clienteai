@@ -397,9 +397,24 @@ export default function Dashboard({ session }) {
         {!isAdmin && misAsistentes.length > 0 && (plan === 'negocio' || misAsistentes.length > 1) && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
             {misAsistentes.map((a, i) => (
-              <button key={a.id} onClick={() => switchAsistente(a)} style={{ padding: '8px 18px', borderRadius: 20, border: '2px solid', borderColor: negocioActivo?.id === a.id ? '#16a34a' : 'var(--border)', background: negocioActivo?.id === a.id ? '#16a34a' : 'var(--bg-card)', color: negocioActivo?.id === a.id ? '#fff' : 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                🤖 {a.asistente_nombre || `Asistente ${i + 1}`}
-              </button>
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button onClick={() => switchAsistente(a)} style={{ padding: '8px 18px', borderRadius: 20, border: '2px solid', borderColor: negocioActivo?.id === a.id ? '#16a34a' : 'var(--border)', background: negocioActivo?.id === a.id ? '#16a34a' : 'var(--bg-card)', color: negocioActivo?.id === a.id ? '#fff' : 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  🤖 {a.asistente_nombre || `Asistente ${i + 1}`}
+                </button>
+                {i > 0 && (
+                  <button onClick={async () => {
+                    if (!confirm(`¿Eliminar "${a.asistente_nombre || `Asistente ${i + 1}`}"? Esta acción no se puede deshacer.`)) return
+                    await supabase.from('conversaciones').delete().eq('negocio_id', a.id)
+                    await supabase.from('negocios').delete().eq('id', a.id)
+                    const nuevaLista = misAsistentes.filter(x => x.id !== a.id)
+                    setMisAsistentes(nuevaLista)
+                    if (negocioActivo?.id === a.id) {
+                      setNegocio(nuevaLista[0])
+                      setNegocioActivo(nuevaLista[0])
+                    }
+                  }} style={{ padding: '4px 8px', borderRadius: '50%', border: '1px solid #fee2e2', background: '#fee2e2', color: '#dc2626', fontSize: 12, cursor: 'pointer', lineHeight: 1 }} title="Eliminar asistente">✕</button>
+                )}
+              </div>
             ))}
             {plan === 'negocio' && misAsistentes.length < 3 && (
               <button onClick={crearNuevoAsistente} style={{ padding: '8px 18px', borderRadius: 20, border: '2px dashed var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
