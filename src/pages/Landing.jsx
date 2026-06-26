@@ -45,7 +45,7 @@ export default function Landing({ session }) {
             <ThemeToggle />
             {session
               ? <button className={s.btnPrimary} onClick={() => navigate('/dashboard')}>Mi dashboard</button>
-              : <button className={s.btnSecondary} onClick={() => navigate('/admin')}>No soy un bot 🤖</button>
+              : <button className={s.btnPrimary} onClick={() => navigate('/admin')}>Admin</button>
             }
           </div>
         </div>
