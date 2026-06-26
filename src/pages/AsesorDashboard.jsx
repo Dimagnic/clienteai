@@ -164,7 +164,28 @@ export default function AsesorDashboard({ session }) {
           <button className={`${s.navItem} ${tabActivo === 'banco' ? s.navItemActive : ''}`} onClick={() => setTabActivo('banco')}>Datos bancarios</button>
           <button className={`${s.navItem} ${tabActivo === 'perfil' ? s.navItemActive : ''}`} onClick={() => setTabActivo('perfil')}>Mi perfil</button>
           {!tieneNegocioPropio && (
-            <button className={s.navItem} onClick={() => navigate('/configurar')} style={{ color: '#16a34a', fontWeight: 700 }}>+ Crear mi propio bot</button>
+            <div style={{ margin: '16px 12px', background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', borderRadius: 12, padding: 16 }}>
+              <p style={{ fontSize: 11, color: '#c4b5fd', fontWeight: 600, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 1 }}>Mis estadísticas</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#e9d5ff' }}>👥 Clientes referidos</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{referidos.length}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#e9d5ff' }}>✅ Activos (pago)</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80' }}>{referidosActivos}</span>
+                </div>
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.15)', margin: '4px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#e9d5ff' }}>💰 Este mes</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#fbbf24' }}>${totalMesActual.toFixed(0)} MXN</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#e9d5ff' }}>📅 Próximo corte</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>1 de {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleString('es-MX', { month: 'long' })}</span>
+                </div>
+              </div>
+            </div>
           )}
         </nav>
         <div style={{ marginTop: 'auto', padding: 20 }}>
