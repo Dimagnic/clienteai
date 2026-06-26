@@ -194,13 +194,14 @@ export default function Dashboard({ session }) {
   }
 
   async function eliminarCliente(cliente) {
-    if (!confirm(`¿Eliminar el negocio "${cliente.nombre}"? Esta acción no se puede deshacer.`)) return
-    await supabase.from('conversaciones').delete().eq('negocio_id', cliente.id)
-    await supabase.from('comisiones').delete().eq('negocio_id', cliente.id)
-    await supabase.from('negocios').delete().eq('id', cliente.id)
-    const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
-    const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
-    setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
+    if (!confirm(`¿Eliminar el negocio "${cliente.nombre || cliente.email_contacto}"? Esta acción no se puede deshacer.`)) return
+    // Intentar borrar datos relacionados (pueden fallar por RLS, no importa)
+    await supabase.from('conversaciones').delete().eq('negocio_id', cliente.id).then(() => {}).catch(() => {})
+    await supabase.from('comisiones').delete().eq('negocio_id', cliente.id).then(() => {}).catch(() => {})
+    // Borrar el negocio
+    const { error } = await supabase.from('negocios').delete().eq('id', cliente.id)
+    if (error) { alert('Error al eliminar: ' + error.message); return }
+    setClientes(prev => prev.filter(c => c.id !== cliente.id))
   }
 
   async function handlePago(plan) {
