@@ -127,19 +127,25 @@ export default function Login() {
           {error && <div className={s.error}>{error}</div>}
           {success && <div className={s.successMsg}>{success}</div>}
 
+          {mode === 'register' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: 4 }}>
+              <input type="checkbox" id="nobot" required style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#16a34a' }} />
+              <label htmlFor="nobot" style={{ fontSize: 14, color: '#374151', cursor: 'pointer', userSelect: 'none' }}>No soy un robot 🤖</label>
+            </div>
+          )}
+
           <button className={s.btnSubmit} type="submit" disabled={loading}>
             {loading ? 'Cargando...' : mode === 'login' ? 'Entrar' : 'Crear cuenta'}
           </button>
         </form>
 
         <p className={s.toggle}>
-          {mode === 'login' ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
-          <button
-            className={s.toggleBtn}
-            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setSuccess(''); setCodigoGenerado('') }}
-          >
-            {mode === 'login' ? 'Regístrate gratis' : 'Inicia sesión'}
-          </button>
+          {mode === 'login' ? '¿No tienes cuenta? ' : ''}
+          {mode === 'login' && (
+            <button className={s.toggleBtn} onClick={() => { setMode('register'); setError(''); setSuccess(''); setCodigoGenerado('') }}>
+              Regístrate gratis
+            </button>
+          )}
         </p>
       </div>
     </div>
