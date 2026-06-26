@@ -195,12 +195,15 @@ export default function Dashboard({ session }) {
 
   async function eliminarCliente(cliente) {
     if (!confirm(`¿Eliminar el negocio "${cliente.nombre || cliente.email_contacto}"? Esta acción no se puede deshacer.`)) return
-    // Intentar borrar datos relacionados (pueden fallar por RLS, no importa)
-    await supabase.from('conversaciones').delete().eq('negocio_id', cliente.id).then(() => {}).catch(() => {})
-    await supabase.from('comisiones').delete().eq('negocio_id', cliente.id).then(() => {}).catch(() => {})
-    // Borrar el negocio
-    const { error } = await supabase.from('negocios').delete().eq('id', cliente.id)
-    if (error) { alert('Error al eliminar: ' + error.message); return }
+    // Usar función RPC que elimina negocio + usuario de auth
+    const { error } = await supabase.rpc('eliminar_cliente_completo', { negocio_id: cliente.id })
+    if (error) {
+      // Fallback: eliminar solo el negocio
+      await supabase.from('conversaciones').delete().eq('negocio_id', cliente.id).then(() => {}).catch(() => {})
+      await supabase.from('comisiones').delete().eq('negocio_id', cliente.id).then(() => {}).catch(() => {})
+      const { error: err2 } = await supabase.from('negocios').delete().eq('id', cliente.id)
+      if (err2) { alert('Error al eliminar: ' + err2.message); return }
+    }
     setClientes(prev => prev.filter(c => c.id !== cliente.id))
   }
 
