@@ -18,8 +18,8 @@ const TESTIMONIALS = [
 
 const PLANS = [
   { name: 'Gratuito', price: '0', period: 'para siempre', desc: 'Perfecto para probar ClienteAI', features: ['50 conversaciones al mes', '1 asistente virtual', 'Widget para tu web', 'Soporte por email'], cta: 'Empezar gratis', highlight: false },
-  { name: 'Pro', price: '299', period: 'MXN / mes', desc: 'Para negocios que quieren crecer', features: ['Conversaciones ilimitadas', '1 asistente virtual', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario'], cta: 'Empezar ahora', highlight: true },
-  { name: 'Negocio', price: '599', period: 'MXN / mes', desc: 'Para empresas con mas necesidades', features: ['Conversaciones ilimitadas', '3 asistentes virtuales', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales'], cta: 'Contactar ventas', highlight: false },
+  { name: 'Pro', price: '299', period: 'MXN / mes', desc: 'Para negocios que quieren crecer', features: ['Hasta 2,000 conversaciones al mes', '1 asistente virtual', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario'], cta: 'Empezar ahora', highlight: true },
+  { name: 'Negocio', price: '599', period: 'MXN / mes', desc: 'Para empresas con mas necesidades', features: ['Conversaciones ilimitadas ♾️', '3 asistentes virtuales', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales descargables'], cta: 'Contactar ventas', highlight: false },
 ]
 
 export default function Landing({ session }) {
