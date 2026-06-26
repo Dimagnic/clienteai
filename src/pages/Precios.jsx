@@ -69,6 +69,7 @@ export default function Precios({ session, negocio }) {
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1 style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 12px' }}>Planes y precios</h1>
           <p style={{ fontSize: 16, color: 'var(--text-secondary)', margin: 0 }}>Empieza gratis. Escala cuando lo necesites.</p>
+<p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Precios en MXN. IVA incluido.</p>
         </div>
 
         <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
