@@ -185,7 +185,7 @@ export default function Dashboard({ session }) {
   async function eliminarCliente(cliente) {
     if (!confirm(`¿Eliminar el negocio "${cliente.nombre || cliente.email_contacto}"? Esta acción no se puede deshacer.`)) return
     // Usar función RPC que elimina negocio + usuario de auth
-    const { error } = await supabase.rpc('eliminar_cliente_completo', { negocio_id: cliente.id })
+    const { error } = await supabase.rpc('eliminar_cliente_completo', { p_negocio_id: cliente.id })
     if (error) {
       // Fallback: eliminar solo el negocio
       await supabase.from('conversaciones').delete().eq('negocio_id', cliente.id).then(() => {}).catch(() => {})
