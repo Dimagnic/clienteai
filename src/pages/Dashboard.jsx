@@ -49,7 +49,9 @@ export default function Dashboard({ session }) {
       const { data: todosAsistentes } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true })
       const lista = todosAsistentes || []
       setMisAsistentes(lista)
-      const principal = lista[0] || null
+      const savedId = localStorage.getItem('cai_asistente_activo')
+      const guardado = savedId ? lista.find(a => a.id === savedId) : null
+      const principal = guardado || lista[0] || null
       setNegocio(principal)
       setNegocioActivo(principal)
       if (principal) {
@@ -67,6 +69,7 @@ export default function Dashboard({ session }) {
   async function switchAsistente(asistente) {
     setNegocioActivo(asistente)
     setNegocio(asistente)
+    localStorage.setItem('cai_asistente_activo', asistente.id)
     const hoy = new Date().toISOString().split('T')[0]
     const semana = new Date(Date.now() - 7 * 86400000).toISOString()
     const [{ count: totalHoy }, { count: totalSemana }, { count: total }] = await Promise.all([
@@ -368,10 +371,10 @@ export default function Dashboard({ session }) {
           <button className={`${s.navItem} ${s.navItemActive}`}>
             <span className={s.navIcon}>+</span> Dashboard
           </button>
-          <button className={s.navItem} onClick={() => navigate('/configurar')}>
-            <span className={s.navIcon}>*</span> Mi asistente
+          <button className={s.navItem} onClick={() => navigate(`/configurar${negocioActivo?.id ? `?id=${negocioActivo.id}` : ''}`)}>
+            <span className={s.navIcon}>*</span> {negocioActivo?.asistente_nombre || 'Mi asistente'}
           </button>
-          <button className={s.navItem} onClick={() => navigate('/preview')}>
+          <button className={s.navItem} onClick={() => navigate(`/preview${negocioActivo?.token ? `?token=${negocioActivo.token}` : ''}`)}>
             <span className={s.navIcon}>o</span> Vista previa
           </button>
         </nav>

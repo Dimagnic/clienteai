@@ -43,10 +43,13 @@ export default function Configurar({ session }) {
 
   async function loadNegocio() {
     let data
-    if (asistenteId) {
-      const res = await supabase.from('negocios').select('*').eq('id', asistenteId).eq('user_id', session.user.id).single()
+    const savedId = localStorage.getItem('cai_asistente_activo')
+    const idACargar = asistenteId || savedId
+    if (idACargar) {
+      const res = await supabase.from('negocios').select('*').eq('id', idACargar).eq('user_id', session.user.id).single()
       data = res.data
-    } else {
+    }
+    if (!data) {
       const res = await supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true }).limit(1).single()
       data = res.data
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { askClaude, buildSystemPrompt, detectarIdioma } from '../lib/claude'
 import s from './Preview.module.css'
@@ -7,6 +7,8 @@ import s from './Preview.module.css'
 export default function Preview({ session }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const tokenParam = searchParams.get('token')
   const [negocio, setNegocio] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -17,15 +19,22 @@ export default function Preview({ session }) {
   const inputRef = useRef(null)
 
   useEffect(() => { window.scrollTo(0, 0) }, [location.pathname])
-  useEffect(() => { loadNegocio() }, [])
+  useEffect(() => { loadNegocio() }, [tokenParam])
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, thinking])
 
   async function loadNegocio() {
-    const { data } = await supabase
-      .from('negocios')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single()
+    let data
+    const savedId = localStorage.getItem('cai_asistente_activo')
+    if (tokenParam) {
+      const res = await supabase.from('negocios').select('*').eq('token', tokenParam).single()
+      data = res.data
+    } else if (savedId) {
+      const res = await supabase.from('negocios').select('*').eq('id', savedId).single()
+      data = res.data
+    } else {
+      const res = await supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true }).limit(1).single()
+      data = res.data
+    }
     if (data) {
       setNegocio(data)
       setMessages([{ role: 'assistant', content: `Hola! Soy el asistente de ${data.nombre} que tal? En que te puedo ayudar?` }])
