@@ -36,25 +36,14 @@ export default function Dashboard({ session }) {
     const semana = new Date(Date.now() - 7 * 86400000).toISOString()
 
     if (esAdmin) {
-      // Admin: cargar todo en paralelo
-      const [negocioRes, clientesRes, asesoresRes] = await Promise.all([
-        supabase.from('negocios').select('*').eq('user_id', session.user.id).single(),
+      // Admin: cargar clientes y asesores sin buscar negocio propio
+      const [clientesRes, asesoresRes] = await Promise.all([
         supabase.from('negocios').select('*').order('created_at', { ascending: false }),
         supabase.from('asesores').select('*').order('created_at', { ascending: false }),
       ])
-      const data = negocioRes.data
-      setNegocio(data)
       const asesoresMap = Object.fromEntries((asesoresRes.data || []).map(a => [a.id, a]))
       setClientes((clientesRes.data || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
       setAsesores(asesoresRes.data || [])
-      if (data) {
-        const [{ count: totalHoy }, { count: totalSemana }, { count: total }] = await Promise.all([
-          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', data.id).gte('created_at', hoy),
-          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', data.id).gte('created_at', semana),
-          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', data.id),
-        ])
-        setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
-      }
     } else {
       // Cliente normal - cargar todos sus asistentes
       const { data: todosAsistentes } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true })
