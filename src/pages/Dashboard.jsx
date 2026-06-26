@@ -6,6 +6,8 @@ import s from './Dashboard.module.css'
 export default function Dashboard({ session }) {
   const navigate = useNavigate()
   const [negocio, setNegocio] = useState(null)
+  const [negocioActivo, setNegocioActivo] = useState(null)
+  const [misAsistentes, setMisAsistentes] = useState([])
   const [stats, setStats] = useState({ hoy: 0, semana: 0, total: 0 })
   const [loading, setLoading] = useState(true)
   const [clientes, setClientes] = useState([])
@@ -54,19 +56,60 @@ export default function Dashboard({ session }) {
         setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
       }
     } else {
-      // Cliente normal
-      const { data } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).single()
-      setNegocio(data)
-      if (data) {
+      // Cliente normal - cargar todos sus asistentes
+      const { data: todosAsistentes } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true })
+      const lista = todosAsistentes || []
+      setMisAsistentes(lista)
+      const principal = lista[0] || null
+      setNegocio(principal)
+      setNegocioActivo(principal)
+      if (principal) {
         const [{ count: totalHoy }, { count: totalSemana }, { count: total }] = await Promise.all([
-          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', data.id).gte('created_at', hoy),
-          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', data.id).gte('created_at', semana),
-          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', data.id),
+          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', principal.id).gte('created_at', hoy),
+          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', principal.id).gte('created_at', semana),
+          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', principal.id),
         ])
         setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
       }
     }
     setLoading(false)
+  }
+
+  async function switchAsistente(asistente) {
+    setNegocioActivo(asistente)
+    setNegocio(asistente)
+    const hoy = new Date().toISOString().split('T')[0]
+    const semana = new Date(Date.now() - 7 * 86400000).toISOString()
+    const [{ count: totalHoy }, { count: totalSemana }, { count: total }] = await Promise.all([
+      supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', asistente.id).gte('created_at', hoy),
+      supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', asistente.id).gte('created_at', semana),
+      supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', asistente.id),
+    ])
+    setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
+  }
+
+  async function crearNuevoAsistente() {
+    const maxAsistentes = plan === 'negocio' ? 3 : 1
+    if (misAsistentes.length >= maxAsistentes) {
+      alert(`Tu plan ${plan === 'pro' ? 'Pro' : 'actual'} solo permite ${maxAsistentes} asistente${maxAsistentes > 1 ? 's' : ''}. Actualiza al Plan Negocio para tener hasta 3.`)
+      return
+    }
+    const num = misAsistentes.length + 1
+    const token = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)
+    const { data, error } = await supabase.from('negocios').insert({
+      user_id: session.user.id,
+      nombre: `Mi negocio ${num}`,
+      asistente_num: num,
+      asistente_nombre: `Asistente ${num}`,
+      token,
+      plan: negocio?.plan || 'gratuito',
+    }).select().single()
+    if (error) { alert('Error al crear asistente: ' + error.message); return }
+    const nuevaLista = [...misAsistentes, data]
+    setMisAsistentes(nuevaLista)
+    setNegocio(data)
+    setNegocioActivo(data)
+    setStats({ hoy: 0, semana: 0, total: 0 })
   }
 
   async function crearAsesor() {
@@ -358,6 +401,22 @@ export default function Dashboard({ session }) {
           {negocio && <div className={s.statusBadge}><span className={s.statusDot} /> Bot activo</div>}
         </div>
 
+        {/* Selector de asistentes para plan Negocio */}
+        {!isAdmin && misAsistentes.length > 0 && (plan === 'negocio' || misAsistentes.length > 1) && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+            {misAsistentes.map((a, i) => (
+              <button key={a.id} onClick={() => switchAsistente(a)} style={{ padding: '8px 18px', borderRadius: 20, border: '2px solid', borderColor: negocioActivo?.id === a.id ? '#16a34a' : 'var(--border)', background: negocioActivo?.id === a.id ? '#16a34a' : 'var(--bg-card)', color: negocioActivo?.id === a.id ? '#fff' : 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                🤖 {a.asistente_nombre || `Asistente ${i + 1}`}
+              </button>
+            ))}
+            {plan === 'negocio' && misAsistentes.length < 3 && (
+              <button onClick={crearNuevoAsistente} style={{ padding: '8px 18px', borderRadius: 20, border: '2px dashed var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
+                + Nuevo asistente
+              </button>
+            )}
+          </div>
+        )}
+
         {!negocio ? <EmptyState navigate={navigate} /> : (
           <>
             {plan === 'gratuito' && (
@@ -402,7 +461,7 @@ export default function Dashboard({ session }) {
             <div className={s.section}>
               <h2 className={s.sectionTitle}>Acciones rapidas</h2>
               <div className={s.actionGrid}>
-                <ActionCard icon="⚙" title="Configurar asistente" desc="Actualiza el menu, horarios y datos de tu negocio" onClick={() => navigate('/configurar')} />
+                <ActionCard icon="⚙" title="Configurar asistente" desc="Actualiza el menu, horarios y datos de tu negocio" onClick={() => navigate(`/configurar${negocioActivo?.id ? `?id=${negocioActivo.id}` : ''}`)} />
                 <ActionCard icon="💬" title="Probar bot" desc="Habla con tu asistente antes de publicarlo" onClick={() => navigate('/preview')} />
                 <ActionCard icon="<>" title="Codigo para tu web" desc="Copia el script y pegalo en tu pagina" onClick={() => document.getElementById('codigo-widget')?.scrollIntoView({ behavior: 'smooth' })} />
                 {(plan === 'negocio' || plan === 'pro') && (

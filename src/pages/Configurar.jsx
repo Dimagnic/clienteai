@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Configurar.module.css'
 
@@ -30,6 +30,8 @@ function generateToken() {
 
 export default function Configurar({ session }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const asistenteId = searchParams.get('id')
   const [form, setForm] = useState({ nombre: '', descripcion: '', menu: '', horario: '', direccion: '', telefono: '', extra: '', color: '#16a34a' })
   const [negocioId, setNegocioId] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -37,10 +39,17 @@ export default function Configurar({ session }) {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => { loadNegocio() }, [])
+  useEffect(() => { loadNegocio() }, [asistenteId])
 
   async function loadNegocio() {
-    const { data } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).single()
+    let data
+    if (asistenteId) {
+      const res = await supabase.from('negocios').select('*').eq('id', asistenteId).eq('user_id', session.user.id).single()
+      data = res.data
+    } else {
+      const res = await supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true }).limit(1).single()
+      data = res.data
+    }
     if (data) {
       setNegocioId(data.id)
       setForm({
