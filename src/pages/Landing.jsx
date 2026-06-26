@@ -62,7 +62,7 @@ export default function Landing({ session }) {
           Sin codigo. Sin complicaciones. Desde $299 MXN al mes.
         </p>
         <div className={s.heroCtas}>
-          <button className={s.btnHero} onClick={() => navigate(session ? '/dashboard' : '/login')}>
+          <button className={s.btnHero} onClick={() => navigate(session ? '/dashboard' : '/login?mode=register')}>
             Crear mi asistente gratis
           </button>
           <button className={s.btnHeroSecondary} onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}>
@@ -149,7 +149,7 @@ export default function Landing({ session }) {
               </ul>
               <button
                 className={p.highlight ? s.btnPrimary : s.btnOutline}
-                onClick={() => navigate(session ? '/dashboard' : '/login')}
+                onClick={() => navigate(session ? '/dashboard' : '/login?mode=register')}
               >
                 {p.cta}
               </button>
@@ -160,7 +160,7 @@ export default function Landing({ session }) {
 
       <section className={s.ctaSection}>
         <h2 className={s.ctaTitle}>Listo para que tu negocio atienda solo?</h2>
-        <button className={s.btnHero} onClick={() => navigate(session ? '/dashboard' : '/login')}>
+        <button className={s.btnHero} onClick={() => navigate(session ? '/dashboard' : '/login?mode=register')}>
           Crear mi asistente gratis
         </button>
         <p className={s.heroNote}>Sin tarjeta de credito - Cancela cuando quieras</p>
