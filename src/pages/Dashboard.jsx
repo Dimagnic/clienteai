@@ -168,18 +168,17 @@ export default function Dashboard({ session }) {
 
   async function eliminarAsesor(asesor) {
     if (!confirm(`¿Eliminar al asesor "${asesor.nombre}"? Su enlace de referido dejará de funcionar y se desvinculará de sus clientes.`)) return
-    // Desvincular negocios referidos (no se borran, solo pierden el asesor)
-    await supabase.from('negocios').update({ asesor_id: null }).eq('asesor_id', asesor.id)
-    // Eliminar comisiones del asesor
-    await supabase.from('comisiones').delete().eq('asesor_id', asesor.id)
-    await supabase.from('cortes_comisiones').delete().eq('asesor_id', asesor.id)
-    // Eliminar el asesor
-    await supabase.from('asesores').delete().eq('id', asesor.id)
-    const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
-    setAsesores(todosAsesores || [])
-    const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
-    const asesoresMap = Object.fromEntries((todosAsesores || []).map(a => [a.id, a]))
-    setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
+    const { error } = await supabase.rpc('eliminar_asesor_completo', { p_asesor_id: asesor.id })
+    if (error) {
+      // Fallback manual
+      await supabase.from('negocios').update({ asesor_id: null }).eq('asesor_id', asesor.id).then(() => {}).catch(() => {})
+      await supabase.from('comisiones').delete().eq('asesor_id', asesor.id).then(() => {}).catch(() => {})
+      await supabase.from('cortes_comisiones').delete().eq('asesor_id', asesor.id).then(() => {}).catch(() => {})
+      const { error: err2 } = await supabase.from('asesores').delete().eq('id', asesor.id)
+      if (err2) { alert('Error al eliminar asesor: ' + err2.message); return }
+    }
+    setAsesores(prev => prev.filter(a => a.id !== asesor.id))
+    setClientes(prev => prev.map(c => c.asesor_id === asesor.id ? { ...c, asesor: null, asesor_id: null } : c))
   }
 
   async function eliminarCliente(cliente) {
