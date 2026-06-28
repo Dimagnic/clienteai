@@ -2,7 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://clienteai.site',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -16,8 +16,30 @@ async function enviarCorreo(resendKey: string, to: string, subject: string, html
   }).catch(() => {})
 }
 
+// Rate limiting simple por IP
+const requestCounts = new Map<string, { count: number; resetAt: number }>()
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+
+  // Rate limit: max 30 requests por minuto por IP
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const ahora = Date.now()
+  const limite = requestCounts.get(ip)
+  if (limite) {
+    if (ahora < limite.resetAt) {
+      if (limite.count >= 30) {
+        return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Intenta en un momento.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      limite.count++
+    } else {
+      requestCounts.set(ip, { count: 1, resetAt: ahora + 60000 })
+    }
+  } else {
+    requestCounts.set(ip, { count: 1, resetAt: ahora + 60000 })
+  }
 
   try {
     const body = await req.json()
