@@ -561,7 +561,7 @@ function TextoSugerido({ texto }) {
 }
 
 function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
-  const dims = formato === 'story' ? { w: 1080, h: 1920 } : formato === 'post' ? { w: 1080, h: 1080 } : { w: 1280, h: 720 }
+  const dims = formato === 'story' ? { w: 1080, h: 1920 } : { w: 1080, h: 1080 }
 
   function descargar() {
     const canvas = document.createElement('canvas')
@@ -569,82 +569,94 @@ function BannerCard({ titulo, desc, color, codigo, formato, enlaceReferido }) {
     canvas.height = dims.h
     const ctx = canvas.getContext('2d')
 
-    // Fondo blanco (JPG no soporta transparencia)
-    ctx.fillStyle = '#ffffff'
+    // Fondo negro
+    ctx.fillStyle = '#0a0a0a'
     ctx.fillRect(0, 0, dims.w, dims.h)
 
-    // Fondo degradado principal
-    const grad = ctx.createLinearGradient(0, 0, dims.w, dims.h)
-    grad.addColorStop(0, color)
-    grad.addColorStop(1, '#1e1b4b')
-    ctx.fillStyle = grad
+    // Círculos decorativos
+    ctx.globalAlpha = 0.07
+    ctx.fillStyle = '#22c55e'
     ctx.beginPath()
-    ctx.roundRect(0, 0, dims.w, dims.h, 0)
-    ctx.fill()
-
-    // Círculos decorativos de fondo
-    ctx.globalAlpha = 0.08
-    ctx.fillStyle = '#ffffff'
-    ctx.beginPath()
-    ctx.arc(dims.w * 0.85, dims.h * 0.15, dims.w * 0.28, 0, Math.PI * 2)
+    ctx.arc(dims.w * 0.85, dims.h * 0.12, dims.w * 0.32, 0, Math.PI * 2)
     ctx.fill()
     ctx.beginPath()
-    ctx.arc(dims.w * 0.1, dims.h * 0.88, dims.w * 0.2, 0, Math.PI * 2)
+    ctx.arc(dims.w * 0.1, dims.h * 0.88, dims.w * 0.25, 0, Math.PI * 2)
     ctx.fill()
     ctx.globalAlpha = 1
 
+    // Franjas verdes laterales
+    ctx.fillStyle = '#22c55e'
+    ctx.fillRect(0, 0, 10, dims.h)
+    ctx.fillRect(dims.w - 10, 0, 10, dims.h)
+
+    const isStory = formato === 'story'
+    const pad = dims.w * 0.09
+
     // Logo ClienteAI
     ctx.fillStyle = '#ffffff'
-    ctx.font = `900 ${Math.round(dims.w * 0.085)}px Arial`
-    ctx.textAlign = 'center'
+    ctx.font = `900 ${Math.round(dims.w * 0.075)}px Arial`
+    ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-    ctx.fillText('ClienteAI', dims.w / 2, dims.h * 0.26)
+    ctx.fillText('Cliente', pad, dims.h * (isStory ? 0.18 : 0.2))
+    ctx.fillStyle = '#22c55e'
+    const medida = ctx.measureText('Cliente')
+    ctx.fillText('AI', pad + medida.width + 4, dims.h * (isStory ? 0.18 : 0.2))
 
-    // Subtítulo línea 1
-    ctx.font = `400 ${Math.round(dims.w * 0.038)}px Arial`
-    ctx.fillStyle = 'rgba(255,255,255,0.9)'
-    ctx.fillText('Asistente de WhatsApp con', dims.w / 2, dims.h * 0.36)
-    ctx.fillText('Inteligencia Artificial para tu negocio', dims.w / 2, dims.h * 0.42)
+    // Línea verde bajo logo
+    ctx.fillStyle = '#22c55e'
+    ctx.fillRect(pad, dims.h * (isStory ? 0.21 : 0.24), dims.w * 0.28, 4)
 
-    // Línea separadora
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)'
-    ctx.lineWidth = Math.max(2, dims.w * 0.002)
-    ctx.beginPath()
-    ctx.moveTo(dims.w * 0.2, dims.h * 0.50)
-    ctx.lineTo(dims.w * 0.8, dims.h * 0.50)
-    ctx.stroke()
-
-    // Botón "Pruébalo GRATIS" — perfectamente centrado
-    const btnW = dims.w * 0.58
-    const btnH = dims.h * 0.085
-    const btnX = (dims.w - btnW) / 2   // centrado exacto
-    const btnY = dims.h * 0.545
-    const btnRadius = btnH / 2
-
+    // Mensaje principal
     ctx.fillStyle = '#ffffff'
+    ctx.font = `900 ${Math.round(dims.w * (isStory ? 0.068 : 0.062))}px Arial`
+    ctx.textAlign = 'left'
+    ctx.fillText('¿Tu negocio', pad, dims.h * (isStory ? 0.3 : 0.35))
+    ctx.fillStyle = '#22c55e'
+    ctx.fillText('responde solo?', pad, dims.h * (isStory ? 0.38 : 0.43))
+
+    // Submensaje
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = `400 ${Math.round(dims.w * 0.032)}px Arial`
+    ctx.fillText('Automatiza tu WhatsApp con', pad, dims.h * (isStory ? 0.46 : 0.52))
+    ctx.fillText('Inteligencia Artificial', pad, dims.h * (isStory ? 0.51 : 0.57))
+
+    // Beneficios
+    const beneficios = ['✅ Responde 24/7 sin esfuerzo', '✅ Sin código ni complicaciones', '✅ Desde $0 MXN/mes']
+    ctx.fillStyle = '#e5e7eb'
+    ctx.font = `400 ${Math.round(dims.w * 0.028)}px Arial`
+    beneficios.forEach((b, i) => {
+      ctx.fillText(b, pad, dims.h * (isStory ? 0.59 + i * 0.06 : 0.66 + i * 0.05))
+    })
+
+    // Botón CTA
+    const btnY = dims.h * (isStory ? 0.78 : 0.83)
+    const btnW = dims.w * 0.5
+    const btnH = dims.h * (isStory ? 0.055 : 0.07)
+    const btnX = (dims.w - btnW) / 2
+    const btnR = btnH / 2
+
+    ctx.fillStyle = '#22c55e'
     ctx.beginPath()
-    ctx.roundRect(btnX, btnY, btnW, btnH, btnRadius)
+    ctx.roundRect(btnX, btnY, btnW, btnH, btnR)
     ctx.fill()
 
-    // Texto del botón — centrado dentro del botón
-    ctx.fillStyle = color
-    ctx.font = `700 ${Math.round(dims.w * 0.038)}px Arial`
+    ctx.fillStyle = '#000000'
+    ctx.font = `700 ${Math.round(dims.w * 0.032)}px Arial`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('✅ Pruébalo GRATIS', dims.w / 2, btnY + btnH / 2)
+    ctx.fillText('Pruébalo GRATIS', dims.w / 2, btnY + btnH / 2)
 
     // URL del asesor
-    ctx.fillStyle = 'rgba(255,255,255,0.75)'
-    ctx.font = `400 ${Math.round(dims.w * 0.024)}px Arial`
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'
+    ctx.font = `400 ${Math.round(dims.w * 0.022)}px Arial`
     ctx.textBaseline = 'middle'
-    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * 0.725)
+    ctx.fillText(enlaceReferido, dims.w / 2, dims.h * (isStory ? 0.87 : 0.92))
 
-    // Código de referido
-    ctx.fillStyle = 'rgba(255,255,255,0.5)'
-    ctx.font = `400 ${Math.round(dims.w * 0.020)}px monospace`
-    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * 0.775)
+    // Código
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'
+    ctx.font = `400 ${Math.round(dims.w * 0.018)}px monospace`
+    ctx.fillText(`Código: ${codigo}`, dims.w / 2, dims.h * (isStory ? 0.91 : 0.96))
 
-    // Descargar como JPG
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
