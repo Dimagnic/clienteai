@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const LIMITES: Record<string, number> = { gratuito: 50, pro: 2000, negocio: 5000 }
+const LIMITES: Record<string, number | null> = { gratuito: 50, pro: 2000, negocio: null }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -25,7 +25,7 @@ serve(async (req) => {
     if (negocio_id) {
       const { data: negocio } = await supabase
         .from('negocios')
-        .select('plan, conversaciones_mes, mes_actual')
+        .select('plan, conversaciones_mes, mes_actual, trial_expira_en, trial_activo, email_contacto, nombre')
         .eq('id', negocio_id)
         .single()
 
@@ -35,12 +35,54 @@ serve(async (req) => {
           await supabase.from('negocios').update({ conversaciones_mes: 0, mes_actual: mesActual }).eq('id', negocio_id)
           negocio.conversaciones_mes = 0
         }
-        const limite = LIMITES[negocio.plan] || 50
-        if ((negocio.conversaciones_mes || 0) >= limite) {
+
+        // Verificar si el trial venció (solo plan gratuito)
+        if (negocio.plan === 'gratuito' && negocio.trial_expira_en) {
+          const ahora = new Date()
+          const expira = new Date(negocio.trial_expira_en)
+          if (ahora > expira) {
+            return new Response(
+              JSON.stringify({ error: 'Tu período de prueba gratuito ha vencido. Actualiza tu plan en clienteai.site para reactivar tu asistente.' }),
+              { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+        }
+
+        const limite = LIMITES[negocio.plan]
+        if (limite !== null && (negocio.conversaciones_mes || 0) >= limite) {
           return new Response(
-            JSON.stringify({ error: `Limite de ${limite} conversaciones del mes alcanzado. Actualiza tu plan para continuar.` }),
+            JSON.stringify({ error: `Límite de ${limite} conversaciones del mes alcanzado. Actualiza tu plan para continuar.` }),
             { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
+        }
+
+        // Notificación al 80% del límite
+        if (limite !== null) {
+          const usadas = negocio.conversaciones_mes || 0
+          const porcentaje = (usadas / limite) * 100
+          if (porcentaje >= 80 && porcentaje < 81 && negocio.email_contacto) {
+            const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
+            if (resendKey) {
+              await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  from: 'ClienteAI <noreply@clienteai.site>',
+                  to: [negocio.email_contacto],
+                  subject: '⚠️ Tu asistente está al 80% de su límite mensual',
+                  html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 0">
+                    <div style="background:#fff;border-radius:16px;padding:32px;border:1px solid #e5e7eb">
+                      <p style="font-size:24px;font-weight:900;color:#16a34a;margin:0 0 16px">ClienteAI</p>
+                      <p style="font-size:16px;color:#111;margin:0 0 12px">⚠️ Hola ${negocio.nombre},</p>
+                      <p style="font-size:14px;color:#374151;margin:0 0 16px">Tu asistente virtual ha usado <strong>${usadas} de ${limite} conversaciones</strong> este mes (${Math.round(porcentaje)}%).</p>
+                      <p style="font-size:14px;color:#374151;margin:0 0 20px">Para no interrumpir la atención a tus clientes, te recomendamos actualizar tu plan antes de que se agote.</p>
+                      <a href="https://clienteai.site/dashboard" style="background:#16a34a;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;display:inline-block">Ver mis planes</a>
+                    </div>
+                  </div>`
+                }),
+              }).catch(() => {})
+            }
+          }
         }
       }
     }
@@ -53,7 +95,7 @@ serve(async (req) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 400,
         system: systemPrompt,
         messages: messages.length > 0
@@ -73,7 +115,9 @@ serve(async (req) => {
         { negocio_id, mensaje: lastUserMessage.content, rol: 'user' },
         { negocio_id, mensaje: reply, rol: 'assistant' },
       ])
-      await supabase.rpc('increment_conversaciones', { p_negocio_id: negocio_id })
+      await supabase.from('negocios').update({
+        conversaciones_mes: (await supabase.from('negocios').select('conversaciones_mes').eq('id', negocio_id).single()).data?.conversaciones_mes + 1 || 1
+      }).eq('id', negocio_id)
     }
 
     return new Response(

@@ -370,6 +370,12 @@ export default function Dashboard({ session }) {
   const porcentaje = limite ? Math.min(100, (usadas / limite) * 100) : 0
   const restantes = limite ? Math.max(0, limite - usadas) : null
 
+  // Calcular días restantes de trial
+  const diasTrial = plan === 'gratuito' && negocio?.trial_expira_en
+    ? Math.max(0, Math.ceil((new Date(negocio.trial_expira_en) - new Date()) / (1000 * 60 * 60 * 24)))
+    : null
+  const trialVencido = plan === 'gratuito' && negocio?.trial_expira_en && new Date(negocio.trial_expira_en) < new Date()
+
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
@@ -403,7 +409,30 @@ export default function Dashboard({ session }) {
           {negocio && <div className={s.statusBadge}><span className={s.statusDot} /> Bot activo</div>}
         </div>
 
-        {/* Selector de asistentes para plan Negocio */}
+        {/* Banner de trial para plan gratuito */}
+        {!isAdmin && plan === 'gratuito' && (
+          trialVencido ? (
+            <div style={{ background: '#fef2f2', border: '2px solid #dc2626', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#dc2626' }}>🚫 Tu período de prueba ha vencido</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#991b1b' }}>Tu asistente está desactivado. Actualiza tu plan para reactivarlo.</p>
+              </div>
+              <button onClick={() => handlePago('pro')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Reactivar ahora</button>
+            </div>
+          ) : diasTrial !== null && diasTrial <= 7 ? (
+            <div style={{ background: '#fffbeb', border: '2px solid #f59e0b', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#92400e' }}>⏰ Tu prueba gratuita vence en {diasTrial} día{diasTrial !== 1 ? 's' : ''}</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#92400e' }}>Actualiza ahora para no perder tu asistente virtual.</p>
+              </div>
+              <button onClick={() => handlePago('pro')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#f59e0b', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Ver planes</button>
+            </div>
+          ) : diasTrial !== null ? (
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '12px 20px', marginBottom: 20 }}>
+              <p style={{ margin: 0, fontSize: 13, color: '#15803d' }}>🎁 Prueba gratuita activa — <strong>{diasTrial} días restantes</strong></p>
+            </div>
+          ) : null
+        )}
         {!isAdmin && misAsistentes.length > 0 && (plan === 'negocio' || misAsistentes.length > 1) && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
             {misAsistentes.map((a, i) => (

@@ -87,6 +87,7 @@ serve(async (req) => {
     // Generar código de cliente
     const codigo = await generarCodigo(supabase)
     const token = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)
+    const trialExpira = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
     // Crear negocio
     const { error: negocioError } = await supabase.from('negocios').insert({
@@ -101,6 +102,8 @@ serve(async (req) => {
       estado_cuenta: 'activo',
       activado_en: new Date().toISOString(),
       asesor_id,
+      trial_expira_en: trialExpira,
+      trial_activo: true,
     })
     if (negocioError) throw new Error(negocioError.message)
 

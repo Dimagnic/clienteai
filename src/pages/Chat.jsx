@@ -51,6 +51,11 @@ export default function Chat() {
           role: 'assistant',
           content: `⚠️ Este asistente ha alcanzado el límite de conversaciones del mes. Por favor contacta al negocio para más información.`
         }])
+      } else if (msg.includes('prueba') || msg.includes('vencido') || msg.includes('403')) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `⏰ El período de prueba gratuito de este asistente ha vencido. Por favor contacta al negocio para más información.`
+        }])
       } else {
         setError(msg)
       }
