@@ -122,10 +122,10 @@
       });
       const data = await res.json();
       document.getElementById('cai-thinking')?.remove();
-      if (res.status === 429 || (data.error && (data.error.includes('Límite') || data.error.includes('limite')))) {
-        addMessage('bot', '⚠️ Este asistente ha alcanzado el límite de conversaciones del mes. Por favor contacta al negocio para más información.');
-      } else if (res.status === 403 || (data.error && data.error.includes('prueba'))) {
-        addMessage('bot', '⏰ El período de prueba gratuito de este asistente ha vencido. Por favor contacta al negocio para más información.');
+      if (res.status === 429 || (data.error && data.error.includes('limite'))) {
+        addMessage('bot', '⚠️ Este asistente ha alcanzado el límite de conversaciones del mes. Contacta al negocio para más información.');
+      } else if (res.status === 403 || (data.error && (data.error.includes('trial') || data.error.includes('plan_vencido')))) {
+        addMessage('bot', '🔴 El plan de este asistente ha vencido. Contacta al negocio para más información.');
       } else {
         addMessage('bot', data.text || 'Lo siento, no pude responder.');
       }

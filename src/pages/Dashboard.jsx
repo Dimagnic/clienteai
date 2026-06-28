@@ -376,6 +376,12 @@ export default function Dashboard({ session }) {
     : null
   const trialVencido = plan === 'gratuito' && negocio?.trial_expira_en && new Date(negocio.trial_expira_en) < new Date()
 
+  // Calcular días restantes de plan Pro/Negocio
+  const diasPlan = (plan === 'pro' || plan === 'negocio') && negocio?.plan_expira_en
+    ? Math.max(0, Math.ceil((new Date(negocio.plan_expira_en) - new Date()) / (1000 * 60 * 60 * 24)))
+    : null
+  const planVencido = (plan === 'pro' || plan === 'negocio') && negocio?.plan_expira_en && new Date(negocio.plan_expira_en) < new Date()
+
   return (
     <div className={s.page}>
       <aside className={s.sidebar}>
@@ -408,6 +414,34 @@ export default function Dashboard({ session }) {
           </div>
           {negocio && <div className={s.statusBadge}><span className={s.statusDot} /> Bot activo</div>}
         </div>
+
+        {/* Banner plan Pro/Negocio */}
+        {!isAdmin && (plan === 'pro' || plan === 'negocio') && (
+          planVencido ? (
+            <div style={{ background: '#fef2f2', border: '2px solid #dc2626', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#dc2626' }}>🔴 Tu Plan {plan === 'pro' ? 'Pro' : 'Negocio'} ha vencido</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#991b1b' }}>Tu asistente está detenido. Renueva tu plan para reactivarlo.</p>
+              </div>
+              <button onClick={() => handlePago(plan)} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Renovar ahora</button>
+            </div>
+          ) : diasPlan !== null && diasPlan <= 7 ? (
+            <div style={{ background: '#fffbeb', border: '2px solid #f59e0b', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#92400e' }}>⏰ Tu Plan {plan === 'pro' ? 'Pro' : 'Negocio'} vence en {diasPlan} día{diasPlan !== 1 ? 's' : ''}</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#92400e' }}>Renueva ahora para no interrumpir la atención a tus clientes.{plan === 'pro' ? ' O migra al Plan Negocio para conversaciones ilimitadas.' : ''}</p>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => handlePago(plan)} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#f59e0b', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Renovar</button>
+                {plan === 'pro' && <button onClick={() => handlePago('negocio')} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Migrar a Negocio</button>}
+              </div>
+            </div>
+          ) : diasPlan !== null ? (
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '12px 20px', marginBottom: 20 }}>
+              <p style={{ margin: 0, fontSize: 13, color: '#15803d' }}>✅ Plan {plan === 'pro' ? 'Pro' : 'Negocio'} activo — <strong>{diasPlan} días hasta la próxima renovación</strong></p>
+            </div>
+          ) : null
+        )}
 
         {/* Banner de trial para plan gratuito */}
         {!isAdmin && plan === 'gratuito' && (

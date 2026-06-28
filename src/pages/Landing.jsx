@@ -17,9 +17,9 @@ const TESTIMONIALS = [
 ]
 
 const PLANS = [
-  { name: 'Gratuito', price: '0', period: 'para siempre', desc: 'Perfecto para probar ClienteAI', features: ['50 conversaciones al mes', '1 asistente virtual', 'Widget para tu web', 'Soporte por email'], cta: 'Empezar gratis', highlight: false },
-  { name: 'Pro', price: '299', period: 'MXN / mes', desc: 'Para negocios que quieren crecer', features: ['Hasta 2,000 conversaciones al mes', '1 asistente virtual', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario'], cta: 'Empezar ahora', highlight: true },
-  { name: 'Negocio', price: '599', period: 'MXN / mes', desc: 'Para empresas con mas necesidades', features: ['Conversaciones ilimitadas ♾️', '3 asistentes virtuales', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales descargables'], cta: 'Contactar ventas', highlight: false },
+  { name: 'Gratuito', price: '0', period: 'para siempre', desc: '30 días de prueba para conocer ClienteAI', features: ['50 conversaciones al mes', '1 asistente virtual', 'Widget para tu web', 'Soporte por email', 'Bot se desactiva al vencer el mes'], cta: 'Empezar gratis', highlight: false },
+  { name: 'Pro', price: '299', period: 'MXN / mes', desc: 'Para negocios que quieren crecer', features: ['Hasta 2,000 conversaciones al mes', '1 asistente virtual', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario', 'Notificación al 80% del límite'], cta: 'Empezar ahora', highlight: true },
+  { name: 'Negocio', price: '599', period: 'MXN / mes', desc: 'Para empresas con más necesidades', features: ['Conversaciones ilimitadas ♾️', '3 asistentes virtuales', 'Widget personalizable', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales descargables'], cta: 'Empezar ahora', highlight: false },
 ]
 
 export default function Landing({ session }) {
@@ -129,7 +129,6 @@ export default function Landing({ session }) {
       <section className={s.pricing} id="precios">
         <h2 className={s.sectionTitle}>Precios simples y claros</h2>
         <p className={s.sectionSub}>En pesos mexicanos. Sin sorpresas.</p>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '-8px 0 16px', textAlign: 'center' }}>Precios en MXN. IVA incluido.</p>
         <div className={s.planGrid}>
           {PLANS.map(p => (
             <div key={p.name} className={`${s.planCard} ${p.highlight ? s.planHighlight : ''}`}>

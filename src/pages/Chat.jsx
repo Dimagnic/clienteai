@@ -46,16 +46,16 @@ export default function Chat() {
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
       const msg = err.message || ''
-      if (msg.includes('Límite') || msg.includes('limite') || msg.includes('429')) {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: `⚠️ Este asistente ha alcanzado el límite de conversaciones del mes. Por favor contacta al negocio para más información.`
-        }])
-      } else if (msg.includes('prueba') || msg.includes('vencido') || msg.includes('403')) {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: `⏰ El período de prueba gratuito de este asistente ha vencido. Por favor contacta al negocio para más información.`
-        }])
+      let botMsg = ''
+      if (msg.includes('trial_vencido') || msg.includes('prueba')) {
+        botMsg = '⏰ El período de prueba de este asistente ha vencido. Contacta al negocio para más información.'
+      } else if (msg.includes('plan_vencido')) {
+        botMsg = '🔴 El plan de este asistente ha vencido. Contacta al negocio para más información.'
+      } else if (msg.includes('limite_alcanzado') || msg.includes('Límite') || msg.includes('429')) {
+        botMsg = '⚠️ Este asistente ha alcanzado el límite de conversaciones del mes. Contacta al negocio para más información.'
+      }
+      if (botMsg) {
+        setMessages(prev => [...prev, { role: 'assistant', content: botMsg }])
       } else {
         setError(msg)
       }
