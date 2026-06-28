@@ -22,7 +22,8 @@ export default function Chat() {
     const { data } = await supabase.from('negocios').select('*').eq('token', token).single()
     if (!data) { setNotFound(true); setLoading(false); return }
     setNegocio(data)
-    setMessages([{ role: 'assistant', content: `Hola! Soy el asistente de ${data.nombre}. En que te puedo ayudar?` }])
+    const nombreBot = data.nombre_bot || data.nombre || 'Asistente'
+    setMessages([{ role: 'assistant', content: `Hola! Soy ${nombreBot}${data.nombre_bot ? `, el asistente de ${data.nombre}` : ''}. ¿En qué te puedo ayudar?` }])
     setLoading(false)
   }
 

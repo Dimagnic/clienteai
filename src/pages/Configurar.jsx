@@ -5,6 +5,7 @@ import s from './Configurar.module.css'
 
 const CAMPOS = [
   { key: 'nombre', label: 'Nombre del negocio', placeholder: 'Ej: Tacos El Gordo', required: true, type: 'input' },
+  { key: 'nombre_bot', label: 'Nombre de tu asistente virtual', placeholder: 'Ej: Lupita, Asistente de Tacos El Gordo, Bot de ventas...', type: 'input' },
   { key: 'descripcion', label: 'A que se dedica tu negocio?', placeholder: 'Ej: Taqueria de comida mexicana en Puebla', type: 'input' },
   { key: 'menu', label: 'Menu o servicios con precios', placeholder: 'Ej:\nTaco de pastor: $25\nQuesadilla: $40\nAgua fresca: $20', type: 'textarea' },
   { key: 'horario', label: 'Horario de atencion', placeholder: 'Ej: Lunes a domingo de 9am a 11pm', type: 'input' },
@@ -32,7 +33,7 @@ export default function Configurar({ session }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const asistenteId = searchParams.get('id')
-  const [form, setForm] = useState({ nombre: '', descripcion: '', menu: '', horario: '', direccion: '', telefono: '', extra: '', color: '#16a34a' })
+  const [form, setForm] = useState({ nombre: '', descripcion: '', menu: '', horario: '', direccion: '', telefono: '', extra: '', color: '#16a34a', nombre_bot: '' })
   const [negocioId, setNegocioId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -64,6 +65,7 @@ export default function Configurar({ session }) {
         telefono: data.telefono || '',
         extra: data.extra || '',
         color: data.color || '#16a34a',
+        nombre_bot: data.nombre_bot || '',
       })
     }
     setLoading(false)

@@ -82,8 +82,9 @@
       negocio = data[0];
       color = negocio.color || '#16a34a';
       applyStyles(color);
-      document.getElementById('cai-title').textContent = negocio.nombre || 'Asistente';
-      addMessage('bot', `Hola! Soy el asistente de ${negocio.nombre}. En que te puedo ayudar?`);
+      const nombreBot = negocio.nombre_bot || negocio.nombre || 'Asistente';
+      document.getElementById('cai-title').textContent = nombreBot;
+      addMessage('bot', `Hola! Soy ${nombreBot}${negocio.nombre ? `, el asistente de ${negocio.nombre}` : ''}. ¿En qué te puedo ayudar?`);
     }
   }
 
