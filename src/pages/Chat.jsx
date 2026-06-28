@@ -45,7 +45,15 @@ export default function Chat() {
       })
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
-      setError(err.message)
+      const msg = err.message || ''
+      if (msg.includes('Límite') || msg.includes('limite') || msg.includes('429')) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `⚠️ Este asistente ha alcanzado el límite de conversaciones del mes. Por favor contacta al negocio para más información.`
+        }])
+      } else {
+        setError(msg)
+      }
     } finally {
       setThinking(false)
       inputRef.current?.focus()

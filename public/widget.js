@@ -122,7 +122,11 @@
       });
       const data = await res.json();
       document.getElementById('cai-thinking')?.remove();
-      addMessage('bot', data.text || 'Lo siento, no pude responder.');
+      if (res.status === 429 || (data.error && (data.error.includes('Límite') || data.error.includes('limite')))) {
+        addMessage('bot', '⚠️ Este asistente ha alcanzado el límite de conversaciones del mes. Por favor contacta al negocio para más información.');
+      } else {
+        addMessage('bot', data.text || 'Lo siento, no pude responder.');
+      }
     } catch {
       document.getElementById('cai-thinking')?.remove();
       addMessage('bot', 'Hubo un error. Intenta de nuevo.');
