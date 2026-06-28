@@ -47,7 +47,7 @@ export default function Legal() {
         </Section>
 
         <Section title="8. Contacto">
-          Si tienes preguntas sobre esta politica, contactanos en: <a href="mailto:hola@clienteai.mx" style={{ color: '#16a34a' }}>hola@clienteai.mx</a>
+          Si tienes preguntas sobre esta politica, contactanos en: <a href="mailto:hola@clienteai.site" style={{ color: '#16a34a' }}>hola@clienteai.site</a>
         </Section>
 
         <div style={{ marginTop: 48, padding: '24px', background: 'var(--bg-secondary)', borderRadius: 12, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.8 }}>

@@ -16,6 +16,22 @@ export default function Login() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [codigoGenerado, setCodigoGenerado] = useState('')
+  const [mostrarRecuperar, setMostrarRecuperar] = useState(false)
+  const [emailRecuperar, setEmailRecuperar] = useState('')
+  const [recuperando, setRecuperando] = useState(false)
+
+  async function recuperarPassword(e) {
+    e.preventDefault()
+    if (!emailRecuperar.trim()) { setError('Ingresa tu correo'); return }
+    setRecuperando(true)
+    setError('')
+    const { error: err } = await supabase.auth.resetPasswordForEmail(emailRecuperar, {
+      redirectTo: 'https://clienteai.site/reset-password'
+    })
+    if (err) { setError('Error: ' + err.message) }
+    else { setSuccess('Te enviamos un correo con el link para restablecer tu contraseña.'); setMostrarRecuperar(false) }
+    setRecuperando(false)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -149,6 +165,39 @@ export default function Login() {
             {loading ? 'Cargando...' : mode === 'login' ? 'Entrar' : 'Crear cuenta'}
           </button>
         </form>
+
+        {mode === 'login' && (
+          <p style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#6b7280' }}>
+            ¿Olvidaste tu contraseña?{' '}
+            <button onClick={() => setMostrarRecuperar(true)} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+              Recupérala aquí
+            </button>
+          </p>
+        )}
+
+        {mostrarRecuperar && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '20px', marginTop: 12 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#15803d', margin: '0 0 12px' }}>Recuperar contraseña</p>
+            <form onSubmit={recuperarPassword}>
+              <input
+                type="email"
+                placeholder="Tu correo electrónico"
+                value={emailRecuperar}
+                onChange={e => setEmailRecuperar(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #bbf7d0', fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="submit" disabled={recuperando} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
+                  {recuperando ? 'Enviando...' : 'Enviar correo'}
+                </button>
+                <button type="button" onClick={() => setMostrarRecuperar(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 14 }}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         <p className={s.toggle}>
           {mode === 'login' ? '¿No tienes cuenta? ' : ''}

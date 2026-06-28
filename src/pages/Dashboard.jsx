@@ -7,6 +7,8 @@ export default function Dashboard({ session }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const planParam = searchParams.get('plan')
+  const sessionId = searchParams.get('session_id')
+  const [pagoExitoso, setPagoExitoso] = useState(!!sessionId)
   const [negocio, setNegocio] = useState(null)
   const [negocioActivo, setNegocioActivo] = useState(null)
   const [misAsistentes, setMisAsistentes] = useState([])
@@ -211,7 +213,7 @@ export default function Dashboard({ session }) {
         body: {
           plan,
           negocio_id: negocio.id,
-          success_url: 'https://clienteai.site/dashboard',
+          success_url: 'https://clienteai.site/dashboard?session_id={CHECKOUT_SESSION_ID}&plan=' + plan,
           cancel_url: 'https://clienteai.site/dashboard',
         }
       })
@@ -414,6 +416,20 @@ export default function Dashboard({ session }) {
           </div>
           {negocio && <div className={s.statusBadge}><span className={s.statusDot} /> Bot activo</div>}
         </div>
+
+        {/* Banner pago exitoso */}
+        {pagoExitoso && (
+          <div style={{ background: '#f0fdf4', border: '2px solid #16a34a', borderRadius: 14, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ fontSize: 36 }}>🎉</span>
+              <div>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#15803d' }}>¡Pago exitoso! Tu plan fue activado</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#166534' }}>Ya puedes disfrutar de todas las funciones de tu nuevo plan. Configura tu asistente y comparte tu widget.</p>
+              </div>
+            </div>
+            <button onClick={() => setPagoExitoso(false)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Entendido ✓</button>
+          </div>
+        )}
 
         {/* Banner plan Pro/Negocio */}
         {!isAdmin && (plan === 'pro' || plan === 'negocio') && (
