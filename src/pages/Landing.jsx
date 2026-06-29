@@ -173,10 +173,39 @@ export default function Landing({ session }) {
         <p className={s.heroNote}>Sin tarjeta de credito - Cancela cuando quieras</p>
       </section>
 
+      {/* Botón flotante de WhatsApp */}
+      <a
+        href="https://wa.me/522219663226?text=Hola,%20me%20interesa%20saber%20más%20sobre%20ClienteAI"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: 'fixed', bottom: 90, right: 24, zIndex: 999,
+          background: '#25D366', color: '#fff', borderRadius: '50%',
+          width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(37,211,102,0.5)', textDecoration: 'none',
+          fontSize: 28, transition: 'transform 0.2s',
+        }}
+        onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+        title="Contáctanos por WhatsApp"
+      >
+        💬
+      </a>
+
       <footer className={s.footer}>
         <div className={s.footerInner}>
           <div className={s.logo}>ClienteAI</div>
           <p className={s.footerText}>© 2026 ClienteAI - Hecho en Puebla, Mexico</p>
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a
+              href="https://wa.me/522219663226?text=Hola,%20me%20interesa%20saber%20más%20sobre%20ClienteAI"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#25D366', color: '#fff', padding: '8px 16px', borderRadius: 8, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}
+            >
+              💬 Contáctanos por WhatsApp
+            </a>
+          </div>
           <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Desarrollado por</span>
             <img src="/cero-logo.png" alt="Cero+" style={{ height: 24, objectFit: 'contain' }} />
