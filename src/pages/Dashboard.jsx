@@ -632,6 +632,13 @@ export default function Dashboard({ session }) {
                   💡 <strong>No tienes web?</strong> Comparte este link directo con tus clientes:
                   <ChatLink token={negocio.token} />
                 </div>
+                <div style={{ marginTop: 16, padding: '16px', background: 'var(--bg-secondary)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <div>
+                    <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>📱 Código QR</p>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>Descarga e imprime tu QR para tarjetas, local o menú.</p>
+                  </div>
+                  <QRDescargable token={negocio.token} nombre={negocio.nombre} />
+                </div>
               </div>
             </div>
           </>
@@ -998,6 +1005,89 @@ function PageLoader() {
       <div style={{ width: 32, height: 32, border: '3px solid #dcfce7', borderTopColor: '#16a34a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
+  )
+}
+
+function QRDescargable({ token, nombre }) {
+  function descargarQR() {
+    const url = `https://clienteai.site/chat/${token}`
+    const canvas = document.createElement('canvas')
+    canvas.width = 600
+    canvas.height = 700
+    const ctx = canvas.getContext('2d')
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, 600, 700)
+
+    // Header verde
+    ctx.fillStyle = '#16a34a'
+    ctx.fillRect(0, 0, 600, 80)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '900 28px Arial'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('ClienteAI', 300, 40)
+
+    // Texto escanea
+    ctx.fillStyle = '#111111'
+    ctx.font = '700 22px Arial'
+    ctx.fillText('¡Escanéame!', 300, 115)
+    ctx.font = '400 16px Arial'
+    ctx.fillStyle = '#6b7280'
+    ctx.fillText('Chatea con nuestro asistente virtual', 300, 145)
+
+    // QR usando API pública
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      ctx.drawImage(img, 125, 170, 350, 350)
+
+      // Nombre del negocio
+      ctx.fillStyle = '#111111'
+      ctx.font = '700 18px Arial'
+      ctx.fillText(nombre || 'Mi Negocio', 300, 570)
+
+      // URL pequeña
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '400 12px Arial'
+      ctx.fillText(url, 300, 595)
+
+      // Footer
+      ctx.fillStyle = '#f9fafb'
+      ctx.fillRect(0, 620, 600, 80)
+      ctx.fillStyle = '#6b7280'
+      ctx.font = '400 12px Arial'
+      ctx.fillText('Desarrollado por Cero+ Software · clienteai.site', 300, 660)
+
+      // Descargar
+      canvas.toBlob(blob => {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = `qr-${nombre || 'bot'}.png`
+        a.click()
+        URL.revokeObjectURL(a.href)
+      }, 'image/png')
+    }
+    img.onerror = () => {
+      // Fallback sin QR visual
+      ctx.fillStyle = '#374151'
+      ctx.font = '400 14px Arial'
+      ctx.fillText('Error al generar QR. Intenta de nuevo.', 300, 400)
+      canvas.toBlob(blob => {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = `qr-${nombre || 'bot'}.png`
+        a.click()
+      }, 'image/png')
+    }
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(url)}&color=000000&bgcolor=ffffff&margin=10`
+  }
+
+  return (
+    <button onClick={descargarQR} style={{ padding: '10px 20px', borderRadius: 8, border: '2px solid #16a34a', background: '#fff', color: '#16a34a', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+      ⬇ Descargar QR
+    </button>
   )
 }
 
