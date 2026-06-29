@@ -17,6 +17,8 @@ export default function Dashboard({ session }) {
   const [clientes, setClientes] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [asesores, setAsesores] = useState([])
+  const [comisiones, setComisiones] = useState([])
+  const [pagandoComision, setPagandoComision] = useState(null)
   const [nuevoAsesor, setNuevoAsesor] = useState({ nombre: '', apellido: '', email: '', telefono: '', fechaNacimiento: '' })
   const [creandoAsesor, setCreandoAsesor] = useState(false)
   const [credencialesGeneradas, setCredencialesGeneradas] = useState(null)
@@ -135,6 +137,12 @@ export default function Dashboard({ session }) {
       setNuevoAsesor({ nombre: '', apellido: '', email: '', telefono: '', fechaNacimiento: '' })
       const { data: todosAsesores } = await supabase.from('asesores').select('*').order('created_at', { ascending: false })
       setAsesores(todosAsesores || [])
+
+      const { data: todasComisiones } = await supabase
+        .from('comisiones')
+        .select('*, asesores(nombre_completo, codigo)')
+        .order('created_at', { ascending: false })
+      setComisiones(todasComisiones || [])
     } catch (err) {
       alert('Error al crear asesor: ' + err.message)
     } finally {
@@ -176,6 +184,44 @@ export default function Dashboard({ session }) {
     const { data: todos } = await supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false })
     const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
     setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
+  }
+
+  async function marcarPagado(asesorId, periodo) {
+    if (!confirm(`¿Marcar como pagadas todas las comisiones de ${periodo}?`)) return
+    setPagandoComision(asesorId + periodo)
+    await supabase.from('comisiones')
+      .update({ estado: 'pagado' })
+      .eq('asesor_id', asesorId)
+      .eq('periodo', periodo)
+      .eq('estado', 'pendiente')
+    setComisiones(prev => prev.map(c =>
+      c.asesor_id === asesorId && c.periodo === periodo ? { ...c, estado: 'pagado' } : c
+    ))
+    setPagandoComision(null)
+  }
+
+  function resumenComisiones() {
+    const grupos = {}
+    comisiones.forEach(c => {
+      const key = `${c.asesor_id}__${c.periodo}`
+      if (!grupos[key]) {
+        grupos[key] = {
+          asesor_id: c.asesor_id,
+          nombre: c.asesores?.nombre_completo || 'Sin nombre',
+          codigo: c.asesores?.codigo || '',
+          periodo: c.periodo,
+          total: 0,
+          pendiente: 0,
+          pagado: 0,
+          cantidad: 0,
+        }
+      }
+      grupos[key].total += c.monto_comision || 0
+      grupos[key].cantidad++
+      if (c.estado === 'pendiente') grupos[key].pendiente += c.monto_comision || 0
+      if (c.estado === 'pagado') grupos[key].pagado += c.monto_comision || 0
+    })
+    return Object.values(grupos).sort((a, b) => b.periodo.localeCompare(a.periodo))
   }
 
   async function eliminarAsesor(asesor) {
@@ -809,6 +855,63 @@ export default function Dashboard({ session }) {
             </div>
           </div>
         )}
+
+        {/* Panel de comisiones admin */}
+        {isAdmin && comisiones.length > 0 && (
+          <div className={s.section}>
+            <h2 className={s.sectionTitle} style={{ color: '#b45309' }}>💰 Comisiones de Asesores</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-secondary)' }}>
+                    {['Asesor', 'Código', 'Período', 'Ventas', 'Total', 'Pendiente', 'Pagado', 'Estado', 'Acción'].map(h => (
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {resumenComisiones().map((r, i) => (
+                    <tr key={r.asesor_id + r.periodo} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--bg-secondary)' }}>
+                      <td style={{ padding: '12px 14px', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{r.nombre}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 12, fontFamily: 'monospace', color: '#7c3aed' }}>{r.codigo}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text-secondary)' }}>{r.periodo}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>{r.cantidad}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>${r.total.toFixed(2)}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 14, fontWeight: 600, color: '#b45309' }}>${r.pendiente.toFixed(2)}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 14, color: '#16a34a' }}>${r.pagado.toFixed(2)}</td>
+                      <td style={{ padding: '12px 14px' }}>
+                        {r.pendiente > 0
+                          ? <span style={{ background: '#fef3c7', color: '#92400e', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>Pendiente</span>
+                          : <span style={{ background: '#dcfce7', color: '#15803d', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>Pagado</span>
+                        }
+                      </td>
+                      <td style={{ padding: '12px 14px' }}>
+                        {r.pendiente > 0 && (
+                          <button
+                            onClick={() => marcarPagado(r.asesor_id, r.periodo)}
+                            disabled={pagandoComision === r.asesor_id + r.periodo}
+                            style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          >
+                            {pagandoComision === r.asesor_id + r.periodo ? 'Procesando...' : '✓ Marcar pagado'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: 12, padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: 10, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Total pendiente: <strong style={{ color: '#b45309' }}>${resumenComisiones().reduce((s, r) => s + r.pendiente, 0).toFixed(2)} MXN</strong>
+              </span>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Total pagado: <strong style={{ color: '#16a34a' }}>${resumenComisiones().reduce((s, r) => s + r.pagado, 0).toFixed(2)} MXN</strong>
+              </span>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   )
