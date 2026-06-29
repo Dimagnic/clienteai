@@ -23,23 +23,57 @@ async function generarCodigo(supabase: any): Promise<string> {
 
 function plantillaCorreo(nombre: string, codigo: string, email: string): string {
   return `
-  <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background:#f9fafb; padding: 32px 0;">
+  <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; background:#f9fafb; padding: 32px 0;">
     <div style="background:#fff; border-radius: 16px; overflow:hidden; border:1px solid #e5e7eb;">
       <div style="background: linear-gradient(135deg, #16a34a, #166534); padding: 28px 32px; text-align:center;">
         <p style="color:#fff; font-size: 24px; font-weight: 900; margin:0;">ClienteAI</p>
         <p style="color:#bbf7d0; font-size: 12px; margin: 4px 0 0;">Bienvenido a tu asistente virtual con IA</p>
       </div>
       <div style="padding: 32px;">
-        <p style="font-size: 16px; color:#111; margin:0 0 16px;">¡Hola! 👋 Tu cuenta ha sido creada.</p>
-        <p style="font-size: 14px; color:#374151; margin:0 0 20px;">Tu código de cliente para iniciar sesión es:</p>
-        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:16px; text-align:center; margin-bottom: 24px;">
-          <p style="font-family: monospace; font-size: 22px; font-weight: 800; color:#16a34a; margin:0; letter-spacing: 2px;">${codigo}</p>
+        <p style="font-size: 16px; color:#111; margin:0 0 8px;">🎉 ¡Bienvenido a ClienteAI!</p>
+        <p style="font-size: 14px; color:#374151; margin:0 0 20px;">Tu cuenta está lista. Aquí está tu código de acceso:</p>
+        <div style="background:#f0fdf4; border:2px solid #16a34a; border-radius:10px; padding:16px; text-align:center; margin-bottom: 24px;">
+          <p style="font-size: 11px; color:#6b7280; margin:0 0 4px;">TU CÓDIGO DE CLIENTE</p>
+          <p style="font-family: monospace; font-size: 24px; font-weight: 900; color:#16a34a; margin:0; letter-spacing: 3px;">${codigo}</p>
         </div>
-        <p style="font-size: 14px; color:#374151; margin:0 0 8px;">Tu correo de acceso: <strong>${email}</strong></p>
-        <p style="font-size: 13px; color:#6b7280; margin:0 0 20px;">Usa tu código y la contraseña que elegiste para entrar en <strong>clienteai.site/admin</strong></p>
-        <div style="text-align:center;">
-          <a href="https://clienteai.site/admin" style="background:#16a34a; color:#fff; padding: 12px 28px; border-radius: 8px; text-decoration:none; font-weight:700; font-size: 14px; display:inline-block;">Ir a mi panel</a>
+        <p style="font-size: 13px; color:#6b7280; margin:0 0 24px;">Entra con tu código + la contraseña que elegiste en <strong>clienteai.site/admin</strong></p>
+
+        <div style="background:#f9fafb; border-radius:10px; padding:20px; margin-bottom:24px;">
+          <p style="font-size:14px; font-weight:700; color:#111; margin:0 0 16px;">🚀 Próximos pasos:</p>
+          <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px;">
+            <span style="background:#16a34a; color:#fff; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">1</span>
+            <div>
+              <p style="font-size:13px; font-weight:600; color:#111; margin:0;">Configura tu asistente</p>
+              <p style="font-size:12px; color:#6b7280; margin:4px 0 0;">Agrega el nombre, descripción, menú y horarios de tu negocio.</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px;">
+            <span style="background:#16a34a; color:#fff; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">2</span>
+            <div>
+              <p style="font-size:13px; font-weight:600; color:#111; margin:0;">Personaliza el widget</p>
+              <p style="font-size:12px; color:#6b7280; margin:4px 0 0;">Elige el color y nombre de tu asistente para que combine con tu marca.</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px;">
+            <span style="background:#16a34a; color:#fff; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">3</span>
+            <div>
+              <p style="font-size:13px; font-weight:600; color:#111; margin:0;">Comparte tu enlace</p>
+              <p style="font-size:12px; color:#6b7280; margin:4px 0 0;">Copia tu link directo o instala el widget en tu página web.</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <span style="background:#16a34a; color:#fff; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">4</span>
+            <div>
+              <p style="font-size:13px; font-weight:600; color:#111; margin:0;">¡Empieza a atender!</p>
+              <p style="font-size:12px; color:#6b7280; margin:4px 0 0;">Tu asistente ya puede responder a tus clientes 24/7 de forma automática.</p>
+            </div>
+          </div>
         </div>
+
+        <div style="text-align:center; margin-bottom:16px;">
+          <a href="https://clienteai.site/admin" style="background:#16a34a; color:#fff; padding: 14px 32px; border-radius: 8px; text-decoration:none; font-weight:700; font-size: 15px; display:inline-block;">Ir a mi panel ahora →</a>
+        </div>
+        <p style="font-size:12px; color:#9ca3af; text-align:center; margin:0;">¿Tienes dudas? Escríbenos al <a href="https://wa.me/522219663226" style="color:#16a34a;">WhatsApp</a></p>
       </div>
       <div style="background:#f9fafb; padding: 16px 32px; border-top:1px solid #f3f4f6; text-align:center;">
         <p style="font-size: 11px; color:#9ca3af; margin:0;">ClienteAI · clienteai.site · Desarrollado por Cero+ Software</p>
