@@ -47,14 +47,32 @@ export default function Dashboard({ session }) {
     const semana = new Date(Date.now() - 7 * 86400000).toISOString()
 
     if (esAdmin) {
-      // Admin: cargar clientes y asesores sin buscar negocio propio
-      const [clientesRes, asesoresRes] = await Promise.all([
+      // Admin: cargar clientes y asesores
+      const [clientesRes, asesoresRes, misNegociosRes] = await Promise.all([
         supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false }),
         supabase.from('asesores').select('*').order('created_at', { ascending: false }),
+        supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true }),
       ])
       const asesoresMap = Object.fromEntries((asesoresRes.data || []).map(a => [a.id, a]))
       setClientes((clientesRes.data || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
       setAsesores(asesoresRes.data || [])
+
+      // Si el admin también tiene su propio negocio, lo carga igual que un cliente normal
+      const misNegocios = misNegociosRes.data || []
+      if (misNegocios.length > 0) {
+        setMisAsistentes(misNegocios)
+        const savedId = localStorage.getItem('cai_asistente_activo')
+        const guardado = savedId ? misNegocios.find(a => a.id === savedId) : null
+        const principal = guardado || misNegocios[0]
+        setNegocio(principal)
+        setNegocioActivo(principal)
+        const [{ count: totalHoy }, { count: totalSemana }, { count: total }] = await Promise.all([
+          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', principal.id).gte('created_at', hoy),
+          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', principal.id).gte('created_at', semana),
+          supabase.from('conversaciones').select('*', { count: 'exact', head: true }).eq('negocio_id', principal.id),
+        ])
+        setStats({ hoy: totalHoy || 0, semana: totalSemana || 0, total: total || 0 })
+      }
     } else {
       // Cliente normal - cargar todos sus asistentes
       const { data: todosAsistentes } = await supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true })
