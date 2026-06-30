@@ -21,7 +21,7 @@ async function generarCodigo(supabase: any): Promise<string> {
   return codigo
 }
 
-function plantillaCorreo(nombre: string, codigo: string, email: string): string {
+function plantillaCorreo(nombre: string, codigo: string, enlaceActivacion: string): string {
   return `
   <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; background:#f9fafb; padding: 32px 0;">
     <div style="background:#fff; border-radius: 16px; overflow:hidden; border:1px solid #e5e7eb;">
@@ -36,7 +36,7 @@ function plantillaCorreo(nombre: string, codigo: string, email: string): string 
           <p style="font-size: 11px; color:#6b7280; margin:0 0 4px;">TU CÓDIGO DE CLIENTE</p>
           <p style="font-family: monospace; font-size: 24px; font-weight: 900; color:#16a34a; margin:0; letter-spacing: 3px;">${codigo}</p>
         </div>
-        <p style="font-size: 13px; color:#6b7280; margin:0 0 24px;">Entra con tu código + la contraseña que elegiste en <strong>clienteai.site/admin</strong></p>
+        <p style="font-size: 13px; color:#6b7280; margin:0 0 24px;">Para activar tu cuenta y crear tu contraseña, haz clic en el botón:</p>
 
         <div style="background:#f9fafb; border-radius:10px; padding:20px; margin-bottom:24px;">
           <p style="font-size:14px; font-weight:700; color:#111; margin:0 0 16px;">🚀 Próximos pasos:</p>
@@ -71,7 +71,7 @@ function plantillaCorreo(nombre: string, codigo: string, email: string): string 
         </div>
 
         <div style="text-align:center; margin-bottom:16px;">
-          <a href="https://clienteai.site/admin" style="background:#16a34a; color:#fff; padding: 14px 32px; border-radius: 8px; text-decoration:none; font-weight:700; font-size: 15px; display:inline-block;">Ir a mi panel ahora →</a>
+          <a href="${enlaceActivacion}" style="background:#16a34a; color:#fff; padding: 14px 32px; border-radius: 8px; text-decoration:none; font-weight:700; font-size: 15px; display:inline-block;">Activar mi cuenta →</a>
         </div>
         <p style="font-size:12px; color:#9ca3af; text-align:center; margin:0;">¿Tienes dudas? Escríbenos al <a href="https://wa.me/522219663226" style="color:#16a34a;">WhatsApp</a></p>
       </div>
@@ -86,10 +86,13 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { email, password, ref } = await req.json()
+    const { email, password, nombre, ref } = await req.json()
 
     if (!email || !password) {
       return new Response(JSON.stringify({ error: 'Faltan email o password' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    if (password.length < 8) {
+      return new Response(JSON.stringify({ error: 'La contraseña debe tener al menos 8 caracteres' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     const supabase = createClient(
@@ -97,19 +100,11 @@ serve(async (req) => {
       Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Verificar si ya existe
+    // Verificar si ya existe ese correo real como contacto
     const { data: existente } = await supabase.from('negocios').select('id').eq('email_contacto', email).maybeSingle()
     if (existente) {
       return new Response(JSON.stringify({ error: 'Este correo ya tiene una cuenta registrada.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
-
-    // Crear usuario en auth
-    const { data: creado, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    })
-    if (authError) throw new Error(authError.message)
 
     // Buscar asesor por código de referido
     let asesor_id = null
@@ -120,43 +115,56 @@ serve(async (req) => {
 
     // Generar código de cliente
     const codigo = await generarCodigo(supabase)
-    const token = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)
+
+    // Crear usuario en auth con correo SINTÉTICO (igual que el flujo del admin)
+    // La contraseña que el cliente eligió se guarda directamente, ya que la puso él mismo en el registro.
+    const emailSintetico = `${codigo.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
+    const { data: creado, error: authError } = await supabase.auth.admin.createUser({
+      email: emailSintetico,
+      password,
+      email_confirm: true,
+    })
+    if (authError) throw new Error(authError.message)
+
+    const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16)
     const trialExpira = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    // Crear negocio
+    // Crear negocio - queda PENDIENTE hasta que confirme su correo real vía link de activación
     const { error: negocioError } = await supabase.from('negocios').insert({
       user_id: creado.user.id,
-      nombre: 'Mi negocio',
+      nombre: nombre || 'Mi negocio',
       email_contacto: email,
       codigo_cliente: codigo,
       token,
       plan: 'gratuito',
       asistente_num: 1,
       asistente_nombre: 'Asistente 1',
-      estado_cuenta: 'activo',
-      activado_en: new Date().toISOString(),
+      estado_cuenta: 'pendiente',
       asesor_id,
       trial_expira_en: trialExpira,
       trial_activo: true,
     })
     if (negocioError) throw new Error(negocioError.message)
 
-    // Enviar correo con código
+    // Enviar correo de confirmación con link de activación
+    const enlaceActivacion = `https://clienteai.site/activar-cliente?codigo=${encodeURIComponent(codigo)}`
     const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
+    let correoEnviado = false
     if (resendKey) {
-      await fetch('https://api.resend.com/emails', {
+      const resp = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'ClienteAI <noreply@clienteai.site>',
           to: [email],
-          subject: `Tu código de acceso ClienteAI: ${codigo}`,
-          html: plantillaCorreo('', codigo, email),
+          subject: `Confirma tu cuenta ClienteAI - Código: ${codigo}`,
+          html: plantillaCorreo(nombre || '', codigo, enlaceActivacion),
         }),
       })
+      correoEnviado = resp.ok
     }
 
-    return new Response(JSON.stringify({ ok: true, codigo }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ ok: true, codigo, correoEnviado }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })

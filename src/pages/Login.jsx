@@ -16,6 +16,9 @@ export default function Login() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [codigoGenerado, setCodigoGenerado] = useState('')
+  const [mostrarPassword, setMostrarPassword] = useState(false)
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false)
+  const [nombre, setNombre] = useState('')
   const [mostrarRecuperar, setMostrarRecuperar] = useState(false)
   const [emailRecuperar, setEmailRecuperar] = useState('')
   const [recuperando, setRecuperando] = useState(false)
@@ -41,35 +44,26 @@ export default function Login() {
 
     try {
       if (mode === 'register') {
-        if (password.length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres.')
+        if (password.length < 8) throw new Error('La contraseña debe tener al menos 8 caracteres.')
         if (password !== confirmPassword) throw new Error('Las contraseñas no coinciden.')
 
         const { data, error } = await supabase.functions.invoke('registrar-cliente', {
-          body: { email, password, ref }
+          body: { email, password, nombre, ref }
         })
         if (error) throw error
         if (data?.error) throw new Error(data.error)
 
         setCodigoGenerado(data.codigo)
-        setSuccess(`¡Cuenta creada! Tu código de cliente es: ${data.codigo}. Te lo enviamos también por correo.`)
-
-        // Si eligió un plan de pago, iniciar sesión y redirigir al dashboard para pagar
-        if (planParam && planParam !== 'gratuito') {
-          const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password })
-          if (!loginErr) {
-            navigate(`/dashboard?plan=${planParam}`)
-            return
-          }
-        }
-
+        setSuccess(`¡Listo! Te enviamos un correo a ${email} con tu código de cliente y un enlace para confirmar tu cuenta. Revisa tu bandeja de entrada (y spam) para activarla.`)
         setMode('login')
+        setEmail('')
+        setNombre('')
         setPassword('')
         setConfirmPassword('')
       } else {
-        // Login con código o correo directo
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        navigate('/dashboard')
+        // Esta página solo es para registro. El login de clientes es por código en /admin.
+        navigate('/admin')
+        return
       }
     } catch (err) {
       const msg = err.message
@@ -111,6 +105,20 @@ export default function Login() {
         )}
 
         <form onSubmit={handleSubmit} className={s.form}>
+          {mode === 'register' && (
+            <div className={s.field}>
+              <label className={s.label}>Nombre de tu negocio</label>
+              <input
+                className={s.input}
+                type="text"
+                placeholder="Ej: Tacos El Gordo"
+                value={nombre}
+                onChange={e => setNombre(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+          )}
           <div className={s.field}>
             <label className={s.label}>Correo electrónico</label>
             <input
@@ -125,29 +133,56 @@ export default function Login() {
           </div>
           <div className={s.field}>
             <label className={s.label}>Contraseña</label>
-            <input
-              className={s.input}
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              minLength={6}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                className={s.input}
+                type={mostrarPassword ? 'text' : 'password'}
+                placeholder="Mínimo 8 caracteres"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                minLength={8}
+                style={{ paddingRight: 40 }}
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarPassword(v => !v)}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#6b7280', padding: 4 }}
+                tabIndex={-1}
+              >
+                {mostrarPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
           </div>
           {mode === 'register' && (
             <div className={s.field}>
               <label className={s.label}>Confirmar contraseña</label>
-              <input
-                className={s.input}
-                type="password"
-                placeholder="Repite tu contraseña"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  className={s.input}
+                  type={mostrarConfirmar ? 'text' : 'password'}
+                  placeholder="Repite tu contraseña"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  style={{ paddingRight: 40 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarConfirmar(v => !v)}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#6b7280', padding: 4 }}
+                  tabIndex={-1}
+                >
+                  {mostrarConfirmar ? '🙈' : '👁️'}
+                </button>
+              </div>
+              {confirmPassword.length > 0 && (
+                <p style={{ fontSize: 12, margin: '6px 0 0', color: password === confirmPassword ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {password === confirmPassword ? '✓ Las contraseñas coinciden' : '✕ Las contraseñas no coinciden'}
+                </p>
+              )}
             </div>
           )}
 
