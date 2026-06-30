@@ -2,7 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://clienteai.site',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -66,8 +66,8 @@ serve(async (req) => {
 
         // Resetear conversaciones al nuevo mes
         if (negocio.mes_actual !== mesActual) {
-          await supabase.from('negocios').update({ 
-            conversaciones_mes: 0, 
+          await supabase.from('negocios').update({
+            conversaciones_mes: 0,
             mes_actual: mesActual,
             notificacion_80_enviada: false,
           }).eq('id', negocio_id)
@@ -78,13 +78,13 @@ serve(async (req) => {
         // ===== PLAN GRATUITO =====
         if (negocio.plan === 'gratuito') {
           if (negocio.trial_expira_en && ahora > new Date(negocio.trial_expira_en)) {
-            return new Response(JSON.stringify({ 
+            return new Response(JSON.stringify({
               error: 'trial_vencido',
               mensaje: 'Tu período de prueba gratuito ha vencido. Actualiza tu plan en clienteai.site para reactivar tu asistente.'
             }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
           }
           if ((negocio.conversaciones_mes || 0) >= 50) {
-            return new Response(JSON.stringify({ 
+            return new Response(JSON.stringify({
               error: 'limite_alcanzado',
               mensaje: 'Has alcanzado el límite de 50 conversaciones del mes. Actualiza al Plan Pro para continuar.'
             }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -99,7 +99,7 @@ serve(async (req) => {
 
             // Bot vencido - detener
             if (ahora > expira) {
-              return new Response(JSON.stringify({ 
+              return new Response(JSON.stringify({
                 error: 'plan_vencido',
                 mensaje: `Tu Plan ${negocio.plan === 'pro' ? 'Pro' : 'Negocio'} ha vencido. Renueva en clienteai.site para reactivar tu asistente.`
               }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -126,7 +126,7 @@ serve(async (req) => {
 
           // Límite conversaciones Plan Pro
           if (negocio.plan === 'pro' && (negocio.conversaciones_mes || 0) >= 2000) {
-            return new Response(JSON.stringify({ 
+            return new Response(JSON.stringify({
               error: 'limite_alcanzado',
               mensaje: 'Has alcanzado el límite de 2,000 conversaciones del mes. Renueva tu plan o migra al Plan Negocio para conversaciones ilimitadas.'
             }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
