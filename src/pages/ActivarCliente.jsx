@@ -43,7 +43,7 @@ export default function ActivarCliente() {
       if (fnError) throw fnError
 
       setExito(true)
-      setTimeout(() => navigate('/login'), 3000)
+      setTimeout(() => navigate('/admin'), 2500)
     } catch (err) {
       setError('Error al activar la cuenta: ' + (err.message || 'intenta de nuevo'))
     } finally {
