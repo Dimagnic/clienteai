@@ -64,8 +64,12 @@ serve(async (req) => {
       .eq('id', negocio.id)
     if (updateError) throw updateError
 
+    // Obtener email sintético para el login automático
+    const { data: authUser } = await supabase.auth.admin.getUserById(negocio.user_id)
+    const emailSintetico = authUser?.user?.email || ''
+
     return new Response(
-      JSON.stringify({ ok: true, nombre: negocio.nombre }),
+      JSON.stringify({ ok: true, nombre: negocio.nombre, emailSintetico }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
