@@ -35,17 +35,21 @@ export default function ActivarCliente() {
       if (!negocio) { setError('Código de cliente no encontrado.'); setLoading(false); return }
       if (negocio.estado_cuenta === 'activo') { setError('Esta cuenta ya fue activada. Inicia sesión normalmente.'); setLoading(false); return }
 
-      // Iniciar sesión con el email sintético y password temporal para actualizar
-      const { error: fnError } = await supabase.functions.invoke('activar-cliente', {
+      // Llamar a la función Edge que activa la cuenta
+      const { data, error: fnError } = await supabase.functions.invoke('activar-cliente', {
         body: { codigo: codigoNormalizado, nuevaPassword: password }
       })
 
       if (fnError) throw fnError
+      if (data?.error) throw new Error(data.error)
 
-      // Login automático con el email sintético devuelto por la función
-      if (data?.emailSintetico) {
-        await supabase.auth.signInWithPassword({ email: data.emailSintetico, password })
-      }
+      // Login automático con el email sintético devuelto por la función (o el calculado localmente)
+      const emailParaLogin = data?.emailSintetico || emailSintetico
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: emailParaLogin,
+        password
+      })
+      if (loginError) throw loginError
 
       setExito(true)
       setTimeout(() => navigate('/dashboard'), 2500)
