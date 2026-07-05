@@ -28,3 +28,4 @@ dist-ssr
 public/og-image_files/
 *.ogg
 .vercel
+schema_dump.sql
