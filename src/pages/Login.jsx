@@ -89,8 +89,11 @@ export default function Login() {
               <p style={{ margin: 0 }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-cliente?codigo={clienteCreado.codigo}</p>
               <p style={{ margin: 0 }}><strong>Estado:</strong> Pendiente (se activa cuando crees tu contraseña)</p>
             </div>
-            <button onClick={() => navigate('/admin')} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-              Entendido
+            <p style={{ fontSize: 13, color: '#15803d', margin: '8px 0 12px' }}>
+              📧 Revisa tu correo electrónico y haz clic en el enlace de activación para crear tu contraseña. Una vez activada tu cuenta podrás iniciar sesión.
+            </p>
+            <button onClick={() => navigate('/')} style={{ marginTop: 4, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+              Entendido, voy a revisar mi correo
             </button>
           </div>
         )}
