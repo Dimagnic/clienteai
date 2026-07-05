@@ -42,8 +42,12 @@ export default function ActivarCliente() {
 
       if (fnError) throw fnError
 
+      // Login automático con el correo sintético y la nueva contraseña
+      const emailSintetico = `${codigoNormalizado.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
+      await supabase.auth.signInWithPassword({ email: emailSintetico, password })
+
       setExito(true)
-      setTimeout(() => navigate('/admin'), 2500)
+      setTimeout(() => navigate('/dashboard'), 2500)
     } catch (err) {
       setError('Error al activar la cuenta: ' + (err.message || 'intenta de nuevo'))
     } finally {
