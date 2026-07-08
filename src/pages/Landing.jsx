@@ -25,6 +25,7 @@ const PLANS = [
 export default function Landing({ session }) {
   const navigate = useNavigate()
 
+  // Guardar ref en localStorage al llegar a la landing
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('ref')
@@ -33,6 +34,15 @@ export default function Landing({ session }) {
       localStorage.setItem('cai_ref_fecha', new Date().toISOString())
     }
   }, [])
+
+  // Siempre leer el ref del localStorage para pasarlo al registro
+  function irARegistro(plan = '') {
+    if (session) { navigate('/dashboard'); return }
+    const ref = localStorage.getItem('cai_ref') || new URLSearchParams(window.location.search).get('ref') || ''
+    const refParam = ref ? `&ref=${ref}` : ''
+    const planParam = plan ? `&plan=${plan}` : ''
+    navigate(`/login?mode=register${refParam}${planParam}`)
+  }
 
   return (
     <div className={s.page}>
@@ -62,7 +72,7 @@ export default function Landing({ session }) {
           Sin codigo. Sin complicaciones. Desde $299 MXN al mes.
         </p>
         <div className={s.heroCtas}>
-          <button className={s.btnHero} onClick={() => navigate(session ? '/dashboard' : '/login?mode=register')}>
+          <button className={s.btnHero} onClick={() => irARegistro()}>
             Crear mi asistente gratis
           </button>
           <button className={s.btnHeroSecondary} onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}>
@@ -95,9 +105,9 @@ export default function Landing({ session }) {
         <h2 className={s.sectionTitle}>Listo en 3 pasos</h2>
         <div className={s.steps}>
           {[
-            { n: '1', title: 'Crea tu cuenta', desc: 'Registrate gratis con tu correo o Google. Sin tarjeta de credito.' },
+            { n: '1', title: 'Crea tu cuenta', desc: 'Registrate gratis con tu correo. Sin tarjeta de credito.' },
             { n: '2', title: 'Describe tu negocio', desc: 'Escribe tu menu, horarios y datos de contacto. La IA aprende en segundos.' },
-            { n: '3', title: 'Publica tu asistente', desc: 'Copia una linea de codigo a tu web o conecta tu WhatsApp. Listo.' },
+            { n: '3', title: 'Publica tu asistente', desc: 'Copia una linea de codigo a tu web o comparte tu link directo. Listo.' },
           ].map(step => (
             <div key={step.n} className={s.step}>
               <div className={s.stepNum}>{step.n}</div>
@@ -148,17 +158,10 @@ export default function Landing({ session }) {
                 ))}
               </ul>
               <button
-                className={p.highlight ? s.btnPrimary : p.name === 'Negocio' ? s.btnPrimary : s.btnOutline}
-                onClick={() => {
-                  if (session) { navigate('/dashboard'); return }
-                  if (p.name === 'Gratuito') {
-                    navigate(`/login?mode=register${new URLSearchParams(window.location.search).get('ref') ? '&ref=' + new URLSearchParams(window.location.search).get('ref') : ''}`)
-                  } else {
-                    navigate(`/login?mode=register&plan=${p.name.toLowerCase()}`)
-                  }
-                }}
+                className={p.highlight ? s.btnPrimary : s.btnOutline}
+                onClick={() => irARegistro(p.name === 'Gratuito' ? '' : p.name.toLowerCase())}
               >
-                {p.name === 'Negocio' ? 'Empezar ahora' : p.cta}
+                {p.cta}
               </button>
             </div>
           ))}
@@ -167,7 +170,7 @@ export default function Landing({ session }) {
 
       <section className={s.ctaSection}>
         <h2 className={s.ctaTitle}>Listo para que tu negocio atienda solo?</h2>
-        <button className={s.btnHero} onClick={() => navigate(session ? '/dashboard' : '/login?mode=register')}>
+        <button className={s.btnHero} onClick={() => irARegistro()}>
           Crear mi asistente gratis
         </button>
         <p className={s.heroNote}>Sin tarjeta de credito - Cancela cuando quieras</p>
