@@ -152,7 +152,7 @@ export default function Landing({ session }) {
                 onClick={() => {
                   if (session) { navigate('/dashboard'); return }
                   if (p.name === 'Gratuito') {
-                    navigate('/login?mode=register')
+                    navigate(`/login?mode=register${new URLSearchParams(window.location.search).get('ref') ? '&ref=' + new URLSearchParams(window.location.search).get('ref') : ''}`)
                   } else {
                     navigate(`/login?mode=register&plan=${p.name.toLowerCase()}`)
                   }
