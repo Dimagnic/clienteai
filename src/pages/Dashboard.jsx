@@ -1105,7 +1105,9 @@ function QRDescargable({ token, nombre }) {
   return (
     <button onClick={descargarQR} style={{ padding: '10px 20px', borderRadius: 8, border: '2px solid #16a34a', background: '#fff', color: '#16a34a', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
       ⬇ Descargar QR
-    </button>
+    </button>const { data: todos } = await supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false })
+const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
+setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
   )
 }
 

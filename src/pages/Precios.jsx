@@ -7,7 +7,12 @@ export default function Precios({ session, negocio }) {
   const [loading, setLoading] = useState(null)
 
   async function handlePago(plan) {
-    if (!session) { navigate('/login'); return }
+    if (!session) {
+  const ref = localStorage.getItem('cai_ref') || ''
+  const refParam = ref ? `&ref=${ref}` : ''
+  navigate(`/login?mode=register&plan=${plan}${refParam}`)
+  return
+}
     if (!negocio) { navigate('/configurar'); return }
     setLoading(plan)
     try {
