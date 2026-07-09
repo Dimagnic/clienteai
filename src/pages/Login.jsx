@@ -6,7 +6,7 @@ import s from './Login.module.css'
 export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const ref = searchParams.get('ref')
+  const ref = searchParams.get('ref') || localStorage.getItem('cai_ref') || ''
   const planParam = searchParams.get('plan')
 
   const [nombre, setNombre] = useState('')

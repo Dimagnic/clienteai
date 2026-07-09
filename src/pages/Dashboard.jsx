@@ -188,8 +188,9 @@ export default function Dashboard({ session }) {
       if (data.error) throw new Error(data.error)
       setClienteCreado(data)
       setNuevoCliente({ nombre: '', email: '', telefono: '', plan: 'gratuito', asesor_id: '' })
-      const { data: todos } = await supabase.from('negocios').select('*').order('created_at', { ascending: false })
-      setClientes(todos || [])
+      const { data: todos } = await supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false })
+const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
+setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
     } catch (err) {
       alert('Error al crear cliente: ' + err.message)
     } finally {
