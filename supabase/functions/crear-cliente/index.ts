@@ -105,12 +105,17 @@ serve(async (req) => {
 
     const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16)
 
+    // SEGURIDAD: el plan real solo lo otorga el webhook de Stripe tras un pago confirmado.
+    // Nunca se le da acceso pagado a un negocio solo porque el formulario lo pidió.
+    const planSolicitado = ['pro', 'negocio'].includes(plan) ? plan : null
+
     const { error: insertError } = await supabase.from('negocios').insert({
       user_id: creado.user.id,
       nombre,
       email_contacto: email,
       telefono: telefono || null,
-      plan: plan || 'gratuito',
+      plan: 'gratuito',
+      plan_deseado: planSolicitado,
       asesor_id: asesor_id || null,
       codigo_cliente: codigo,
       token,

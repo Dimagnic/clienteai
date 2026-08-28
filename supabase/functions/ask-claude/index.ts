@@ -93,6 +93,15 @@ serve(async (req) => {
 
         // ===== PLAN PRO Y NEGOCIO =====
         if (negocio.plan === 'pro' || negocio.plan === 'negocio') {
+          // SEGURIDAD: sin fecha de vencimiento no hay pago confirmado por Stripe.
+          // Nunca se debe tratar como acceso ilimitado por ausencia de dato.
+          if (!negocio.plan_expira_en) {
+            return new Response(JSON.stringify({
+              error: 'plan_no_confirmado',
+              mensaje: `Tu Plan ${negocio.plan === 'pro' ? 'Pro' : 'Negocio'} aún no tiene un pago confirmado. Completa tu pago en clienteai.site para activar tu asistente.`
+            }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+          }
+
           if (negocio.plan_expira_en) {
             const expira = new Date(negocio.plan_expira_en)
             const diasRestantes = Math.ceil((expira.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24))

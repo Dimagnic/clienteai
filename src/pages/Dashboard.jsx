@@ -199,7 +199,13 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
   }
 
   async function cambiarPlan(negocioId, nuevoPlan) {
-    await supabase.from('negocios').update({ plan: nuevoPlan }).eq('id', negocioId)
+    const { data, error } = await supabase.functions.invoke('admin-cambiar-plan', {
+      body: { negocio_id: negocioId, nuevo_plan: nuevoPlan }
+    })
+    if (error || data?.error) {
+      alert('No se pudo cambiar el plan: ' + (data?.error || error?.message || 'error desconocido'))
+      return
+    }
     const { data: todos } = await supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false })
     const asesoresMap = Object.fromEntries(asesores.map(a => [a.id, a]))
     setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
