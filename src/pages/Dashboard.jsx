@@ -216,13 +216,18 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
   async function marcarPagado(asesorId, periodo) {
     if (!confirm(`¿Marcar como pagadas todas las comisiones de ${periodo}?`)) return
     setPagandoComision(asesorId + periodo)
-    await supabase.from('comisiones')
-      .update({ estado: 'pagado' })
+    const { error } = await supabase.from('comisiones')
+      .update({ estado: 'pagada' })
       .eq('asesor_id', asesorId)
       .eq('periodo', periodo)
       .eq('estado', 'pendiente')
+    if (error) {
+      alert('No se pudo marcar como pagado: ' + error.message)
+      setPagandoComision(null)
+      return
+    }
     setComisiones(prev => prev.map(c =>
-      c.asesor_id === asesorId && c.periodo === periodo ? { ...c, estado: 'pagado' } : c
+      c.asesor_id === asesorId && c.periodo === periodo ? { ...c, estado: 'pagada' } : c
     ))
     setPagandoComision(null)
   }
@@ -246,7 +251,7 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
       grupos[key].total += c.monto_comision || 0
       grupos[key].cantidad++
       if (c.estado === 'pendiente') grupos[key].pendiente += c.monto_comision || 0
-      if (c.estado === 'pagado') grupos[key].pagado += c.monto_comision || 0
+      if (c.estado === 'pagada') grupos[key].pagado += c.monto_comision || 0
     })
     return Object.values(grupos).sort((a, b) => b.periodo.localeCompare(a.periodo))
   }

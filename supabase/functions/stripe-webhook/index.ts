@@ -121,7 +121,7 @@ async function registrarComision(supabase: any, negocio_id: string, plan: string
   const { data: negocio } = await supabase.from('negocios').select('asesor_id').eq('id', negocio_id).single()
   if (!negocio?.asesor_id) return
 
-  const { data: asesor } = await supabase.from('asesores').select('comision_primer_mes, comision_recurrente, activo').eq('id', negocio.asesor_id).single()
+  const { data: asesor } = await supabase.from('asesores').select('comision_primer_mes, comision_recurrente, activo, estado').eq('id', negocio.asesor_id).single()
   if (!asesor || !asesor.activo) return
 
   const montoPago = PRECIOS[plan] || 0
@@ -140,6 +140,9 @@ async function registrarComision(supabase: any, negocio_id: string, plan: string
     monto_comision: montoComision,
     periodo,
     elegible: false,
-    estado: 'pendiente',
+    // Se registra siempre, para no perder la comisión. Si el asesor aún
+    // no activó su cuenta (puso contraseña), queda "bloqueada" en vez de
+    // "pendiente" y no se le paga hasta que active — pero el dato no se pierde.
+    estado: asesor.estado === 'activo' ? 'pendiente' : 'bloqueada',
   })
 }

@@ -59,7 +59,7 @@ export default function AsesorDashboard({ session }) {
 
     const { data: referidosData } = await supabase
       .from('negocios')
-      .select('id, nombre, plan, created_at, referido_en, plan_renueva_en, activo')
+      .select('id, nombre, plan, created_at, referido_en, plan_expira_en, activo')
       .eq('asesor_id', asesorData.id)
       .order('created_at', { ascending: false })
     setReferidos(referidosData || [])
@@ -136,8 +136,8 @@ export default function AsesorDashboard({ session }) {
   const hoy = new Date()
   const en30dias = new Date(hoy.getTime() + 30 * 86400000)
   const proximosVencimientos = referidos
-    .filter(r => r.plan_renueva_en && new Date(r.plan_renueva_en) <= en30dias && new Date(r.plan_renueva_en) >= hoy)
-    .sort((a, b) => new Date(a.plan_renueva_en) - new Date(b.plan_renueva_en))
+    .filter(r => r.plan_expira_en && new Date(r.plan_expira_en) <= en30dias && new Date(r.plan_expira_en) >= hoy)
+    .sort((a, b) => new Date(a.plan_expira_en) - new Date(b.plan_expira_en))
 
   const enlaceReferido = `${window.location.origin}/?ref=${asesor.codigo}`
 
@@ -239,7 +239,7 @@ export default function AsesorDashboard({ session }) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {proximosVencimientos.map(r => {
-                    const dias = diasParaVencer(r.plan_renueva_en)
+                    const dias = diasParaVencer(r.plan_expira_en)
                     const urgente = dias <= 5
                     return (
                       <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 10, background: urgente ? '#fef2f2' : '#fafaf9', border: `1px solid ${urgente ? '#fecaca' : '#e5e7eb'}` }}>
@@ -287,7 +287,7 @@ export default function AsesorDashboard({ session }) {
                           </span>
                         </td>
                         <td style={{ color: 'var(--text-secondary)' }}>{new Date(r.created_at).toLocaleDateString('es-MX')}</td>
-                        <td style={{ color: 'var(--text-secondary)' }}>{r.plan_renueva_en ? new Date(r.plan_renueva_en).toLocaleDateString('es-MX') : '—'}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{r.plan_expira_en ? new Date(r.plan_expira_en).toLocaleDateString('es-MX') : '—'}</td>
                       </tr>
                     ))}
                   </tbody>
