@@ -19,11 +19,12 @@ export default function Chat() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, thinking])
 
   async function loadNegocio() {
-    const { data } = await supabase.from('negocios').select('*').eq('token', token).single()
-    if (!data) { setNotFound(true); setLoading(false); return }
-    setNegocio(data)
-    const nombreBot = data.nombre_bot || data.nombre || 'Asistente'
-    setMessages([{ role: 'assistant', content: `Hola! Soy ${nombreBot}${data.nombre_bot ? `, el asistente de ${data.nombre}` : ''}. ¿En qué te puedo ayudar?` }])
+    const { data } = await supabase.rpc('obtener_negocio_widget', { p_token: token })
+    const negocioData = data?.[0]
+    if (!negocioData) { setNotFound(true); setLoading(false); return }
+    setNegocio(negocioData)
+    const nombreBot = negocioData.nombre_bot || negocioData.nombre || 'Asistente'
+    setMessages([{ role: 'assistant', content: `Hola! Soy ${nombreBot}${negocioData.nombre_bot ? `, el asistente de ${negocioData.nombre}` : ''}. ¿En qué te puedo ayudar?` }])
     setLoading(false)
   }
 

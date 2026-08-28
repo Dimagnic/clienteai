@@ -47,15 +47,17 @@ export default function Dashboard({ session }) {
     const semana = new Date(Date.now() - 7 * 86400000).toISOString()
 
     if (esAdmin) {
-      // Admin: cargar clientes y asesores
-      const [clientesRes, asesoresRes, misNegociosRes] = await Promise.all([
+      // Admin: cargar clientes, asesores y comisiones
+      const [clientesRes, asesoresRes, misNegociosRes, comisionesRes] = await Promise.all([
         supabase.from('negocios').select('*').or('asistente_num.is.null,asistente_num.eq.1').order('created_at', { ascending: false }),
         supabase.from('asesores').select('*').order('created_at', { ascending: false }),
         supabase.from('negocios').select('*').eq('user_id', session.user.id).order('asistente_num', { ascending: true }),
+        supabase.from('comisiones').select('*, asesores(nombre, codigo)').order('created_at', { ascending: false }),
       ])
       const asesoresMap = Object.fromEntries((asesoresRes.data || []).map(a => [a.id, a]))
       setClientes((clientesRes.data || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.asesor_id] : null })))
       setAsesores(asesoresRes.data || [])
+      setComisiones(comisionesRes.data || [])
 
       // Si el admin también tiene su propio negocio, lo carga igual que un cliente normal
       const misNegocios = misNegociosRes.data || []
@@ -158,7 +160,7 @@ export default function Dashboard({ session }) {
 
       const { data: todasComisiones } = await supabase
         .from('comisiones')
-        .select('*, asesores(nombre_completo, codigo)')
+        .select('*, asesores(nombre, codigo)')
         .order('created_at', { ascending: false })
       setComisiones(todasComisiones || [])
     } catch (err) {
@@ -232,7 +234,7 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
       if (!grupos[key]) {
         grupos[key] = {
           asesor_id: c.asesor_id,
-          nombre: c.asesores?.nombre_completo || 'Sin nombre',
+          nombre: c.asesores?.nombre || 'Sin nombre',
           codigo: c.asesores?.codigo || '',
           periodo: c.periodo,
           total: 0,

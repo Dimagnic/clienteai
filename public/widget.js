@@ -74,11 +74,19 @@
 
   async function loadNegocio() {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/negocios?token=eq.${token}&select=*`,
-      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+      `${SUPABASE_URL}/rest/v1/rpc/obtener_negocio_widget`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_token: token }),
+      }
     );
     const data = await res.json();
-    if (data.length) {
+    if (data && data.length) {
       negocio = data[0];
       color = negocio.color || '#16a34a';
       applyStyles(color);

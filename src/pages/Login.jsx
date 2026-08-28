@@ -42,8 +42,8 @@ export default function Login() {
     try {
       let asesor_id = null
       if (ref) {
-        const { data: asesor } = await supabase.from('asesores').select('id').eq('codigo', ref.toUpperCase()).maybeSingle()
-        if (asesor) asesor_id = asesor.id
+        const { data: asesorIdEncontrado } = await supabase.rpc('buscar_asesor_por_codigo', { p_codigo: ref })
+        if (asesorIdEncontrado) asesor_id = asesorIdEncontrado
       }
 
       const { data, error: fnError } = await supabase.functions.invoke('crear-cliente', {
