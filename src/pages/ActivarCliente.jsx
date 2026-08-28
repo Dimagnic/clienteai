@@ -28,7 +28,7 @@ export default function ActivarCliente() {
       // Buscar el negocio con ese código
       const { data: negocio } = await supabase
         .from('negocios')
-        .select('id, estado_cuenta')
+        .select('id, estado_cuenta, plan_deseado')
         .eq('codigo_cliente', codigoNormalizado)
         .maybeSingle()
 
@@ -51,6 +51,31 @@ export default function ActivarCliente() {
       })
       if (loginError) throw loginError
 
+      // Cuenta activada y sesión iniciada. Si el cliente eligió un plan de
+      // pago al registrarse, lo mandamos a pagar AHORA, antes de configurar
+      // su bot. Solo si paga con éxito llegará a /configurar.
+      const planPago = negocio.plan_deseado
+
+      if (planPago === 'pro' || planPago === 'negocio') {
+        setExito('pago')
+        const { data: checkout, error: checkoutError } = await supabase.functions.invoke('stripe-checkout', {
+          body: {
+            plan: planPago,
+            negocio_id: negocio.id,
+            success_url: 'https://clienteai.site/configurar?bienvenida=1',
+            cancel_url: 'https://clienteai.site/dashboard',
+          }
+        })
+        if (checkoutError || !checkout?.url) {
+          // Si falla el checkout, no dejamos al cliente varado: lo mandamos
+          // a su dashboard en plan gratuito, puede intentar pagar de nuevo desde ahí.
+          navigate('/dashboard')
+          return
+        }
+        window.location.href = checkout.url
+        return
+      }
+
       setExito(true)
       setTimeout(() => navigate('/dashboard'), 2500)
     } catch (err) {
@@ -65,6 +90,16 @@ export default function ActivarCliente() {
     border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none',
     boxSizing: 'border-box', marginTop: 4,
   }
+
+  if (exito === 'pago') return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0fdf4' }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: '40px 36px', maxWidth: 400, textAlign: 'center', border: '1px solid #bbf7d0' }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+        <h2 style={{ color: '#16a34a', marginBottom: 8 }}>¡Cuenta activada!</h2>
+        <p style={{ color: '#374151', fontSize: 14 }}>Te llevamos a completar tu pago para activar tu plan...</p>
+      </div>
+    </div>
+  )
 
   if (exito) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0fdf4' }}>

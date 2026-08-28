@@ -13,7 +13,12 @@ export default function Precios({ session, negocio }) {
   navigate(`/login?mode=register&plan=${plan}${refParam}`)
   return
 }
-    if (!negocio) { navigate('/configurar'); return }
+    if (!negocio) {
+      // Caso raro: hay sesión pero no se encontró negocio asociado.
+      // Nunca debe mandar a /configurar sin haber pagado primero.
+      alert('No encontramos tu cuenta de negocio. Contacta soporte para ayudarte.')
+      return
+    }
     setLoading(plan)
     try {
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
