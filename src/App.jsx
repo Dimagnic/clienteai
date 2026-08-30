@@ -14,6 +14,7 @@ import AdminLogin from './pages/AdminLogin'
 import ActivarAsesor from './pages/ActivarAsesor'
 import ActivarCliente from './pages/ActivarCliente'
 import ResetPassword from './pages/ResetPassword'
+import EnConstruccion from './pages/EnConstruccion'
 
 function ProtectedRoute({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -22,6 +23,21 @@ function ProtectedRoute({ session, children }) {
 
 export default function App() {
   const [session, setSession] = useState(undefined)
+
+  // MODO MANTENIMIENTO: se activa con la variable de entorno
+  // VITE_MAINTENANCE_MODE=true en Vercel. Para ver el sitio real mientras
+  // está activo, visita una vez: clienteai.site/?preview=TU_CLAVE
+  // (la clave se define en VITE_PREVIEW_KEY). Se recuerda en este navegador.
+  const mantenimiento = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
+  const previewKey = import.meta.env.VITE_PREVIEW_KEY || ''
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const intento = params.get('preview')
+    if (intento && previewKey && intento === previewKey) {
+      localStorage.setItem('cai_preview_ok', '1')
+    }
+  }, [])
 
   useEffect(() => {
     if (!localStorage.getItem('theme')) {
@@ -38,6 +54,11 @@ export default function App() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  const tieneBypass = localStorage.getItem('cai_preview_ok') === '1'
+  if (mantenimiento && !tieneBypass) {
+    return <EnConstruccion />
+  }
 
   if (session === undefined) {
     return (
