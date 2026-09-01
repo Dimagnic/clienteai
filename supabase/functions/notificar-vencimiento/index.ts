@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://clienteai.site',
@@ -9,6 +10,34 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
+    // SEGURIDAD: nadie llamaba esta función desde el código del proyecto,
+    // pero seguía publicada sin ninguna verificación, permitiendo mandar
+    // correos con la marca ClienteAI a cualquier dirección. Se exige que
+    // quien la llame sea un administrador verificado.
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const jwt = authHeader.replace('Bearer ', '')
+    const supabaseUrl = 'https://eevflmyoqwndobjkjuov.supabase.co'
+    const serviceKey = Deno.env.get('SB_SERVICE_ROLE_KEY') ?? ''
+    const supabaseAdmin = createClient(supabaseUrl, serviceKey)
+
+    if (!jwt) {
+      return new Response(JSON.stringify({ error: 'No autenticado' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(jwt)
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Sesión inválida' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const { data: perfil } = await supabaseAdmin.from('perfiles').select('is_admin').eq('user_id', userData.user.id).single()
+    if (!perfil?.is_admin) {
+      return new Response(JSON.stringify({ error: 'No tienes permisos de administrador' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const { nombre, email, plan, expira_en } = await req.json()
     const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
 

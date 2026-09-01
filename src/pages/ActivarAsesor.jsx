@@ -6,7 +6,8 @@ import s from './Login.module.css'
 export default function ActivarAsesor() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [codigo, setCodigo] = useState('')
+  const [email, setEmail] = useState('')
+  const [token, setToken] = useState('')
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
   const [aceptaTerminos, setAceptaTerminos] = useState(false)
@@ -15,15 +16,18 @@ export default function ActivarAsesor() {
   const [exito, setExito] = useState(false)
 
   useEffect(() => {
-    const codigoUrl = searchParams.get('codigo')
-    if (codigoUrl) setCodigo(codigoUrl.toUpperCase())
+    const emailUrl = searchParams.get('email')
+    if (emailUrl) setEmail(emailUrl)
+    const tokenUrl = searchParams.get('token')
+    if (tokenUrl) setToken(tokenUrl)
   }, [searchParams])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
-    if (!codigo.trim()) { setError('Ingresa tu código de asesor.'); return }
+    if (!email.trim()) { setError('Ingresa tu correo electrónico.'); return }
+    if (!token.trim()) { setError('Falta el código de activación de tu correo. Usa el link completo que te enviamos, o pégalo abajo.'); return }
     if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return }
     if (password !== password2) { setError('Las contraseñas no coinciden.'); return }
     if (!aceptaTerminos) { setError('Debes aceptar los términos y condiciones.'); return }
@@ -31,7 +35,7 @@ export default function ActivarAsesor() {
     setLoading(true)
     try {
       const { data, error: err } = await supabase.functions.invoke('activar-asesor', {
-        body: { codigo: codigo.trim().toUpperCase(), password }
+        body: { email: email.trim().toLowerCase(), password, token: token.trim() }
       })
       if (err) throw err
       if (data.error) throw new Error(data.error)
@@ -66,17 +70,28 @@ export default function ActivarAsesor() {
 
         <form className={s.form} onSubmit={handleSubmit}>
           <div className={s.field}>
-            <label className={s.label}>Código de asesor</label>
+            <label className={s.label}>Correo electrónico</label>
             <input
               className={s.input}
-              value={codigo}
-              onChange={e => setCodigo(e.target.value)}
-              placeholder="CAI2026-XXNNNNNN"
-              style={{ textTransform: 'uppercase', fontFamily: 'monospace' }}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               required
               disabled={loading}
             />
           </div>
+          {!searchParams.get('token') && (
+            <div className={s.field}>
+              <label className={s.label}>Código de activación (del correo)</label>
+              <input
+                className={s.input}
+                value={token}
+                onChange={e => setToken(e.target.value)}
+                placeholder="Pega aquí el código largo de tu correo"
+                disabled={loading}
+              />
+            </div>
+          )}
           <div className={s.field}>
             <label className={s.label}>Crea tu contraseña</label>
             <input className={s.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={8} />

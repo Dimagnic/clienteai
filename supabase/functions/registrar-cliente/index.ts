@@ -116,17 +116,18 @@ serve(async (req) => {
     // Generar código de cliente
     const codigo = await generarCodigo(supabase)
 
-    // Crear usuario en auth con correo SINTÉTICO (igual que el flujo del admin)
+    // Crear usuario en auth con el correo real del cliente.
     // La contraseña que el cliente eligió se guarda directamente, ya que la puso él mismo en el registro.
-    const emailSintetico = `${codigo.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
+    const emailNormalizado = email.trim().toLowerCase()
     const { data: creado, error: authError } = await supabase.auth.admin.createUser({
-      email: emailSintetico,
+      email: emailNormalizado,
       password,
       email_confirm: true,
     })
     if (authError) throw new Error(authError.message)
 
     const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16)
+    const tokenActivacion = crypto.randomUUID().replace(/-/g, '')
     const trialExpira = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
     // Crear negocio - queda PENDIENTE hasta que confirme su correo real vía link de activación
@@ -136,6 +137,7 @@ serve(async (req) => {
       email_contacto: email,
       codigo_cliente: codigo,
       token,
+      token_activacion: tokenActivacion,
       plan: 'gratuito',
       asistente_num: 1,
       asistente_nombre: 'Asistente 1',
@@ -147,7 +149,7 @@ serve(async (req) => {
     if (negocioError) throw new Error(negocioError.message)
 
     // Enviar correo de confirmación con link de activación
-    const enlaceActivacion = `https://clienteai.site/activar-cliente?codigo=${encodeURIComponent(codigo)}`
+    const enlaceActivacion = `https://clienteai.site/activar-cliente?codigo=${encodeURIComponent(codigo)}&token=${encodeURIComponent(tokenActivacion)}`
     const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
     let correoEnviado = false
     if (resendKey) {

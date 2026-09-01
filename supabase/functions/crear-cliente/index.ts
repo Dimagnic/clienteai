@@ -87,11 +87,11 @@ serve(async (req) => {
     }
 
     const codigo = await generarCodigoCliente(supabase)
-    const emailSintetico = `${codigo.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
+    const emailNormalizado = email.trim().toLowerCase()
     const passwordTemporal = crypto.randomUUID()
 
     const { data: creado, error: createError } = await supabase.auth.admin.createUser({
-      email: emailSintetico,
+      email: emailNormalizado,
       password: passwordTemporal,
       email_confirm: true,
     })
@@ -104,6 +104,10 @@ serve(async (req) => {
     }
 
     const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16)
+    // Token SECRETO de activación: no se comparte públicamente en ningún lado,
+    // solo viaja en el link del correo. Es lo único que evita que alguien tome
+    // la cuenta adivinando o conociendo el codigo_cliente (que sí es predecible).
+    const tokenActivacion = crypto.randomUUID().replace(/-/g, '')
 
     // SEGURIDAD: el plan real solo lo otorga el webhook de Stripe tras un pago confirmado.
     // Nunca se le da acceso pagado a un negocio solo porque el formulario lo pidió.
@@ -119,13 +123,15 @@ serve(async (req) => {
       asesor_id: asesor_id || null,
       codigo_cliente: codigo,
       token,
+      token_activacion: tokenActivacion,
       estado_cuenta: 'pendiente',
     })
 
     if (insertError) throw insertError
 
-    // Enviar correo de activación
-    const enlaceActivacion = `https://clienteai.site/activar-cliente?codigo=${encodeURIComponent(codigo)}`
+    // Enviar correo de activación (identidad = correo real, el codigo_cliente
+    // queda solo como número de referencia amigable, ya no se usa para entrar)
+    const enlaceActivacion = `https://clienteai.site/activar-cliente?email=${encodeURIComponent(emailNormalizado)}&token=${encodeURIComponent(tokenActivacion)}`
     const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? ''
     let correoEnviado = false
 
@@ -147,7 +153,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ ok: true, codigo, nombre, correoEnviado }),
+      JSON.stringify({ ok: true, codigo, nombre, email: emailNormalizado, correoEnviado, tokenActivacion }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

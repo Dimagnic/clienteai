@@ -86,7 +86,7 @@ export default function Login() {
             </p>
             <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2 }}>
               <p style={{ margin: 0 }}><strong>Código de cliente:</strong> {clienteCreado.codigo}</p>
-              <p style={{ margin: 0 }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-cliente?codigo={clienteCreado.codigo}</p>
+              <p style={{ margin: 0 }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-cliente?email={clienteCreado.email}&token={clienteCreado.tokenActivacion}</p>
               <p style={{ margin: 0 }}><strong>Estado:</strong> Pendiente (se activa cuando crees tu contraseña)</p>
             </div>
             <p style={{ fontSize: 13, color: '#15803d', margin: '8px 0 12px' }}>

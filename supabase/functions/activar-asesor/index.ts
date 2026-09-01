@@ -10,11 +10,11 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { codigo, password } = await req.json()
+    const { email, password, token } = await req.json()
 
-    if (!codigo || !password) {
+    if (!email || !password || !token) {
       return new Response(
-        JSON.stringify({ error: 'Faltan datos: codigo o password' }),
+        JSON.stringify({ error: 'Faltan datos: email, token o password' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -31,18 +31,27 @@ serve(async (req) => {
       Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
     )
 
-    const codigoNormalizado = codigo.trim().toUpperCase()
+    const emailNormalizado = email.trim().toLowerCase()
 
     const { data: asesor, error: findError } = await supabase
       .from('asesores')
-      .select('id, user_id, estado, nombre')
-      .eq('codigo', codigoNormalizado)
+      .select('id, user_id, estado, nombre, token_activacion')
+      .eq('email', emailNormalizado)
       .maybeSingle()
 
     if (findError || !asesor) {
       return new Response(
-        JSON.stringify({ error: 'Código de asesor no encontrado' }),
+        JSON.stringify({ error: 'No encontramos una cuenta con ese correo' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // SEGURIDAD: el token secreto solo viaja en el link del correo privado
+    // de activación, evitando que alguien active la cuenta en tu lugar.
+    if (!asesor.token_activacion || asesor.token_activacion !== token) {
+      return new Response(
+        JSON.stringify({ error: 'Enlace de activación inválido o expirado. Revisa el correo que te enviamos.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -57,15 +66,15 @@ serve(async (req) => {
     const { error: updateAuthError } = await supabase.auth.admin.updateUserById(asesor.user_id, { password })
     if (updateAuthError) throw updateAuthError
 
-    // Marcar como activo
+    // Marcar como activo e invalidar el token (de un solo uso)
     const { error: updateAsesorError } = await supabase
       .from('asesores')
-      .update({ estado: 'activo', activado_en: new Date().toISOString() })
+      .update({ estado: 'activo', activado_en: new Date().toISOString(), token_activacion: null })
       .eq('id', asesor.id)
     if (updateAsesorError) throw updateAsesorError
 
     return new Response(
-      JSON.stringify({ ok: true, nombre: asesor.nombre }),
+      JSON.stringify({ ok: true, nombre: asesor.nombre, email: emailNormalizado }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

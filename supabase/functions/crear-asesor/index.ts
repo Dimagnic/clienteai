@@ -7,13 +7,14 @@ const corsHeaders = {
 }
 
 function generarCodigo(nombre: string, apellido: string, fechaNacimiento: string): string {
+  const anioActual = new Date().getFullYear()
   const [anio, mes, dia] = fechaNacimiento.split('-')
   const inicialNombre = (nombre.trim()[0] || 'X').toUpperCase()
   const inicialApellido = (apellido.trim()[0] || 'X').toUpperCase()
   const dd = dia.padStart(2, '0')
   const mm = mes.padStart(2, '0')
   const yy = anio.slice(-2)
-  return `CAI2026-${inicialNombre}${inicialApellido}${dd}${mm}${yy}`
+  return `CAI${anioActual}-${inicialNombre}${inicialApellido}${dd}${mm}${yy}`
 }
 
 function plantillaCorreoActivacion(nombre: string, codigo: string, enlaceActivacion: string): string {
@@ -92,11 +93,11 @@ serve(async (req) => {
       )
     }
 
-    const emailSintetico = `${codigo.toLowerCase()}@asesores.clienteai.site`
+    const emailNormalizado = email.trim().toLowerCase()
     const passwordTemporal = crypto.randomUUID() // password aleatorio temporal, el asesor lo cambia al activar
 
     const { data: creado, error: createError } = await supabase.auth.admin.createUser({
-      email: emailSintetico,
+      email: emailNormalizado,
       password: passwordTemporal,
       email_confirm: true,
     })
@@ -108,20 +109,26 @@ serve(async (req) => {
       )
     }
 
+    // Token SECRETO de activación: distinto del "codigo" (que se comparte
+    // públicamente como link de referido). Solo viaja en el correo privado.
+    const tokenActivacion = crypto.randomUUID().replace(/-/g, '')
+
     const { error: insertError } = await supabase.from('asesores').insert({
       user_id: creado.user.id,
       nombre: nombreCompleto,
-      email,
+      email: emailNormalizado,
       telefono: telefono || null,
       fecha_nacimiento: fechaNacimiento,
       codigo,
+      token_activacion: tokenActivacion,
       estado: 'pendiente',
     })
 
     if (insertError) throw insertError
 
-    // Enviar correo de activación vía Resend
-    const enlaceActivacion = `https://clienteai.site/activar-asesor?codigo=${encodeURIComponent(codigo)}`
+    // Enviar correo de activación vía Resend (identidad = correo real; el
+    // codigo queda solo como número de referencia y link de referido)
+    const enlaceActivacion = `https://clienteai.site/activar-asesor?email=${encodeURIComponent(emailNormalizado)}&token=${encodeURIComponent(tokenActivacion)}`
     const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? ''
     let correoEnviado = false
 
@@ -143,7 +150,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ ok: true, codigo, nombreCompleto, correoEnviado }),
+      JSON.stringify({ ok: true, codigo, nombreCompleto, email: emailNormalizado, correoEnviado, tokenActivacion }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

@@ -14,11 +14,11 @@ export default function AdminLogin() {
   const [adminPassword, setAdminPassword] = useState('')
 
   // Asesor
-  const [codigo, setCodigo] = useState('')
+  const [emailAsesor, setEmailAsesor] = useState('')
   const [password, setPassword] = useState('')
 
   // Cliente
-  const [codigoCliente, setCodigoCliente] = useState('')
+  const [emailCliente, setEmailCliente] = useState('')
   const [passwordCliente, setPasswordCliente] = useState('')
 
   async function loginAdmin(e) {
@@ -34,11 +34,9 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const codigoNormalizado = codigo.trim().toUpperCase()
-    if (!codigoNormalizado) { setError('Ingresa tu código de asesor.'); setLoading(false); return }
-    const emailSintetico = `${codigoNormalizado.toLowerCase()}@asesores.clienteai.site`
-    const { error: err } = await supabase.auth.signInWithPassword({ email: emailSintetico, password })
-    if (err) { setError('Código o contraseña incorrectos.'); setLoading(false); return }
+    if (!emailAsesor.trim()) { setError('Ingresa tu correo electrónico.'); setLoading(false); return }
+    const { error: err } = await supabase.auth.signInWithPassword({ email: emailAsesor.trim().toLowerCase(), password })
+    if (err) { setError('Correo o contraseña incorrectos.'); setLoading(false); return }
     navigate('/asesor')
   }
 
@@ -46,11 +44,9 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const codigoNormalizado = codigoCliente.trim().toUpperCase()
-    if (!codigoNormalizado) { setError('Ingresa tu código de cliente.'); setLoading(false); return }
-    const emailSintetico = `${codigoNormalizado.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
-    const { error: err } = await supabase.auth.signInWithPassword({ email: emailSintetico, password: passwordCliente })
-    if (err) { setError('Código o contraseña incorrectos.'); setLoading(false); return }
+    if (!emailCliente.trim()) { setError('Ingresa tu correo electrónico.'); setLoading(false); return }
+    const { error: err } = await supabase.auth.signInWithPassword({ email: emailCliente.trim().toLowerCase(), password: passwordCliente })
+    if (err) { setError('Correo o contraseña incorrectos.'); setLoading(false); return }
     navigate('/dashboard')
   }
 
@@ -84,11 +80,11 @@ export default function AdminLogin() {
         {modo === 'asesor' && (
           <>
             <h1 className={s.title}>Acceso de asesor</h1>
-            <p className={s.subtitle}>Entra con tu código y contraseña</p>
+            <p className={s.subtitle}>Entra con tu correo y contraseña</p>
             <form className={s.form} onSubmit={loginAsesor}>
               <div className={s.field}>
-                <label className={s.label}>Código de asesor</label>
-                <input className={s.input} placeholder="CAI2026-XXNNNNNN" value={codigo} onChange={e => setCodigo(e.target.value)} required disabled={loading} style={{ textTransform: 'uppercase', fontFamily: 'monospace' }} />
+                <label className={s.label}>Correo electrónico</label>
+                <input className={s.input} type="email" value={emailAsesor} onChange={e => setEmailAsesor(e.target.value)} required disabled={loading} />
               </div>
               <div className={s.field}>
                 <label className={s.label}>Contraseña</label>
@@ -105,11 +101,11 @@ export default function AdminLogin() {
         {modo === 'cliente' && (
           <>
             <h1 className={s.title}>Acceso de cliente</h1>
-            <p className={s.subtitle}>Entra con tu código y contraseña</p>
+            <p className={s.subtitle}>Entra con tu correo y contraseña</p>
             <form className={s.form} onSubmit={loginCliente}>
               <div className={s.field}>
-                <label className={s.label}>Código de cliente</label>
-                <input className={s.input} placeholder="CAI2026-CL000001" value={codigoCliente} onChange={e => setCodigoCliente(e.target.value)} required disabled={loading} style={{ textTransform: 'uppercase', fontFamily: 'monospace' }} />
+                <label className={s.label}>Correo electrónico</label>
+                <input className={s.input} type="email" value={emailCliente} onChange={e => setEmailCliente(e.target.value)} required disabled={loading} />
               </div>
               <div className={s.field}>
                 <label className={s.label}>Contraseña</label>

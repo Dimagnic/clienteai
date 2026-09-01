@@ -5,9 +5,11 @@ import { supabase } from '../lib/supabase'
 export default function ActivarCliente() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const codigoUrl = params.get('codigo') || ''
+  const emailUrl = params.get('email') || ''
+  const tokenUrl = params.get('token') || ''
 
-  const [codigo, setCodigo] = useState(codigoUrl)
+  const [email, setEmail] = useState(emailUrl)
+  const [token, setToken] = useState(tokenUrl)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,37 +18,36 @@ export default function ActivarCliente() {
 
   async function activar() {
     setError('')
-    if (!codigo.trim()) { setError('Ingresa tu código de cliente.'); return }
+    if (!email.trim()) { setError('Ingresa tu correo electrónico.'); return }
+    if (!token.trim()) { setError('Falta el código de activación de tu correo. Usa el link completo que te enviamos, o pégalo abajo.'); return }
     if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return }
     if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); return }
 
     setLoading(true)
     try {
-      const codigoNormalizado = codigo.trim().toUpperCase()
-      const emailSintetico = `${codigoNormalizado.toLowerCase().replace(/-/g, '.')}@clientes.clienteai.site`
+      const emailNormalizado = email.trim().toLowerCase()
 
-      // Buscar el negocio con ese código
+      // Buscar el negocio con ese correo
       const { data: negocio } = await supabase
         .from('negocios')
         .select('id, estado_cuenta, plan_deseado')
-        .eq('codigo_cliente', codigoNormalizado)
+        .eq('email_contacto', emailNormalizado)
         .maybeSingle()
 
-      if (!negocio) { setError('Código de cliente no encontrado.'); setLoading(false); return }
+      if (!negocio) { setError('No encontramos una cuenta con ese correo.'); setLoading(false); return }
       if (negocio.estado_cuenta === 'activo') { setError('Esta cuenta ya fue activada. Inicia sesión normalmente.'); setLoading(false); return }
 
       // Llamar a la función Edge que activa la cuenta
       const { data, error: fnError } = await supabase.functions.invoke('activar-cliente', {
-        body: { codigo: codigoNormalizado, nuevaPassword: password }
+        body: { email: emailNormalizado, nuevaPassword: password, token: token.trim() }
       })
 
       if (fnError) throw fnError
       if (data?.error) throw new Error(data.error)
 
-      // Login automático con el email sintético devuelto por la función (o el calculado localmente)
-      const emailParaLogin = data?.emailSintetico || emailSintetico
+      // Login automático con el correo real
       const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: emailParaLogin,
+        email: data?.email || emailNormalizado,
         password
       })
       if (loginError) throw loginError
@@ -122,14 +123,28 @@ export default function ActivarCliente() {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Código de cliente</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Correo electrónico</label>
           <input
-            value={codigo}
-            onChange={e => setCodigo(e.target.value.toUpperCase())}
-            placeholder="CAI2026-CL000001"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="tu@negocio.com"
             style={inputStyle}
           />
         </div>
+
+        {!tokenUrl && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Código de activación (del correo)</label>
+            <input
+              value={token}
+              onChange={e => setToken(e.target.value)}
+              placeholder="Pega aquí el código largo de tu correo"
+              style={inputStyle}
+            />
+            <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>Lo encuentras en el link del correo de activación, o pega solo el código que sigue a "&token=" en ese link.</p>
+          </div>
+        )}
 
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Nueva contraseña</label>
