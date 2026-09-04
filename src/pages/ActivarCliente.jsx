@@ -27,15 +27,11 @@ export default function ActivarCliente() {
     try {
       const emailNormalizado = email.trim().toLowerCase()
 
-      // Buscar el negocio con ese correo
-      const { data: negocio } = await supabase
-        .from('negocios')
-        .select('id, estado_cuenta, plan_deseado')
-        .eq('email_contacto', emailNormalizado)
-        .maybeSingle()
-
-      if (!negocio) { setError('No encontramos una cuenta con ese correo.'); setLoading(false); return }
-      if (negocio.estado_cuenta === 'activo') { setError('Esta cuenta ya fue activada. Inicia sesión normalmente.'); setLoading(false); return }
+      // Nota: la verificación de que la cuenta exista y esté pendiente la
+      // hace la función Edge (con permisos de servidor). No se puede
+      // consultar la tabla "negocios" desde el navegador en este punto
+      // porque el cliente aún no inició sesión, y las reglas de seguridad
+      // (RLS) bloquean correctamente ese acceso anónimo.
 
       // Llamar a la función Edge que activa la cuenta
       const { data, error: fnError } = await supabase.functions.invoke('activar-cliente', {
@@ -55,17 +51,12 @@ export default function ActivarCliente() {
       // Cuenta activada y sesión iniciada. Si el cliente eligió un plan de
       // pago al registrarse, lo mandamos a pagar AHORA, antes de configurar
       // su bot. Solo si paga con éxito llegará a /configurar.
-      const planPago = negocio.plan_deseado
+      const planPago = data?.plan_deseado
 
       if (planPago === 'pro' || planPago === 'negocio') {
         setExito('pago')
         const { data: checkout, error: checkoutError } = await supabase.functions.invoke('stripe-checkout', {
-          body: {
-            plan: planPago,
-            negocio_id: negocio.id,
-            success_url: 'https://clienteai.site/configurar?bienvenida=1',
-            cancel_url: 'https://clienteai.site/dashboard',
-          }
+          body: { plan: planPago, negocio_id: data.negocio_id }
         })
         if (checkoutError || !checkout?.url) {
           // Si falla el checkout, no dejamos al cliente varado: lo mandamos
