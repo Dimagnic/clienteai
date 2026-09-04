@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { askClaude, buildSystemPrompt, detectarIdioma } from '../lib/claude'
+import { askClaude, detectarIdioma } from '../lib/claude'
 import s from './Preview.module.css'
 
 export default function Preview({ session }) {
@@ -55,8 +55,9 @@ export default function Preview({ session }) {
     // Vista previa: NO guarda en conversaciones ni cuenta contra el límite
     // (negocio_id omitido intencionalmente para no afectar las stats)
     try {
-      const systemPrompt = buildSystemPrompt(negocio, detectarIdioma())
-      const reply = await askClaude({ systemPrompt, messages: newMessages })
+      // Sin negocio_id: la función reconoce tu sesión y arma el preview con
+      // los datos de TU negocio directamente desde el servidor.
+      const reply = await askClaude({ messages: newMessages, idioma: detectarIdioma() })
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
       setError(err.message)
