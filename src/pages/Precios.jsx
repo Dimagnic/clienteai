@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -21,13 +21,10 @@ export default function Precios({ session, negocio }) {
     }
     setLoading(plan)
     try {
+      // Nota: success_url/cancel_url ya no se mandan — el servidor las fija
+      // siempre a clienteai.site, para evitar redirecciones manipuladas.
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
-        body: {
-          plan,
-          negocio_id: negocio.id,
-          success_url: 'https://clienteai.site/dashboard',
-          cancel_url: 'https://clienteai.site/precios',
-        }
+        body: { plan, negocio_id: negocio.id }
       })
       if (error) throw error
       if (data.url) window.location.href = data.url
