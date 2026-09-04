@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { askClaude, buildSystemPrompt, detectarIdioma } from '../lib/claude'
+import { askClaude, detectarIdioma } from '../lib/claude'
 
 export default function Chat() {
   const { token } = useParams()
@@ -41,9 +41,9 @@ export default function Chat() {
     // La Edge Function guarda las conversaciones y controla los límites
     try {
       const reply = await askClaude({
-        systemPrompt: buildSystemPrompt(negocio, detectarIdioma()),
         messages: newMessages,
         negocio_id: negocio.id,
+        idioma: detectarIdioma(),
       })
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
