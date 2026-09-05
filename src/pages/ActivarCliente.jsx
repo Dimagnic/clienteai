@@ -41,6 +41,10 @@ export default function ActivarCliente() {
       if (fnError) throw fnError
       if (data?.error) throw new Error(data.error)
 
+      // Cerrar cualquier sesión previa del navegador (otro cliente, un
+      // asesor, o el admin) antes de iniciar la del cliente recién activado.
+      await supabase.auth.signOut()
+
       // Login automático con el correo real
       const { error: loginError } = await supabase.auth.signInWithPassword({
         email: data?.email || emailNormalizado,
