@@ -1,10 +1,9 @@
-﻿(function () {
+(function () {
   // Solo cargar el widget de demo en la landing page (raíz del sitio)
   if (window.location.pathname !== '/') return;
 
   const SUPABASE_URL = 'https://eevflmyoqwndobjkjuov.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldmZsbXlvcXduZG9iamtqdW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MzI5MjMsImV4cCI6MjA5NzEwODkyM30.3GomP52oNTWL8sdttwHaF2NyfjklKKO9eucmgFe2x_E';
-  const TOKEN = 'rpb944k2yp3e87s6';
 
   const style = document.createElement('style');
   style.textContent = `
@@ -110,30 +109,9 @@
   document.body.appendChild(btn);
   document.body.appendChild(box);
 
-  let negocio = null;
   let messages = [];
   let isOpen = false;
   let badgeHidden = false;
-
-  const SISTEMA = `Eres el asistente virtual de ClienteAI, una plataforma que permite a negocios crear asistentes de IA en 10 minutos.
-Responde siempre en español, amable y conciso (maximo 3 lineas).
-
-SOBRE CLIENTEAI:
-- Crea un asistente virtual para tu negocio en 10 minutos
-- Sin codigo, sin complicaciones
-- Widget embebible para tu pagina web
-- Link directo para compartir por WhatsApp
-- Planes desde $0 MXN (gratuito con 50 conversaciones/mes)
-- Plan Pro: $299 MXN/mes - conversaciones ilimitadas
-- Plan Negocio: $599 MXN/mes - 3 asistentes, reportes mensuales
-- Funciona con cualquier tipo de negocio: restaurantes, salones, consultorios, tiendas, etc.
-- Atiende a tus clientes 24/7 automaticamente
-- Dashboard con estadisticas de conversaciones
-- Modo oscuro/claro incluido
-- Soporte en español
-
-Si el visitante quiere registrarse, indicale que haga clic en "Empezar gratis" en la parte superior.
-Si tiene dudas sobre precios, menciona los planes disponibles.`;
 
   function addMessage(role, text) {
     const el = document.createElement('div');
@@ -160,10 +138,12 @@ Si tiene dudas sobre precios, menciona los planes disponibles.`;
     document.getElementById('cai-messages').appendChild(thinking);
 
     try {
+      // Nota: el servidor usa un system prompt fijo para este bot de demo
+      // (sin negocio_id ni sesión), no se manda desde el cliente.
       const res = await fetch(`${SUPABASE_URL}/functions/v1/ask-claude`, {
         method: 'POST',
        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
-        body: JSON.stringify({ systemPrompt: SISTEMA, messages }),
+        body: JSON.stringify({ messages }),
       });
       const data = await res.json();
       document.getElementById('cai-thinking')?.remove();
