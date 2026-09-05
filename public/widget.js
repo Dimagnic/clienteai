@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const scriptTag = document.currentScript;
   const token = scriptTag?.getAttribute('data-token');
   if (!token) return;
@@ -123,11 +123,14 @@
     thinking.id = 'cai-thinking';
     document.getElementById('cai-messages').appendChild(thinking);
     try {
-      const systemPrompt = buildPrompt(negocio);
+      // Nota: el servidor reconstruye el system prompt siempre a partir de
+      // los datos del negocio guardados en la base (nunca confía en texto
+      // libre enviado desde el navegador), así que acá solo se manda el
+      // mensaje del usuario y el id del negocio.
       const res = await fetch(`${SUPABASE_URL}/functions/v1/ask-claude`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ systemPrompt, messages, negocio_id: negocio.id }),
+        body: JSON.stringify({ messages, negocio_id: negocio.id }),
       });
       const data = await res.json();
       document.getElementById('cai-thinking')?.remove();
@@ -144,16 +147,6 @@
     }
     send.disabled = false;
     input.focus();
-  }
-
-  function buildPrompt(n) {
-    return `Eres el asistente virtual de "${n.nombre}". Responde en español, amable y conciso (max 3 lineas). Solo responde sobre el negocio.
-${n.descripcion ? `DESCRIPCION: ${n.descripcion}` : ''}
-${n.menu ? `MENU:\n${n.menu}` : ''}
-${n.horario ? `HORARIO: ${n.horario}` : ''}
-${n.direccion ? `DIRECCION: ${n.direccion}` : ''}
-${n.telefono ? `TELEFONO: ${n.telefono}` : ''}
-${n.extra ? `INFO ADICIONAL:\n${n.extra}` : ''}`;
   }
 
   btn.addEventListener('click', () => {
