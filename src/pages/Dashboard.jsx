@@ -6,7 +6,6 @@ import s from './Dashboard.module.css'
 export default function Dashboard({ session }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const planParam = searchParams.get('plan')
   const sessionId = searchParams.get('session_id')
   const [pagoExitoso, setPagoExitoso] = useState(!!sessionId)
   const [negocio, setNegocio] = useState(null)
@@ -27,11 +26,14 @@ export default function Dashboard({ session }) {
   const [clienteCreado, setClienteCreado] = useState(null)
 
   useEffect(() => { loadData() }, [])
-  useEffect(() => {
-    if (planParam && !loading && negocio) {
-      handlePago(planParam)
-    }
-  }, [planParam, loading, negocio])
+  // NOTA DE SEGURIDAD: se eliminó un useEffect que disparaba handlePago(plan)
+  // automáticamente cuando la URL tenía "?plan=...". Como el propio success_url
+  // de Stripe incluye "&plan=pro" al volver de un pago exitoso, esto generaba
+  // una SEGUNDA sesión de pago automática apenas se completaba la primera —
+  // riesgo real de doble cobro / doble suscripción. El "plan" en la URL solo
+  // se usa para mostrar el mensaje de bienvenida (pagoExitoso), nunca para
+  // iniciar un cobro; el pago solo debe dispararse por clic explícito del
+  // usuario en los botones de la interfaz.
 
   async function loadData() {
     const { data: perfil } = await supabase.from('perfiles').select('is_admin').eq('user_id', session.user.id).single()
@@ -287,13 +289,10 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
 
   async function handlePago(plan) {
     try {
+      // Nota: success_url/cancel_url ya no se mandan — el servidor los fija
+      // siempre a clienteai.site, para evitar redirecciones manipuladas.
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
-        body: {
-          plan,
-          negocio_id: negocio.id,
-          success_url: 'https://clienteai.site/dashboard?session_id={CHECKOUT_SESSION_ID}&plan=' + plan,
-          cancel_url: 'https://clienteai.site/dashboard',
-        }
+        body: { plan, negocio_id: negocio.id }
       })
       if (error) throw error
       if (data.url) window.location.href = data.url
