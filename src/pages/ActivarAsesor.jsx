@@ -39,8 +39,21 @@ export default function ActivarAsesor() {
       })
       if (err) throw err
       if (data.error) throw new Error(data.error)
+
+      // Importante: si el navegador ya tenía otra sesión abierta (un cliente,
+      // otro asesor, o el admin), hay que cerrarla primero. Si no, el login
+      // de abajo puede quedar "pisado" por la sesión vieja y el usuario
+      // termina en el dashboard equivocado.
+      await supabase.auth.signOut()
+
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password
+      })
+      if (loginError) throw loginError
+
       setExito(true)
-      setTimeout(() => navigate('/admin'), 2500)
+      setTimeout(() => navigate('/asesor'), 1500)
     } catch (err) {
       setError(err.message || 'No se pudo activar la cuenta.')
     } finally {
@@ -54,7 +67,7 @@ export default function ActivarAsesor() {
         <div className={s.card} style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
           <h1 className={s.title}>¡Cuenta activada!</h1>
-          <p className={s.subtitle}>Tu contraseña fue creada correctamente. Te llevaremos al inicio de sesión...</p>
+          <p className={s.subtitle}>Tu contraseña fue creada correctamente. Te llevaremos a tu panel de asesor...</p>
         </div>
       </div>
     )
