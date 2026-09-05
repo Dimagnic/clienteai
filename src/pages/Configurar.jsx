@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Configurar.module.css'
@@ -40,6 +40,8 @@ export default function Configurar({ session }) {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
+  // Se re-ejecuta cuando cambia el asistente seleccionado (asistenteId).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadNegocio() }, [asistenteId])
 
   async function loadNegocio() {
@@ -86,12 +88,15 @@ export default function Configurar({ session }) {
     if (negocioId) {
       result = await supabase.from('negocios').update(payload).eq('id', negocioId).select().single()
     } else {
-      // Si el usuario llegó con un enlace de referido (?ref=codigo), lo asociamos al asesor
+      // Si el usuario llegó con un enlace de referido (?ref=codigo), lo asociamos al asesor.
+      // Se usa la función RPC (no una consulta directa a "asesores") porque las
+      // reglas de seguridad no permiten leer la fila de un asesor ajeno desde
+      // el navegador; esta función expone solo el id, de forma segura.
       const refCodigo = localStorage.getItem('cai_ref')
       let asesorId = null
       if (refCodigo) {
-        const { data: asesor } = await supabase.from('asesores').select('id').eq('codigo', refCodigo).eq('activo', true).maybeSingle()
-        if (asesor) asesorId = asesor.id
+        const { data: asesorIdEncontrado } = await supabase.rpc('buscar_asesor_por_codigo', { p_codigo: refCodigo })
+        if (asesorIdEncontrado) asesorId = asesorIdEncontrado
       }
       result = await supabase.from('negocios').insert({
         ...payload,
