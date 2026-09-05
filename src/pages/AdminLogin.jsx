@@ -3,51 +3,58 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Login.module.css'
 
+// Sub-componente reutilizable: los 3 modos de acceso (admin/asesor/cliente)
+// comparten exactamente el mismo formulario, solo cambian título, color del
+// botón, a dónde navegan al entrar, y los enlaces para cambiar de modo.
+function LoginForm({ title, email, setEmail, password, setPassword, onSubmit, buttonColor, error, loading, toggles }) {
+  return (
+    <>
+      <h1 className={s.title}>{title}</h1>
+      <p className={s.subtitle}>Entra con tu correo y contraseña</p>
+      <form className={s.form} onSubmit={onSubmit}>
+        <div className={s.field}>
+          <label className={s.label}>Correo electrónico</label>
+          <input className={s.input} type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} />
+        </div>
+        <div className={s.field}>
+          <label className={s.label}>Contraseña</label>
+          <input className={s.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} />
+        </div>
+        {error && <div className={s.error}>{error}</div>}
+        <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: buttonColor }}>{loading ? 'Entrando...' : 'Entrar'}</button>
+      </form>
+      {toggles.map(t => (
+        <p className={s.toggle} key={t.pregunta}>{t.pregunta} <button className={s.toggleBtn} onClick={t.onClick}>Entra aquí</button></p>
+      ))}
+    </>
+  )
+}
+
 export default function AdminLogin() {
   const navigate = useNavigate()
   const [modo, setModo] = useState('cliente') // 'admin' | 'asesor' | 'cliente'
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Admin
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
-
-  // Asesor
   const [emailAsesor, setEmailAsesor] = useState('')
-  const [password, setPassword] = useState('')
-
-  // Cliente
+  const [passwordAsesor, setPasswordAsesor] = useState('')
   const [emailCliente, setEmailCliente] = useState('')
   const [passwordCliente, setPasswordCliente] = useState('')
 
-  async function loginAdmin(e) {
-    e.preventDefault()
-    setLoading(true)
+  function cambiarModo(nuevoModo) {
+    setModo(nuevoModo)
     setError('')
-    const { error: err } = await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPassword })
-    if (err) { setError('Correo o contraseña incorrectos.'); setLoading(false); return }
-    navigate('/dashboard')
   }
 
-  async function loginAsesor(e) {
-    e.preventDefault()
+  async function login(email, password, rutaDestino) {
+    if (!email.trim()) { setError('Ingresa tu correo electrónico.'); return }
     setLoading(true)
     setError('')
-    if (!emailAsesor.trim()) { setError('Ingresa tu correo electrónico.'); setLoading(false); return }
-    const { error: err } = await supabase.auth.signInWithPassword({ email: emailAsesor.trim().toLowerCase(), password })
+    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
     if (err) { setError('Correo o contraseña incorrectos.'); setLoading(false); return }
-    navigate('/asesor')
-  }
-
-  async function loginCliente(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    if (!emailCliente.trim()) { setError('Ingresa tu correo electrónico.'); setLoading(false); return }
-    const { error: err } = await supabase.auth.signInWithPassword({ email: emailCliente.trim().toLowerCase(), password: passwordCliente })
-    if (err) { setError('Correo o contraseña incorrectos.'); setLoading(false); return }
-    navigate('/dashboard')
+    navigate(rutaDestino)
   }
 
   return (
@@ -57,66 +64,48 @@ export default function AdminLogin() {
         <div className={s.logo}>ClienteAI</div>
 
         {modo === 'admin' && (
-          <>
-            <h1 className={s.title}>Acceso administrador</h1>
-            <p className={s.subtitle}>Entra con tu correo y contraseña</p>
-            <form className={s.form} onSubmit={loginAdmin}>
-              <div className={s.field}>
-                <label className={s.label}>Correo electrónico</label>
-                <input className={s.input} type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} required disabled={loading} />
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Contraseña</label>
-                <input className={s.input} type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} required disabled={loading} />
-              </div>
-              {error && <div className={s.error}>{error}</div>}
-              <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#111827' }}>{loading ? 'Entrando...' : 'Entrar'}</button>
-            </form>
-            <p className={s.toggle}>¿Eres asesor? <button className={s.toggleBtn} onClick={() => { setModo('asesor'); setError('') }}>Entra aquí</button></p>
-            <p className={s.toggle}>¿Eres cliente? <button className={s.toggleBtn} onClick={() => { setModo('cliente'); setError('') }}>Entra aquí</button></p>
-          </>
+          <LoginForm
+            title="Acceso administrador"
+            email={adminEmail} setEmail={setAdminEmail}
+            password={adminPassword} setPassword={setAdminPassword}
+            onSubmit={e => { e.preventDefault(); login(adminEmail, adminPassword, '/dashboard') }}
+            buttonColor="#111827"
+            error={error} loading={loading}
+            toggles={[
+              { pregunta: '¿Eres asesor?', onClick: () => cambiarModo('asesor') },
+              { pregunta: '¿Eres cliente?', onClick: () => cambiarModo('cliente') },
+            ]}
+          />
         )}
 
         {modo === 'asesor' && (
-          <>
-            <h1 className={s.title}>Acceso de asesor</h1>
-            <p className={s.subtitle}>Entra con tu correo y contraseña</p>
-            <form className={s.form} onSubmit={loginAsesor}>
-              <div className={s.field}>
-                <label className={s.label}>Correo electrónico</label>
-                <input className={s.input} type="email" value={emailAsesor} onChange={e => setEmailAsesor(e.target.value)} required disabled={loading} />
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Contraseña</label>
-                <input className={s.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} />
-              </div>
-              {error && <div className={s.error}>{error}</div>}
-              <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#7c3aed' }}>{loading ? 'Entrando...' : 'Entrar'}</button>
-            </form>
-            <p className={s.toggle}>¿Eres cliente? <button className={s.toggleBtn} onClick={() => { setModo('cliente'); setError('') }}>Entra aquí</button></p>
-            <p className={s.toggle}>¿Eres administrador? <button className={s.toggleBtn} onClick={() => { setModo('admin'); setError('') }}>Entra aquí</button></p>
-          </>
+          <LoginForm
+            title="Acceso de asesor"
+            email={emailAsesor} setEmail={setEmailAsesor}
+            password={passwordAsesor} setPassword={setPasswordAsesor}
+            onSubmit={e => { e.preventDefault(); login(emailAsesor, passwordAsesor, '/asesor') }}
+            buttonColor="#7c3aed"
+            error={error} loading={loading}
+            toggles={[
+              { pregunta: '¿Eres cliente?', onClick: () => cambiarModo('cliente') },
+              { pregunta: '¿Eres administrador?', onClick: () => cambiarModo('admin') },
+            ]}
+          />
         )}
 
         {modo === 'cliente' && (
-          <>
-            <h1 className={s.title}>Acceso de cliente</h1>
-            <p className={s.subtitle}>Entra con tu correo y contraseña</p>
-            <form className={s.form} onSubmit={loginCliente}>
-              <div className={s.field}>
-                <label className={s.label}>Correo electrónico</label>
-                <input className={s.input} type="email" value={emailCliente} onChange={e => setEmailCliente(e.target.value)} required disabled={loading} />
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Contraseña</label>
-                <input className={s.input} type="password" value={passwordCliente} onChange={e => setPasswordCliente(e.target.value)} required disabled={loading} />
-              </div>
-              {error && <div className={s.error}>{error}</div>}
-              <button className={s.btnSubmit} type="submit" disabled={loading} style={{ background: '#16a34a' }}>{loading ? 'Entrando...' : 'Entrar'}</button>
-            </form>
-            <p className={s.toggle}>¿Eres asesor? <button className={s.toggleBtn} onClick={() => { setModo('asesor'); setError('') }}>Entra aquí</button></p>
-            <p className={s.toggle}>¿Eres administrador? <button className={s.toggleBtn} onClick={() => { setModo('admin'); setError('') }}>Entra aquí</button></p>
-          </>
+          <LoginForm
+            title="Acceso de cliente"
+            email={emailCliente} setEmail={setEmailCliente}
+            password={passwordCliente} setPassword={setPasswordCliente}
+            onSubmit={e => { e.preventDefault(); login(emailCliente, passwordCliente, '/dashboard') }}
+            buttonColor="#16a34a"
+            error={error} loading={loading}
+            toggles={[
+              { pregunta: '¿Eres asesor?', onClick: () => cambiarModo('asesor') },
+              { pregunta: '¿Eres administrador?', onClick: () => cambiarModo('admin') },
+            ]}
+          />
         )}
       </div>
     </div>
