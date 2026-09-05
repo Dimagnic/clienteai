@@ -25,6 +25,8 @@ export default function Dashboard({ session }) {
   const [creandoCliente, setCreandoCliente] = useState(false)
   const [clienteCreado, setClienteCreado] = useState(null)
 
+  // Se ejecuta solo al montar, para cargar los datos iniciales del panel.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadData() }, [])
   // NOTA DE SEGURIDAD: se eliminó un useEffect que disparaba handlePago(plan)
   // automáticamente cuando la URL tenía "?plan=...". Como el propio success_url
@@ -645,7 +647,7 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
 
             <div className={s.section}>
               <h2 className={s.sectionTitle}>Ultimas conversaciones</h2>
-              <ConversacionesRecientes negocioId={negocio.id} plan={negocio.plan} />
+              <ConversacionesRecientes negocioId={negocio.id} />
             </div>
 
             <div className={s.section} id="codigo-widget">
@@ -1122,7 +1124,7 @@ function QRDescargable({ token, nombre }) {
   )
 }
 
-function ConversacionesRecientes({ negocioId, plan }) {
+function ConversacionesRecientes({ negocioId }) {
   const [mensajes, setMensajes] = useState([])
   const [loading, setLoading] = useState(true)
 
