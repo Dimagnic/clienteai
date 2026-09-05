@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
@@ -688,10 +688,10 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
                     ? ' Se le envió un correo con su código y enlace de activación.'
                     : ' ⚠️ No se pudo confirmar el envío del correo — comparte estos datos manualmente:'}
                 </p>
-                <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2 }}>
-                  <p style={{ margin: 0 }}><strong>Código de cliente:</strong> {clienteCreado.codigo}</p>
-                  <p style={{ margin: 0 }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-cliente?codigo={clienteCreado.codigo}</p>
-                  <p style={{ margin: 0 }}><strong>Estado:</strong> Pendiente (se activa cuando el cliente crea su contraseña)</p>
+                <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2, color: '#111827' }}>
+                  <p style={{ margin: 0, color: '#111827' }}><strong>Código de cliente:</strong> {clienteCreado.codigo}</p>
+                  <p style={{ margin: 0, color: '#111827' }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-cliente?email={clienteCreado.email}&token=(ver correo del cliente)</p>
+                  <p style={{ margin: 0, color: '#111827' }}><strong>Estado:</strong> Pendiente (se activa cuando el cliente crea su contraseña)</p>
                 </div>
                 <button onClick={() => setClienteCreado(null)} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', cursor: 'pointer', fontSize: 13 }}>Entendido</button>
               </div>
@@ -793,10 +793,10 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
                     ? ' Se le envió un correo con su código y el enlace para activar su cuenta.'
                     : ' ⚠️ No se pudo confirmar el envío del correo — comparte estos datos manualmente:'}
                 </p>
-                <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2 }}>
-                  <p style={{ margin: 0 }}><strong>Código de asesor:</strong> {credencialesGeneradas.codigo}</p>
-                  <p style={{ margin: 0 }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-asesor?email={credencialesGeneradas.email}&token={credencialesGeneradas.tokenActivacion}</p>
-                  <p style={{ margin: 0 }}><strong>Estado:</strong> Pendiente (se activa cuando el asesor crea su contraseña)</p>
+                <div style={{ background: '#fff', borderRadius: 10, padding: 14, fontSize: 14, fontFamily: 'monospace', lineHeight: 2, color: '#111827' }}>
+                  <p style={{ margin: 0, color: '#111827' }}><strong>Código de asesor:</strong> {credencialesGeneradas.codigo}</p>
+                  <p style={{ margin: 0, color: '#111827' }}><strong>Enlace de activación:</strong> https://clienteai.site/activar-asesor?email={credencialesGeneradas.email}&token=(ver correo del asesor)</p>
+                  <p style={{ margin: 0, color: '#111827' }}><strong>Estado:</strong> Pendiente (se activa cuando el asesor crea su contraseña)</p>
                 </div>
                 <button onClick={() => setCredencialesGeneradas(null)} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontSize: 13 }}>Entendido</button>
               </div>
