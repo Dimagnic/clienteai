@@ -59,6 +59,12 @@ function plantillaCorreoCliente(nombre: string, codigo: string, enlaceActivacion
   `
 }
 
+// NOTA DE DISEÑO: esta función es pública a propósito — la usa tanto el
+// registro público de clientes (Login.jsx, "Crea tu cuenta gratis") como el
+// panel del admin (Dashboard.jsx) para dar de alta clientes manualmente.
+// Esto es seguro porque el plan pagado NUNCA se otorga acá (siempre queda en
+// "gratuito"; ver comentario más abajo), así que no hace falta ser admin
+// para llamarla — es equivalente a cualquier registro público.
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -77,8 +83,10 @@ serve(async (req) => {
       Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Verificar que no exista el email
-    const { data: existente } = await supabase.from('negocios').select('id').eq('email_contacto', email).maybeSingle()
+    // Verificar que no exista el email (comparación normalizada, para que
+    // "Juan@Mail.com" y "juan@mail.com " no se traten como cuentas distintas)
+    const emailNormalizado = email.trim().toLowerCase()
+    const { data: existente } = await supabase.from('negocios').select('id').eq('email_contacto', emailNormalizado).maybeSingle()
     if (existente) {
       return new Response(
         JSON.stringify({ error: 'Ya existe un cliente con ese correo' }),
@@ -87,7 +95,6 @@ serve(async (req) => {
     }
 
     const codigo = await generarCodigoCliente(supabase)
-    const emailNormalizado = email.trim().toLowerCase()
     const passwordTemporal = crypto.randomUUID()
 
     const { data: creado, error: createError } = await supabase.auth.admin.createUser({
@@ -108,6 +115,7 @@ serve(async (req) => {
     // solo viaja en el link del correo. Es lo único que evita que alguien tome
     // la cuenta adivinando o conociendo el codigo_cliente (que sí es predecible).
     const tokenActivacion = crypto.randomUUID().replace(/-/g, '')
+    const tokenGeneradoEn = new Date().toISOString()
 
     // SEGURIDAD: el plan real solo lo otorga el webhook de Stripe tras un pago confirmado.
     // Nunca se le da acceso pagado a un negocio solo porque el formulario lo pidió.
@@ -116,7 +124,7 @@ serve(async (req) => {
     const { error: insertError } = await supabase.from('negocios').insert({
       user_id: creado.user.id,
       nombre,
-      email_contacto: email,
+      email_contacto: emailNormalizado,
       telefono: telefono || null,
       plan: 'gratuito',
       plan_deseado: planSolicitado,
@@ -124,6 +132,7 @@ serve(async (req) => {
       codigo_cliente: codigo,
       token,
       token_activacion: tokenActivacion,
+      token_generado_en: tokenGeneradoEn,
       estado_cuenta: 'pendiente',
     })
 
@@ -144,7 +153,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           from: 'ClienteAI <noreply@clienteai.site>',
-          to: [email],
+          to: [emailNormalizado],
           subject: 'Activa tu cuenta en ClienteAI',
           html: plantillaCorreoCliente(nombre, codigo, enlaceActivacion),
         }),
@@ -152,14 +161,18 @@ serve(async (req) => {
       correoEnviado = resendResp.ok
     }
 
+    // IMPORTANTE: nunca se devuelve tokenActivacion en la respuesta. Solo
+    // viaja dentro del correo, para que únicamente el dueño del correo real
+    // pueda activar la cuenta.
     return new Response(
-      JSON.stringify({ ok: true, codigo, nombre, email: emailNormalizado, correoEnviado, tokenActivacion }),
+      JSON.stringify({ ok: true, codigo, nombre, email: emailNormalizado, correoEnviado }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
+    console.error('crear-cliente error:', error)
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'No se pudo crear el cliente. Intenta de nuevo.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

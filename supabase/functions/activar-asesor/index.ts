@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://clienteai.site',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -35,7 +35,7 @@ serve(async (req) => {
 
     const { data: asesor, error: findError } = await supabase
       .from('asesores')
-      .select('id, user_id, estado, nombre, token_activacion')
+      .select('id, user_id, estado, nombre, token_activacion, token_generado_en')
       .eq('email', emailNormalizado)
       .maybeSingle()
 
@@ -62,6 +62,17 @@ serve(async (req) => {
       )
     }
 
+    // El enlace expira 48 horas después de generado
+    if (asesor.token_generado_en) {
+      const horas = (Date.now() - new Date(asesor.token_generado_en).getTime()) / (1000 * 60 * 60)
+      if (horas > 48) {
+        return new Response(
+          JSON.stringify({ error: 'El enlace de activación expiró. Contacta soporte para reenviarlo.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
     // Actualizar la contraseña del usuario en auth
     const { error: updateAuthError } = await supabase.auth.admin.updateUserById(asesor.user_id, { password })
     if (updateAuthError) throw updateAuthError
@@ -79,8 +90,9 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('activar-asesor error:', error)
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'No se pudo activar la cuenta. Intenta de nuevo.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

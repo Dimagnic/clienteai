@@ -35,7 +35,7 @@ serve(async (req) => {
 
     const { data: negocio, error: findError } = await supabase
       .from('negocios')
-      .select('id, user_id, estado_cuenta, nombre, token_activacion')
+      .select('id, user_id, estado_cuenta, nombre, token_activacion, token_generado_en, plan_deseado')
       .eq('email_contacto', emailNormalizado)
       .maybeSingle()
 
@@ -62,6 +62,18 @@ serve(async (req) => {
       )
     }
 
+    // El enlace expira 48 horas después de generado, por si un correo viejo
+    // queda expuesto (reenviado, bandeja compartida, etc.)
+    if (negocio.token_generado_en) {
+      const horas = (Date.now() - new Date(negocio.token_generado_en).getTime()) / (1000 * 60 * 60)
+      if (horas > 48) {
+        return new Response(
+          JSON.stringify({ error: 'El enlace de activación expiró. Contacta soporte para reenviarlo.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
     // Actualizar contraseña en auth
     const { error: updateAuthError } = await supabase.auth.admin.updateUserById(negocio.user_id, { password: nuevaPassword })
     if (updateAuthError) throw updateAuthError
@@ -74,13 +86,14 @@ serve(async (req) => {
     if (updateError) throw updateError
 
     return new Response(
-      JSON.stringify({ ok: true, nombre: negocio.nombre, email: emailNormalizado }),
+      JSON.stringify({ ok: true, nombre: negocio.nombre, email: emailNormalizado, negocio_id: negocio.id, plan_deseado: negocio.plan_deseado }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
+    console.error('activar-cliente error:', error)
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'No se pudo activar la cuenta. Intenta de nuevo.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

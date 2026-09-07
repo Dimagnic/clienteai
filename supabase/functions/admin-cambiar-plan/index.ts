@@ -83,8 +83,9 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error('admin-cambiar-plan error:', error)
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'No se pudo cambiar el plan. Intenta de nuevo.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

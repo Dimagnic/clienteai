@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://clienteai.site',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -58,6 +58,36 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
+    const supabase = createClient(
+      'https://eevflmyoqwndobjkjuov.supabase.co',
+      Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
+    )
+
+    // SEGURIDAD: solo un administrador autenticado puede crear asesores.
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const jwt = authHeader.replace('Bearer ', '')
+    if (!jwt) {
+      return new Response(JSON.stringify({ error: 'No autenticado' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const { data: userData, error: userError } = await supabase.auth.getUser(jwt)
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Sesión inválida' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const { data: perfil, error: perfilError } = await supabase
+      .from('perfiles')
+      .select('is_admin')
+      .eq('user_id', userData.user.id)
+      .single()
+    if (perfilError || !perfil?.is_admin) {
+      return new Response(JSON.stringify({ error: 'No tienes permisos de administrador' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const { nombre, apellido, email, telefono, fechaNacimiento } = await req.json()
 
     if (!nombre || !apellido || !email || !fechaNacimiento) {
@@ -66,11 +96,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-
-    const supabase = createClient(
-      'https://eevflmyoqwndobjkjuov.supabase.co',
-      Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
-    )
 
     const nombreCompleto = `${nombre} ${apellido}`
     let codigo = generarCodigo(nombre, apellido, fechaNacimiento)
@@ -85,7 +110,9 @@ serve(async (req) => {
     }
     codigo = codigoFinal
 
-    const { data: existente } = await supabase.from('asesores').select('id').eq('email', email).maybeSingle()
+    const emailNormalizado = email.trim().toLowerCase()
+
+    const { data: existente } = await supabase.from('asesores').select('id').eq('email', emailNormalizado).maybeSingle()
     if (existente) {
       return new Response(
         JSON.stringify({ error: 'Ya existe un asesor con ese correo' }),
@@ -93,7 +120,6 @@ serve(async (req) => {
       )
     }
 
-    const emailNormalizado = email.trim().toLowerCase()
     const passwordTemporal = crypto.randomUUID() // password aleatorio temporal, el asesor lo cambia al activar
 
     const { data: creado, error: createError } = await supabase.auth.admin.createUser({
@@ -112,6 +138,7 @@ serve(async (req) => {
     // Token SECRETO de activación: distinto del "codigo" (que se comparte
     // públicamente como link de referido). Solo viaja en el correo privado.
     const tokenActivacion = crypto.randomUUID().replace(/-/g, '')
+    const tokenGeneradoEn = new Date().toISOString()
 
     const { error: insertError } = await supabase.from('asesores').insert({
       user_id: creado.user.id,
@@ -121,6 +148,7 @@ serve(async (req) => {
       fecha_nacimiento: fechaNacimiento,
       codigo,
       token_activacion: tokenActivacion,
+      token_generado_en: tokenGeneradoEn,
       estado: 'pendiente',
     })
 
@@ -141,7 +169,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           from: 'ClienteAI <noreply@clienteai.site>',
-          to: [email],
+          to: [emailNormalizado],
           subject: 'Activa tu cuenta de Asesor ClienteAI',
           html: plantillaCorreoActivacion(nombreCompleto, codigo, enlaceActivacion),
         }),
@@ -150,13 +178,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ ok: true, codigo, nombreCompleto, email: emailNormalizado, correoEnviado, tokenActivacion }),
+      JSON.stringify({ ok: true, codigo, nombreCompleto, email: emailNormalizado, correoEnviado }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
+    console.error('crear-asesor error:', error)
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'No se pudo crear el asesor. Intenta de nuevo.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

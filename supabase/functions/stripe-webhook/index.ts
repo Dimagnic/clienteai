@@ -8,12 +8,25 @@ const corsHeaders = {
 
 const PRECIOS: Record<string, number> = { pro: 299, negocio: 599 }
 
+function comparacionSegura(a: string, b: string): boolean {
+  // Comparación en tiempo constante para evitar timing attacks sobre la firma
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
 async function verificarFirmaStripe(body: string, signature: string, secret: string): Promise<boolean> {
   try {
     const parts = signature.split(',')
     const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1]
     const v1 = parts.find(p => p.startsWith('v1='))?.split('=')[1]
     if (!timestamp || !v1) return false
+
+    // Rechazar eventos con timestamp muy viejo (protege contra reenvío de
+    // una petición interceptada tiempo después - "replay attack")
+    const ahoraSeg = Math.floor(Date.now() / 1000)
+    if (Math.abs(ahoraSeg - parseInt(timestamp, 10)) > 300) return false // 5 min de tolerancia
 
     const payload = `${timestamp}.${body}`
     const key = await crypto.subtle.importKey(
@@ -22,7 +35,7 @@ async function verificarFirmaStripe(body: string, signature: string, secret: str
     )
     const signed = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload))
     const expected = Array.from(new Uint8Array(signed)).map(b => b.toString(16).padStart(2, '0')).join('')
-    return expected === v1
+    return comparacionSegura(expected, v1)
   } catch { return false }
 }
 
@@ -47,6 +60,26 @@ serve(async (req) => {
       'https://eevflmyoqwndobjkjuov.supabase.co',
       Deno.env.get('SB_SERVICE_ROLE_KEY') ?? '',
     )
+
+    // Protección contra eventos duplicados: Stripe reenvía el mismo evento
+    // si no recibe respuesta a tiempo (o por fallas de red). Sin esto, un
+    // mismo pago podría registrar la comisión dos veces o resetear el
+    // contador de conversaciones más de una vez.
+    const { error: yaProcesadoError } = await supabase
+      .from('stripe_eventos_procesados')
+      .insert({ event_id: event.id })
+
+    if (yaProcesadoError) {
+      // Si falla por violar la restricción de único (evento repetido), lo
+      // aceptamos igual con 200 para que Stripe no siga reintentando, pero
+      // no volvemos a procesar nada.
+      if (yaProcesadoError.code === '23505') {
+        return new Response(JSON.stringify({ received: true, duplicado: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      throw yaProcesadoError
+    }
 
     // Pago inicial del plan
     if (event.type === 'checkout.session.completed') {
@@ -110,8 +143,9 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error('stripe-webhook error:', error)
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'No se pudo procesar el evento' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
