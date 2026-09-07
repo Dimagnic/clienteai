@@ -20,6 +20,8 @@ export default function AsesorDashboard({ session }) {
   const [subiendoFoto, setSubiendoFoto] = useState(false)
   const [fotoUrl, setFotoUrl] = useState(null)
 
+  // Se ejecuta solo al montar, para cargar los datos iniciales del panel.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadData() }, [])
 
   async function loadData() {

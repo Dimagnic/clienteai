@@ -19,6 +19,8 @@ export default function Preview({ session }) {
   const inputRef = useRef(null)
 
   useEffect(() => { window.scrollTo(0, 0) }, [location.pathname])
+  // Se re-ejecuta cuando cambia el token de la vista previa.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadNegocio() }, [tokenParam])
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, thinking])
 

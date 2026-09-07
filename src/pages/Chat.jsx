@@ -15,6 +15,8 @@ export default function Chat() {
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
 
+  // Se ejecuta solo al montar, para cargar los datos del negocio.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadNegocio() }, [])
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, thinking])
 
