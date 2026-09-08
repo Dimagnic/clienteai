@@ -16,23 +16,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [clienteCreado, setClienteCreado] = useState(null)
-  const [mostrarRecuperar, setMostrarRecuperar] = useState(false)
-  const [emailRecuperar, setEmailRecuperar] = useState('')
-  const [recuperando, setRecuperando] = useState(false)
-  const [successRecuperar, setSuccessRecuperar] = useState('')
-
-  async function recuperarPassword(e) {
-    e.preventDefault()
-    if (!emailRecuperar.trim()) { setError('Ingresa tu correo'); return }
-    setRecuperando(true)
-    setError('')
-    const { error: err } = await supabase.auth.resetPasswordForEmail(emailRecuperar, {
-      redirectTo: 'https://clienteai.site/reset-password'
-    })
-    if (err) setError('Error: ' + err.message)
-    else { setSuccessRecuperar('Te enviamos un correo con el link para restablecer tu contraseña.'); setMostrarRecuperar(false) }
-    setRecuperando(false)
-  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -123,7 +106,6 @@ export default function Login() {
             </div>
 
             {error && <div className={s.error}>{error}</div>}
-            {successRecuperar && <div className={s.successMsg}>{successRecuperar}</div>}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: 4 }}>
               <input type="checkbox" id="nobot" required style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#16a34a' }} />
@@ -136,36 +118,6 @@ export default function Login() {
           </form>
         )}
 
-        <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#6b7280' }}>
-          ¿Ya tienes cuenta?{' '}
-          <button onClick={() => navigate('/admin')} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-            Inicia sesión aquí
-          </button>
-        </p>
-
-        <p style={{ textAlign: 'center', marginTop: 4, fontSize: 13, color: '#6b7280' }}>
-          ¿Olvidaste tu contraseña?{' '}
-          <button onClick={() => setMostrarRecuperar(v => !v)} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-            Recupérala aquí
-          </button>
-        </p>
-
-        {mostrarRecuperar && (
-          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 20, marginTop: 12 }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: '#15803d', margin: '0 0 12px' }}>Recuperar contraseña</p>
-            <form onSubmit={recuperarPassword}>
-              <input type="email" placeholder="Tu correo electrónico" value={emailRecuperar} onChange={e => setEmailRecuperar(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #bbf7d0', fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }} />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="submit" disabled={recuperando} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
-                  {recuperando ? 'Enviando...' : 'Enviar correo'}
-                </button>
-                <button type="button" onClick={() => setMostrarRecuperar(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 14 }}>
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
       </div>
     </div>
   )

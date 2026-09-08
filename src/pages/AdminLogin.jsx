@@ -43,6 +43,24 @@ export default function AdminLogin() {
   const [emailCliente, setEmailCliente] = useState('')
   const [passwordCliente, setPasswordCliente] = useState('')
 
+  const [mostrarRecuperar, setMostrarRecuperar] = useState(false)
+  const [emailRecuperar, setEmailRecuperar] = useState('')
+  const [recuperando, setRecuperando] = useState(false)
+  const [successRecuperar, setSuccessRecuperar] = useState('')
+
+  async function recuperarPassword(e) {
+    e.preventDefault()
+    if (!emailRecuperar.trim()) { setError('Ingresa tu correo'); return }
+    setRecuperando(true)
+    setError('')
+    const { error: err } = await supabase.auth.resetPasswordForEmail(emailRecuperar, {
+      redirectTo: 'https://clienteai.site/reset-password'
+    })
+    if (err) setError('Error: ' + err.message)
+    else { setSuccessRecuperar('Te enviamos un correo con el link para restablecer tu contraseña.'); setMostrarRecuperar(false) }
+    setRecuperando(false)
+  }
+
   function cambiarModo(nuevoModo) {
     setModo(nuevoModo)
     setError('')
@@ -106,6 +124,32 @@ export default function AdminLogin() {
               { pregunta: '¿Eres administrador?', onClick: () => cambiarModo('admin') },
             ]}
           />
+        )}
+
+        {successRecuperar && <p style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#16a34a', fontWeight: 600 }}>{successRecuperar}</p>}
+
+        <p style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#6b7280' }}>
+          ¿Olvidaste tu contraseña?{' '}
+          <button onClick={() => setMostrarRecuperar(v => !v)} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+            Recupérala aquí
+          </button>
+        </p>
+
+        {mostrarRecuperar && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 20, marginTop: 12 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#15803d', margin: '0 0 12px' }}>Recuperar contraseña</p>
+            <form onSubmit={recuperarPassword}>
+              <input type="email" placeholder="Tu correo electrónico" value={emailRecuperar} onChange={e => setEmailRecuperar(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #bbf7d0', fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="submit" disabled={recuperando} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
+                  {recuperando ? 'Enviando...' : 'Enviar correo'}
+                </button>
+                <button type="button" onClick={() => setMostrarRecuperar(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 14 }}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
         )}
       </div>
     </div>
