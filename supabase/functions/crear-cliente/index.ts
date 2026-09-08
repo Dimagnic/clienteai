@@ -121,6 +121,12 @@ serve(async (req) => {
     // Nunca se le da acceso pagado a un negocio solo porque el formulario lo pidió.
     const planSolicitado = ['pro', 'negocio'].includes(plan) ? plan : null
 
+    // El plan gratuito es una prueba de 30 días desde el registro (o hasta
+    // agotar 50 conversaciones, lo que ocurra primero — ese segundo límite
+    // se aplica en ask-claude). Si el cliente paga un plan antes de esto,
+    // el webhook de Stripe reemplaza este límite por su propia fecha real.
+    const trialExpiraEn = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
     const { error: insertError } = await supabase.from('negocios').insert({
       user_id: creado.user.id,
       nombre,
@@ -134,6 +140,7 @@ serve(async (req) => {
       token_activacion: tokenActivacion,
       token_generado_en: tokenGeneradoEn,
       estado_cuenta: 'pendiente',
+      trial_expira_en: trialExpiraEn,
     })
 
     if (insertError) throw insertError
