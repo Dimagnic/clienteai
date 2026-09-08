@@ -1,4 +1,4 @@
-﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -121,7 +121,7 @@ serve(async (req) => {
     if (negocio_id) {
       const { data: negocio } = await supabase
         .from('negocios')
-        .select('plan, conversaciones_mes, mes_actual, trial_expira_en, plan_expira_en, email_contacto, nombre, notificacion_7dias_enviada, notificacion_80_enviada, descripcion, menu, horario, direccion, telefono, extra')
+        .select('plan, conversaciones_mes, trial_expira_en, plan_expira_en, email_contacto, nombre, notificacion_7dias_enviada, notificacion_80_enviada, descripcion, menu, horario, direccion, telefono, extra')
         .eq('id', negocio_id)
         .single()
 
@@ -137,31 +137,28 @@ serve(async (req) => {
       if (negocio) {
         const ahora = new Date()
         const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
-        const mesActual = ahora.toISOString().slice(0, 7)
 
-        // Resetear conversaciones al nuevo mes
-        if (negocio.mes_actual !== mesActual) {
-          await supabase.from('negocios').update({
-            conversaciones_mes: 0,
-            mes_actual: mesActual,
-            notificacion_80_enviada: false,
-          }).eq('id', negocio_id)
-          negocio.conversaciones_mes = 0
-          negocio.notificacion_80_enviada = false
-        }
+        // NOTA DE DISEÑO: conversaciones_mes ya NO se resetea por mes de
+        // calendario. Los únicos resets válidos son:
+        //   - Plan gratuito: nunca se resetea durante el trial — son 50
+        //     conversaciones TOTALES en la ventana de 30 días, no 50/mes.
+        //   - Plan pro/negocio: se resetea únicamente cuando Stripe confirma
+        //     una renovación real (ver stripe-webhook, evento invoice.paid),
+        //     así el período de 2,000 conversaciones queda atado a la fecha
+        //     real de pago del cliente, no al día 1 del mes calendario.
 
         // ===== PLAN GRATUITO =====
         if (negocio.plan === 'gratuito') {
           if (negocio.trial_expira_en && ahora > new Date(negocio.trial_expira_en)) {
             return new Response(JSON.stringify({
               error: 'trial_vencido',
-              mensaje: 'Tu período de prueba gratuito ha vencido. Actualiza tu plan en clienteai.site para reactivar tu asistente.'
+              mensaje: 'Tu período de prueba gratuito de 30 días ha vencido. Actualiza tu plan en clienteai.site para reactivar tu asistente.'
             }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
           }
           if ((negocio.conversaciones_mes || 0) >= 50) {
             return new Response(JSON.stringify({
               error: 'limite_alcanzado',
-              mensaje: 'Has alcanzado el límite de 50 conversaciones del mes. Actualiza al Plan Pro para continuar.'
+              mensaje: 'Has alcanzado el límite de 50 conversaciones de tu prueba gratuita. Actualiza al Plan Pro para continuar.'
             }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
           }
         }
