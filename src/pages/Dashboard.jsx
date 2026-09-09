@@ -116,7 +116,9 @@ export default function Dashboard({ session }) {
   }
 
   async function crearNuevoAsistente() {
-    const maxAsistentes = plan === 'negocio' ? 3 : 1
+    // El administrador puede crear tantos asistentes propios como quiera
+    // (uso interno/demos); el resto de las cuentas siguen el tope de su plan.
+    const maxAsistentes = isAdmin ? Infinity : (plan === 'negocio' ? 3 : 1)
     if (misAsistentes.length >= maxAsistentes) {
       alert(`Tu plan ${plan === 'pro' ? 'Pro' : 'actual'} solo permite ${maxAsistentes} asistente${maxAsistentes > 1 ? 's' : ''}. Actualiza al Plan Negocio para tener hasta 3.`)
       return
@@ -562,7 +564,7 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
             </div>
           ) : null
         )}
-        {!isAdmin && misAsistentes.length > 0 && (plan === 'negocio' || misAsistentes.length > 1) && (
+        {(isAdmin || (misAsistentes.length > 0 && (plan === 'negocio' || misAsistentes.length > 1))) && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
             {misAsistentes.map((a, i) => (
               <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -584,7 +586,7 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
                 )}
               </div>
             ))}
-            {plan === 'negocio' && misAsistentes.length < 3 && (
+            {(isAdmin || (plan === 'negocio' && misAsistentes.length < 3)) && (
               <button onClick={crearNuevoAsistente} style={{ padding: '8px 18px', borderRadius: 20, border: '2px dashed var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
                 + Nuevo asistente
               </button>
