@@ -121,7 +121,7 @@ serve(async (req) => {
     if (negocio_id) {
       const { data: negocio } = await supabase
         .from('negocios')
-        .select('plan, conversaciones_mes, trial_expira_en, plan_expira_en, email_contacto, nombre, notificacion_7dias_enviada, notificacion_80_enviada, descripcion, menu, horario, direccion, telefono, extra')
+        .select('user_id, plan, conversaciones_mes, trial_expira_en, plan_expira_en, email_contacto, nombre, notificacion_7dias_enviada, notificacion_80_enviada, descripcion, menu, horario, direccion, telefono, extra')
         .eq('id', negocio_id)
         .single()
 
@@ -138,6 +138,16 @@ serve(async (req) => {
         const ahora = new Date()
         const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
 
+        // El bot de una cuenta administradora es vitalicio: nunca se le
+        // aplican límites de trial, vencimiento de plan, ni tope de
+        // conversaciones, sin importar qué "plan" tenga guardado.
+        const { data: perfilDueno } = await supabase
+          .from('perfiles')
+          .select('is_admin')
+          .eq('user_id', negocio.user_id)
+          .maybeSingle()
+        const esBotDeAdmin = perfilDueno?.is_admin === true
+
         // NOTA DE DISEÑO: conversaciones_mes ya NO se resetea por mes de
         // calendario. Los únicos resets válidos son:
         //   - Plan gratuito: nunca se resetea durante el trial — son 50
@@ -148,7 +158,7 @@ serve(async (req) => {
         //     real de pago del cliente, no al día 1 del mes calendario.
 
         // ===== PLAN GRATUITO =====
-        if (negocio.plan === 'gratuito') {
+        if (!esBotDeAdmin && negocio.plan === 'gratuito') {
           if (negocio.trial_expira_en && ahora > new Date(negocio.trial_expira_en)) {
             return new Response(JSON.stringify({
               error: 'trial_vencido',
@@ -164,7 +174,7 @@ serve(async (req) => {
         }
 
         // ===== PLAN PRO Y NEGOCIO =====
-        if (negocio.plan === 'pro' || negocio.plan === 'negocio') {
+        if (!esBotDeAdmin && (negocio.plan === 'pro' || negocio.plan === 'negocio')) {
           // SEGURIDAD: sin fecha de vencimiento no hay pago confirmado por Stripe.
           // Nunca se debe tratar como acceso ilimitado por ausencia de dato.
           if (!negocio.plan_expira_en) {
