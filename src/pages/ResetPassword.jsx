@@ -13,7 +13,7 @@ export default function ResetPassword() {
 
   async function handleReset(e) {
     e.preventDefault()
-    if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
+    if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres'); return }
     if (password !== confirmPassword) { setError('Las contraseñas no coinciden'); return }
     setLoading(true)
     setError('')
@@ -43,7 +43,7 @@ export default function ResetPassword() {
         <form onSubmit={handleReset} className={s.form}>
           <div className={s.field}>
             <label className={s.label}>Nueva contraseña</label>
-            <input className={s.input} type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} />
+            <input className={s.input} type="password" placeholder="Mínimo 8 caracteres" minLength={8} value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} />
           </div>
           <div className={s.field}>
             <label className={s.label}>Confirmar contraseña</label>

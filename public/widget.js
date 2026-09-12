@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   const scriptTag = document.currentScript;
   const token = scriptTag?.getAttribute('data-token');
   if (!token) return;

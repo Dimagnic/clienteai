@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   // Solo cargar el widget de demo en la landing page (raíz del sitio)
   if (window.location.pathname !== '/') return;
 

@@ -433,3 +433,15 @@ entrypoint = "./functions/stripe-checkout/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/stripe-checkout/*.html" ]
+
+# IMPORTANTE: Stripe llama a este webhook directo por HTTP, sin ningún
+# token de Supabase (solo manda su propia firma "stripe-signature"). Si
+# verify_jwt quedara en true (el valor por defecto), la plataforma
+# rechazaría la petición de Stripe con 401 antes de que el código de la
+# función llegue a ejecutarse — la firma nunca se validaría porque el
+# código nunca correría. Esto ya causó una falla real en producción.
+[functions.stripe-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/stripe-webhook/deno.json"
+entrypoint = "./functions/stripe-webhook/index.ts"

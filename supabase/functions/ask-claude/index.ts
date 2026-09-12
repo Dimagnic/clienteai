@@ -19,7 +19,7 @@ SOBRE CLIENTEAI:
 - Widget embebible para tu pagina web
 - Link directo para compartir por WhatsApp
 - Planes desde $0 MXN (gratuito con 50 conversaciones/mes)
-- Plan Pro: $299 MXN/mes - conversaciones ilimitadas
+- Plan Pro: $299 MXN/mes - hasta 2,000 conversaciones al mes
 - Plan Negocio: $599 MXN/mes - 3 asistentes, reportes mensuales
 - Funciona con cualquier tipo de negocio: restaurantes, salones, consultorios, tiendas, etc.
 - Atiende a tus clientes 24/7 automaticamente
@@ -294,8 +294,7 @@ serve(async (req) => {
         { negocio_id, mensaje: lastUserMessage.content, rol: 'user' },
         { negocio_id, mensaje: reply, rol: 'assistant' },
       ])
-      const { data: neg } = await supabase.from('negocios').select('conversaciones_mes').eq('id', negocio_id).single()
-      await supabase.from('negocios').update({ conversaciones_mes: (neg?.conversaciones_mes || 0) + 1 }).eq('id', negocio_id)
+      await supabase.rpc('increment_conversaciones', { p_negocio_id: negocio_id })
     }
 
     return new Response(

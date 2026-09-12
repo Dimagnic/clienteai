@@ -1,10 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-export default function Precios({ session, negocio }) {
+export default function Precios({ session }) {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(null)
+  const [negocio, setNegocio] = useState(null)
+
+  // Antes esta pagina esperaba recibir "negocio" como prop, pero App.jsx
+  // nunca lo pasaba: cualquier usuario logueado que llegara aqui y diera
+  // clic en un plan de pago siempre caia en el error "no encontramos tu
+  // cuenta", sin llegar nunca a Stripe. Ahora se carga el negocio propio
+  // apenas hay sesion (igual que Preview.jsx).
+  useEffect(() => {
+    if (!session) { setNegocio(null); return }
+    supabase.from('negocios').select('id, plan')
+      .eq('user_id', session.user.id)
+      .order('asistente_num', { ascending: true })
+      .limit(1).maybeSingle()
+      .then(({ data }) => setNegocio(data || null))
+  }, [session])
 
   async function handlePago(plan) {
     if (!session) {
@@ -62,7 +77,7 @@ export default function Precios({ session, negocio }) {
       precio: '$599',
       periodo: 'MXN / mes',
       desc: 'Para empresas con mas necesidades',
-      features: ['5,000 conversaciones al mes', '3 asistentes virtuales', 'Widget personalizable', 'Link directo', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales'],
+      features: ['Conversaciones ilimitadas ♾️', '3 asistentes virtuales', 'Widget personalizable', 'Link directo', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales'],
       cta: 'Contratar Negocio',
       plan: 'negocio',
       destacado: false,
