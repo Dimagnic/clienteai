@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
@@ -157,7 +157,7 @@ export default function AsesorDashboard({ session }) {
     <div className={s.page}>
       <aside className={s.sidebar}>
         <div className={s.sidebarLogo}>ClienteAI</div>
-        <p style={{ padding: '0 20px', fontSize: 11, color: '#9ca3af', marginTop: -8, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>Panel de Asesor</p>
+        <p className={s.sidebarSubtitle} style={{ padding: '0 20px', fontSize: 11, color: '#9ca3af', marginTop: -8, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>Panel de Asesor</p>
         <nav className={s.sidebarNav}>
           <button className={`${s.navItem} ${tabActivo === 'resumen' ? s.navItemActive : ''}`} onClick={() => setTabActivo('resumen')}>Resumen</button>
           <button className={`${s.navItem} ${tabActivo === 'referidos' ? s.navItemActive : ''}`} onClick={() => setTabActivo('referidos')}>Mis referidos</button>
@@ -166,7 +166,7 @@ export default function AsesorDashboard({ session }) {
           <button className={`${s.navItem} ${tabActivo === 'banco' ? s.navItemActive : ''}`} onClick={() => setTabActivo('banco')}>Datos bancarios</button>
           <button className={`${s.navItem} ${tabActivo === 'perfil' ? s.navItemActive : ''}`} onClick={() => setTabActivo('perfil')}>Mi perfil</button>
           {!tieneNegocioPropio && (
-            <div style={{ margin: '16px 12px', background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', borderRadius: 12, padding: 16 }}>
+            <div className={s.sidebarStats} style={{ margin: '16px 12px', background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', borderRadius: 12, padding: 16 }}>
               <p style={{ fontSize: 11, color: '#c4b5fd', fontWeight: 600, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 1 }}>Mis estadísticas</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -190,8 +190,8 @@ export default function AsesorDashboard({ session }) {
             </div>
           )}
         </nav>
-        <div style={{ marginTop: 'auto', padding: 20 }}>
-          <button onClick={() => supabase.auth.signOut().then(() => navigate('/'))} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Cerrar sesión</button>
+        <div className={s.sidebarFooter} style={{ marginTop: 'auto', padding: 20 }}>
+          <button className={s.signOutMobile} onClick={() => supabase.auth.signOut().then(() => navigate('/'))} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Cerrar sesión</button>
         </div>
       </aside>
 
