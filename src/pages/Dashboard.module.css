@@ -66,6 +66,7 @@
   }
   .navItem { white-space: nowrap; flex-shrink: 0; }
   .sidebarStats { display: none; }
+  .userInfo { display: none; }
   .sidebarSubtitle { display: none; }
   .sidebarFooter { flex-shrink: 0; margin-left: 8px; padding: 0 !important; margin-top: 0 !important; }
   .signOutMobile { white-space: nowrap; padding: 8px 12px !important; width: auto !important; }

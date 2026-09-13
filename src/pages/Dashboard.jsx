@@ -486,13 +486,13 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
             <span className={s.navIcon}>#</span> Reportes
           </button>
         </nav>
-        <div className={s.sidebarBottom}>
+        <div className={s.sidebarFooter}>
           <div className={s.userInfo}>
             <div className={s.userAvatar}>{session.user.email[0].toUpperCase()}</div>
             <div className={s.userEmail}>{session.user.email}</div>
           </div>
           <ThemeToggle />
-          <button className={s.signOutBtn} onClick={handleSignOut}>Cerrar sesion</button>
+          <button className={s.signOutMobile} onClick={handleSignOut}>Cerrar sesion</button>
         </div>
       </aside>
 
