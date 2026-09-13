@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -76,6 +76,9 @@ serve(async (req) => {
       .slice(-20)
       .map(m => ({ role: m.role, content: String(m.content ?? '').slice(0, 4000) }))
     const negocio_id: string | null = body.negocio_id || null
+    const sesion_id: string | null = typeof body.sesion_id === 'string' ? body.sesion_id.slice(0, 100) : null
+    const cliente_nombre: string | null = typeof body.cliente_nombre === 'string' ? body.cliente_nombre.slice(0, 120) : null
+    const cliente_telefono: string | null = typeof body.cliente_telefono === 'string' ? body.cliente_telefono.slice(0, 40) : null
     const idioma: string = typeof body.idioma === 'string' ? body.idioma.slice(0, 5) : 'es'
 
     const supabase = createClient(
@@ -291,8 +294,8 @@ serve(async (req) => {
     if (negocio_id && messages.length > 0) {
       const lastUserMessage = messages[messages.length - 1]
       await supabase.from('conversaciones').insert([
-        { negocio_id, mensaje: lastUserMessage.content, rol: 'user' },
-        { negocio_id, mensaje: reply, rol: 'assistant' },
+        { negocio_id, mensaje: lastUserMessage.content, rol: 'user', sesion_id, cliente_nombre, cliente_telefono },
+        { negocio_id, mensaje: reply, rol: 'assistant', sesion_id, cliente_nombre, cliente_telefono },
       ])
       await supabase.rpc('increment_conversaciones', { p_negocio_id: negocio_id })
     }

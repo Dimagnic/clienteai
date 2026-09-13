@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { askClaude, detectarIdioma } from '../lib/claude'
@@ -59,6 +59,10 @@ export default function Chat() {
   const [thinking, setThinking] = useState(false)
   const [error, setError] = useState('')
   const [notFound, setNotFound] = useState(false)
+  const [datosListos, setDatosListos] = useState(false)
+  const [clienteNombre, setClienteNombre] = useState('')
+  const [clienteTelefono, setClienteTelefono] = useState('')
+  const [sesionId] = useState(() => crypto.randomUUID())
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -93,6 +97,9 @@ export default function Chat() {
         messages: newMessages,
         negocio_id: negocio.id,
         idioma: detectarIdioma(),
+        sesion_id: sesionId,
+        cliente_nombre: clienteNombre,
+        cliente_telefono: clienteTelefono,
       })
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
@@ -139,6 +146,42 @@ export default function Chat() {
 
   const color = negocio.color || '#16a34a'
   const vivid = toVivid(color)
+
+  if (!datosListos) return (
+    <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#eef1f0', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 380, background: '#fff', borderRadius: 20, padding: '32px 28px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', background: `linear-gradient(135deg, ${color}, ${vivid})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 auto 16px' }}>
+          {negocio.nombre[0].toUpperCase()}
+        </div>
+        <p style={{ textAlign: 'center', fontWeight: 700, fontSize: 17, color: '#111', margin: '0 0 4px' }}>{negocio.nombre}</p>
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#9ca3af', margin: '0 0 24px' }}>Antes de empezar, cuéntanos quién eres</p>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Tu nombre</label>
+        <input
+          value={clienteNombre}
+          onChange={e => setClienteNombre(e.target.value)}
+          placeholder="Ej. Maria Lopez"
+          maxLength={120}
+          style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 14.5, outline: 'none', marginBottom: 14, background: '#f7f8fa' }}
+        />
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Tu telefono / WhatsApp</label>
+        <input
+          value={clienteTelefono}
+          onChange={e => setClienteTelefono(e.target.value)}
+          placeholder="Ej. 55 1234 5678"
+          maxLength={40}
+          style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 14.5, outline: 'none', marginBottom: 20, background: '#f7f8fa' }}
+        />
+        <button
+          onClick={() => clienteNombre.trim() && clienteTelefono.trim() && setDatosListos(true)}
+          disabled={!clienteNombre.trim() || !clienteTelefono.trim()}
+          style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${vivid}, ${color})`, color: '#fff', fontWeight: 700, fontSize: 14.5, cursor: 'pointer', opacity: (!clienteNombre.trim() || !clienteTelefono.trim()) ? 0.5 : 1 }}
+        >
+          Empezar a chatear
+        </button>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#c1c5cb', marginTop: 16 }}>Powered by ClienteAI</p>
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#eef1f0', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', maxWidth: 600, margin: '0 auto', boxShadow: '0 0 40px rgba(0,0,0,0.08)' }}>
