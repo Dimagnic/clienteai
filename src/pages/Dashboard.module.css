@@ -43,10 +43,24 @@
     flex: 1;
     min-width: 0;
     flex-direction: row;
-    padding: 0;
+    padding: 6px 8px;
     gap: 6px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    background: #f3faf5;
+    border-radius: 10px;
+  }
+  .sidebarNav::after {
+    content: '\203A';
+    position: sticky;
+    right: 0;
+    flex-shrink: 0;
+    align-self: center;
+    font-size: 13px;
+    line-height: 1;
+    color: rgba(22, 163, 74, 0.5);
+    padding-left: 6px;
+    pointer-events: none;
   }
   .navItem { white-space: nowrap; flex-shrink: 0; }
   .sidebarStats { display: none; }
