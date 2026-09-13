@@ -2,7 +2,7 @@
 
 .sidebar { width: 220px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
 .sidebarLogo { font-size: 18px; font-weight: 700; color: #16a34a; padding: 0 20px; margin-bottom: 32px; }
-.sidebarNav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+.sidebarNav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 10px; overflow-y: auto; min-height: 0; }
 .navItem { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; border: none; background: transparent; font-size: 14px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; }
 .navItem:hover { background: var(--bg-secondary); color: var(--text-primary); }
 .navItemActive { background: #f0fdf4; color: #16a34a; font-weight: 500; }
