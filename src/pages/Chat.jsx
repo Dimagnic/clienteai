@@ -3,6 +3,53 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { askClaude, detectarIdioma } from '../lib/claude'
 
+// Genera una variante "vivida" (más saturada y luminosa) de un color hex,
+// para que el chat se vea con vida aunque la marca use un color apagado.
+function toVivid(hex) {
+  try {
+    let c = (hex || '').replace('#', '')
+    if (c.length === 3) c = c.split('').map(ch => ch + ch).join('')
+    if (c.length !== 6) return '#22c55e'
+    const r = parseInt(c.substr(0, 2), 16) / 255
+    const g = parseInt(c.substr(2, 2), 16) / 255
+    const b = parseInt(c.substr(4, 2), 16) / 255
+    const max = Math.max(r, g, b), min = Math.min(r, g, b)
+    let h, s, l = (max + min) / 2
+    if (max === min) { h = s = 0 } else {
+      const d = max - min
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break
+        case g: h = (b - r) / d + 2; break
+        default: h = (r - g) / d + 4
+      }
+      h /= 6
+    }
+    s = Math.max(s, 0.58)
+    l = Math.min(Math.max(l, 0.46), 0.58)
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1
+      if (t > 1) t -= 1
+      if (t < 1 / 6) return p + (q - p) * 6 * t
+      if (t < 1 / 2) return q
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+      return p
+    }
+    let r2, g2, b2
+    if (s === 0) { r2 = g2 = b2 = l } else {
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+      const p = 2 * l - q
+      r2 = hue2rgb(p, q, h + 1 / 3)
+      g2 = hue2rgb(p, q, h)
+      b2 = hue2rgb(p, q, h - 1 / 3)
+    }
+    const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0')
+    return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`
+  } catch {
+    return '#22c55e'
+  }
+}
+
 export default function Chat() {
   const { token } = useParams()
   const [negocio, setNegocio] = useState(null)
@@ -91,32 +138,41 @@ export default function Chat() {
   )
 
   const color = negocio.color || '#16a34a'
+  const vivid = toVivid(color)
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#eef1f0', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', maxWidth: 600, margin: '0 auto', boxShadow: '0 0 40px rgba(0,0,0,0.06)' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#eef1f0', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', maxWidth: 600, margin: '0 auto', boxShadow: '0 0 40px rgba(0,0,0,0.08)' }}>
 
       {/* Header */}
       <div style={{
-        background: `linear-gradient(135deg, ${color}, ${color}dd)`,
+        background: `linear-gradient(135deg, ${color}, ${vivid})`,
         padding: '18px 20px',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
         position: 'relative',
         zIndex: 2,
+        overflow: 'hidden',
       }}>
-        <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.22)', border: '2px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+        {/* Blobs decorativos difuminados, dan profundidad sin depender del color de marca */}
+        <div style={{ position: 'absolute', top: -40, right: -20, width: 130, height: 130, borderRadius: '50%', background: vivid, opacity: 0.35, filter: 'blur(28px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -50, left: '30%', width: 100, height: 100, borderRadius: '50%', background: '#fff', opacity: 0.08, filter: 'blur(24px)', pointerEvents: 'none' }} />
+
+        <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.22)', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 700, color: '#fff', flexShrink: 0, position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
           {negocio.nombre[0].toUpperCase()}
         </div>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ margin: 0, fontWeight: 700, color: '#fff', fontSize: 16, letterSpacing: -0.2 }}>{negocio.nombre}</p>
-          <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.88)', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#86efac', display: 'inline-block', boxShadow: '0 0 0 rgba(134,239,172,0.6)', animation: 'pulse 2s infinite' }} />
+        <div style={{ minWidth: 0, position: 'relative' }}>
+          <p style={{ margin: 0, fontWeight: 700, color: '#fff', fontSize: 16, letterSpacing: -0.2, textShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>{negocio.nombre}</p>
+          <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#86efac', display: 'inline-block', animation: 'pulse 2s infinite' }} />
             Responde al instante
           </p>
         </div>
       </div>
+
+      {/* Franja de acento debajo del header */}
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${vivid}, ${color}, ${vivid})`, backgroundSize: '200% 100%', animation: 'shimmer 3s linear infinite', flexShrink: 0 }} />
 
       {/* Mensajes */}
       <div style={{
@@ -127,13 +183,13 @@ export default function Chat() {
         flexDirection: 'column',
         gap: 12,
         backgroundColor: '#eef1f0',
-        backgroundImage: 'radial-gradient(rgba(0,0,0,0.045) 1px, transparent 1px)',
-        backgroundSize: '18px 18px',
+        backgroundImage: `radial-gradient(${vivid}33 1.5px, transparent 1.5px)`,
+        backgroundSize: '20px 20px',
       }}>
         {messages.map((m, i) => (
           <div key={i} className="msgIn" style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: 8 }}>
             {m.role === 'assistant' && (
-              <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#fff', color, border: `1.5px solid ${color}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#fff', color: vivid, border: `1.5px solid ${vivid}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
                 {negocio.nombre[0].toUpperCase()}
               </div>
             )}
@@ -143,9 +199,9 @@ export default function Chat() {
               borderRadius: 18,
               fontSize: 14.5,
               lineHeight: 1.55,
-              background: m.role === 'user' ? color : '#fff',
+              background: m.role === 'user' ? `linear-gradient(135deg, ${vivid}, ${color})` : '#fff',
               color: m.role === 'user' ? '#fff' : '#1f2937',
-              boxShadow: m.role === 'user' ? `0 2px 8px ${color}40` : '0 1px 4px rgba(0,0,0,0.06)',
+              boxShadow: m.role === 'user' ? `0 3px 10px ${vivid}55` : '0 1px 4px rgba(0,0,0,0.08)',
               borderBottomRightRadius: m.role === 'user' ? 4 : 18,
               borderBottomLeftRadius: m.role === 'assistant' ? 4 : 18,
               whiteSpace: 'pre-wrap',
@@ -158,13 +214,13 @@ export default function Chat() {
 
         {thinking && (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#fff', color, border: `1.5px solid ${color}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#fff', color: vivid, border: `1.5px solid ${vivid}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
               {negocio.nombre[0].toUpperCase()}
             </div>
-            <div style={{ background: '#fff', borderRadius: 18, borderBottomLeftRadius: 4, padding: '13px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <div style={{ background: '#fff', borderRadius: 18, borderBottomLeftRadius: 4, padding: '13px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
               <span style={{ display: 'flex', gap: 4 }}>
                 {[0, 1, 2].map(i => (
-                  <span key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: color, opacity: 0.5, animation: 'bounce 1.2s infinite', animationDelay: `${i * 0.15}s` }} />
+                  <span key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: vivid, opacity: 0.6, animation: 'bounce 1.2s infinite', animationDelay: `${i * 0.15}s` }} />
                 ))}
               </span>
             </div>
@@ -199,7 +255,7 @@ export default function Chat() {
             background: '#f7f8fa',
             transition: 'border-color 0.15s, box-shadow 0.15s',
           }}
-          onFocus={e => { e.target.style.borderColor = color; e.target.style.boxShadow = `0 0 0 3px ${color}22` }}
+          onFocus={e => { e.target.style.borderColor = vivid; e.target.style.boxShadow = `0 0 0 3px ${vivid}22` }}
           onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none' }}
         />
         <button
@@ -209,7 +265,7 @@ export default function Chat() {
             width: 42,
             height: 42,
             borderRadius: '50%',
-            background: color,
+            background: `linear-gradient(135deg, ${vivid}, ${color})`,
             color: '#fff',
             border: 'none',
             fontSize: 18,
@@ -219,7 +275,7 @@ export default function Chat() {
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            boxShadow: !input.trim() || thinking ? 'none' : `0 3px 10px ${color}55`,
+            boxShadow: !input.trim() || thinking ? 'none' : `0 3px 12px ${vivid}66`,
             transition: 'transform 0.1s, box-shadow 0.15s',
           }}
           onMouseDown={e => { if (input.trim() && !thinking) e.currentTarget.style.transform = 'scale(0.92)' }}
@@ -236,6 +292,7 @@ export default function Chat() {
         @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-5px);opacity:1} }
         @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(134,239,172,0.55)} 70%{box-shadow:0 0 0 6px rgba(134,239,172,0)} 100%{box-shadow:0 0 0 0 rgba(134,239,172,0)} }
         @keyframes msgIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
+        @keyframes shimmer { 0%{background-position:0% 0} 100%{background-position:200% 0} }
         .msgIn { animation: msgIn 0.2s ease-out; }
       `}</style>
     </div>
