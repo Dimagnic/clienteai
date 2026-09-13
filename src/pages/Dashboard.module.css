@@ -36,12 +36,18 @@
     flex-direction: row;
     align-items: center;
     padding: 10px 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
   .page { flex-direction: column; }
   .sidebarLogo { display: none; }
-  .sidebarNav { flex: none; flex-direction: row; padding: 0; gap: 6px; }
+  .sidebarNav {
+    flex: 1;
+    min-width: 0;
+    flex-direction: row;
+    padding: 0;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .navItem { white-space: nowrap; flex-shrink: 0; }
   .sidebarStats { display: none; }
   .sidebarSubtitle { display: none; }
