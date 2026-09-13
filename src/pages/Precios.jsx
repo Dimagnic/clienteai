@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -55,7 +55,7 @@ export default function Precios({ session }) {
       precio: '$0',
       periodo: 'para siempre',
       desc: 'Perfecto para probar ClienteAI',
-      features: ['50 conversaciones al mes', '1 asistente virtual', 'Widget para tu web', 'Link directo', 'Soporte por email'],
+      features: ['50 conversaciones al mes', '1 asistente virtual', 'Widget para tu web', 'Link directo', 'Soporte por email', 'Reportes de conversaciones por dia, clasificados por cliente'],
       cta: 'Tu plan actual',
       plan: null,
       destacado: false,
@@ -66,7 +66,7 @@ export default function Precios({ session }) {
       precio: '$299',
       periodo: 'MXN / mes',
       desc: 'Para negocios que quieren crecer',
-      features: ['2,000 conversaciones al mes', '1 asistente virtual', 'Widget personalizable', 'Link directo', 'Historial de conversaciones', 'Soporte prioritario'],
+      features: ['2,000 conversaciones al mes', '1 asistente virtual', 'Widget personalizable', 'Link directo', 'Reportes de conversaciones por dia, clasificados por cliente', 'Soporte prioritario'],
       cta: 'Contratar Pro',
       plan: 'pro',
       destacado: true,
@@ -77,7 +77,7 @@ export default function Precios({ session }) {
       precio: '$599',
       periodo: 'MXN / mes',
       desc: 'Para empresas con mas necesidades',
-      features: ['Conversaciones ilimitadas ♾️', '3 asistentes virtuales', 'Widget personalizable', 'Link directo', 'Historial de conversaciones', 'Soporte prioritario', 'Reportes mensuales'],
+      features: ['Conversaciones ilimitadas ♾️', '3 asistentes virtuales', 'Widget personalizable', 'Link directo', 'Soporte prioritario', 'Reportes de conversaciones por dia, clasificados por cliente'],
       cta: 'Contratar Negocio',
       plan: 'negocio',
       destacado: false,
