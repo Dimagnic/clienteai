@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import ReporteConversaciones from '../components/ReporteConversaciones'
 import { supabase } from '../lib/supabase'
 import ThemeToggle from '../components/ThemeToggle'
 import s from './Dashboard.module.css'
@@ -25,6 +26,7 @@ export default function Dashboard({ session }) {
   const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', email: '', telefono: '', plan: 'gratuito', asesor_id: '' })
   const [creandoCliente, setCreandoCliente] = useState(false)
   const [clienteCreado, setClienteCreado] = useState(null)
+  const [vistaActiva, setVistaActiva] = useState('dashboard')
 
   // Se ejecuta solo al montar, para cargar los datos iniciales del panel.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -471,7 +473,7 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
       <aside className={s.sidebar}>
         <div className={s.sidebarLogo}>ClienteAI</div>
         <nav className={s.sidebarNav}>
-          <button className={`${s.navItem} ${s.navItemActive}`}>
+          <button className={`${s.navItem} ${vistaActiva === 'dashboard' ? s.navItemActive : ''}`} onClick={() => setVistaActiva('dashboard')}>
             <span className={s.navIcon}>+</span> Dashboard
           </button>
           <button className={s.navItem} onClick={() => navigate(`/configurar${negocioActivo?.id ? `?id=${negocioActivo.id}` : ''}`)}>
@@ -479,6 +481,9 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
           </button>
           <button className={s.navItem} onClick={() => navigate(`/preview${negocioActivo?.token ? `?token=${negocioActivo.token}` : ''}`)}>
             <span className={s.navIcon}>o</span> Vista previa
+          </button>
+          <button className={`${s.navItem} ${vistaActiva === 'reportes' ? s.navItemActive : ''}`} onClick={() => setVistaActiva('reportes')}>
+            <span className={s.navIcon}>#</span> Reportes
           </button>
         </nav>
         <div className={s.sidebarBottom}>
@@ -492,6 +497,10 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
       </aside>
 
       <main className={s.main}>
+        {vistaActiva === 'reportes' ? (
+          <ReporteConversaciones negocio={negocioActivo} />
+        ) : (
+        <>
         <div className={s.header}>
           <div>
             <h1 className={s.greeting}>Hola{negocio ? `, ${negocio.nombre}` : ''}</h1>
@@ -957,6 +966,8 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
           </div>
         )}
 
+        </>
+        )}
       </main>
     </div>
   )
