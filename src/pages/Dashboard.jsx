@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 import s from './Dashboard.module.css'
 
 export default function Dashboard({ session }) {
@@ -485,6 +486,7 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
             <div className={s.userAvatar}>{session.user.email[0].toUpperCase()}</div>
             <div className={s.userEmail}>{session.user.email}</div>
           </div>
+          <ThemeToggle />
           <button className={s.signOutBtn} onClick={handleSignOut}>Cerrar sesion</button>
         </div>
       </aside>

@@ -1,48 +1,27 @@
-import { useState, useEffect } from 'react'
+﻿import { useState } from 'react'
+import { getTheme, toggleTheme } from '../lib/theme'
 
-export default function ThemeToggle() {
-  const [dark, setDark] = useState(() => {
-    return localStorage.getItem('theme') === 'dark'
-  })
+export default function ThemeToggle({ style }) {
+  const [theme, setTheme] = useState(getTheme())
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
-    localStorage.setItem('theme', dark ? 'dark' : 'light')
-  }, [dark])
+  function handleClick() {
+    setTheme(toggleTheme())
+  }
 
   return (
     <button
-      onClick={() => setDark(!dark)}
-      title={dark ? 'Modo claro' : 'Modo oscuro'}
+      onClick={handleClick}
       style={{
-        background: dark ? '#334155' : '#f3f4f6',
-        border: 'none',
-        borderRadius: 20,
-        width: 44,
-        height: 24,
-        cursor: 'pointer',
-        position: 'relative',
-        transition: 'background 0.2s',
-        flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        width: '100%', padding: '9px 12px', borderRadius: 8, marginBottom: 8,
+        border: '1px solid var(--border)', background: 'var(--bg-secondary)',
+        color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+        ...style,
       }}
+      aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
     >
-      <span style={{
-        position: 'absolute',
-        top: 3,
-        left: dark ? 23 : 3,
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        background: dark ? '#16a34a' : '#fff',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-        transition: 'left 0.2s',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 10,
-      }}>
-        {dark ? '🌙' : '☀️'}
-      </span>
+      <span style={{ fontSize: 15 }}>{theme === 'dark' ? '☀️' : '🌙'}</span>
+      {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
     </button>
   )
 }

@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import s from './Dashboard.module.css'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function AsesorDashboard({ session }) {
   const navigate = useNavigate()
@@ -191,6 +192,7 @@ export default function AsesorDashboard({ session }) {
           )}
         </nav>
         <div className={s.sidebarFooter} style={{ marginTop: 'auto', padding: 20 }}>
+          <ThemeToggle />
           <button className={s.signOutMobile} onClick={() => supabase.auth.signOut().then(() => navigate('/'))} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Cerrar sesión</button>
         </div>
       </aside>
