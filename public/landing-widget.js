@@ -1,7 +1,4 @@
-﻿(function () {
-  // Solo cargar el widget de demo en la landing page (raíz del sitio)
-  if (window.location.pathname !== '/') return;
-
+(function () {
   const SUPABASE_URL = 'https://eevflmyoqwndobjkjuov.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldmZsbXlvcXduZG9iamtqdW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MzI5MjMsImV4cCI6MjA5NzEwODkyM30.3GomP52oNTWL8sdttwHaF2NyfjklKKO9eucmgFe2x_E';
 
@@ -109,9 +106,14 @@
   document.body.appendChild(btn);
   document.body.appendChild(box);
 
+  // Ocultos por defecto hasta que sepamos en que ruta estamos (evita parpadeo)
+  btn.style.display = 'none';
+  badge.style.display = 'none';
+
   let messages = [];
   let isOpen = false;
   let badgeHidden = false;
+  let badgeTimerStarted = false;
 
   function addMessage(role, text) {
     const el = document.createElement('div');
@@ -179,7 +181,47 @@
     if (e.key === 'Enter') sendMessage();
   });
 
-  setTimeout(() => {
-    if (!isOpen) { badge.style.display = 'none'; badgeHidden = true; }
-  }, 5000);
+  // --- Vigilancia de ruta ---
+  // Como el sitio es una SPA (React Router), navegar entre paginas no siempre
+  // recarga el documento por completo, asi que en vez de chequear la ruta
+  // una sola vez al cargar el script, la volvemos a chequear cada vez que
+  // cambia (con un pequeno polling, que cubre tanto los botones atras/adelante
+  // del navegador como la navegacion interna de React Router).
+  let lastPath = null;
+
+  function syncVisibility() {
+    const currentPath = window.location.pathname;
+    if (currentPath === lastPath) return;
+    lastPath = currentPath;
+
+    const onHome = currentPath === '/';
+
+    if (!onHome) {
+      // Salimos de la landing: escondemos todo y cerramos el chat si estaba abierto
+      btn.style.display = 'none';
+      badge.style.display = 'none';
+      if (isOpen) {
+        isOpen = false;
+        box.classList.remove('open');
+        btn.classList.remove('open');
+        btn.innerHTML = '✦';
+      }
+      return
+    }
+
+    // Volvimos a la landing: mostramos el boton
+    btn.style.display = 'flex';
+    if (!badgeHidden) {
+      badge.style.display = 'block';
+      if (!badgeTimerStarted) {
+        badgeTimerStarted = true;
+        setTimeout(() => {
+          if (!isOpen) { badge.style.display = 'none'; badgeHidden = true; }
+        }, 5000);
+      }
+    }
+  }
+
+  syncVisibility();
+  setInterval(syncVisibility, 400);
 })();
