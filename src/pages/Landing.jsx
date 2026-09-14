@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import s from './Landing.module.css'
 import ThemeToggle from '../components/ThemeToggle'
@@ -52,7 +52,7 @@ export default function Landing({ session }) {
           <div className={s.navLinks}>
             <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }) }}>Funciones</a>
             <a href="#precios" onClick={(e) => { e.preventDefault(); document.getElementById('precios')?.scrollIntoView({ behavior: 'smooth' }) }}>Precios</a>
-            <ThemeToggle />
+            <ThemeToggle style={{ width: 'auto', marginBottom: 0 }} />
             {session
               ? <button className={s.btnPrimary} onClick={() => navigate('/dashboard')}>Mi dashboard</button>
               : <button className={s.btnPrimary} onClick={() => navigate('/admin')}>Acceder</button>
