@@ -3,6 +3,8 @@ import { jsPDF } from "jspdf"
 // Agrupa las filas crudas de "conversaciones" en: dia -> sesiones -> mensajes.
 // Las filas viejas (antes de este feature) no tienen sesion_id ni datos del
 // cliente, asi que se agrupan aparte como "Cliente sin identificar".
+const ORDEN_PRIORIDAD = { alta: 3, media: 2, baja: 1 }
+
 export function agruparPorDia(filas) {
   const porDia = new Map()
 
@@ -28,7 +30,16 @@ export function agruparPorDia(filas) {
   // Convertir a array ordenado: dias mas recientes primero, sesiones por hora de inicio
   const dias = Array.from(porDia.entries()).map(([fecha, sesionesMap]) => {
     const sesiones = Array.from(sesionesMap.values())
-      .map(s => ({ ...s, mensajes: s.mensajes.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) }))
+      .map(s => {
+        const mensajesOrdenados = s.mensajes.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        // Prioridad de la sesion = la mas alta detectada entre sus mensajes.
+        const prioridad = mensajesOrdenados.reduce((max, m) => {
+          const valorActual = ORDEN_PRIORIDAD[m.prioridad] || 0
+          const valorMax = ORDEN_PRIORIDAD[max] || 0
+          return valorActual > valorMax ? m.prioridad : max
+        }, null)
+        return { ...s, mensajes: mensajesOrdenados, prioridad }
+      })
       .sort((a, b) => new Date(a.mensajes[0].created_at) - new Date(b.mensajes[0].created_at))
     return { fecha, sesiones }
   })

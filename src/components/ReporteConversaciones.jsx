@@ -97,7 +97,14 @@ export default function ReporteConversaciones({ negocio }) {
                         style={{ padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", background: sesionVisible ? "var(--bg-secondary)" : "transparent" }}
                       >
                         <div>
-                          <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5, color: "var(--text-primary)" }}>{sesion.clienteNombre}</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5, color: "var(--text-primary)" }}>{sesion.clienteNombre}</p>
+                            {sesion.prioridad && (
+                              <span style={badgePrioridad(sesion.prioridad)}>
+                                {sesion.prioridad === "alta" ? "Urgente" : sesion.prioridad === "media" ? "Media" : "Baja"}
+                              </span>
+                            )}
+                          </div>
                           <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-muted)" }}>{sesion.clienteTelefono} · {sesion.mensajes.length} mensajes</p>
                         </div>
                         <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
@@ -141,4 +148,22 @@ const btnAccion = {
   fontSize: 11.5,
   fontWeight: 600,
   cursor: "pointer",
+}
+
+function badgePrioridad(nivel) {
+  const colores = {
+    alta: { bg: "#fee2e2", color: "#dc2626" },
+    media: { bg: "#fef3c7", color: "#d97706" },
+    baja: { bg: "#f3f4f6", color: "#6b7280" },
+  }
+  const c = colores[nivel] || colores.baja
+  return {
+    fontSize: 10.5,
+    fontWeight: 700,
+    padding: "2px 8px",
+    borderRadius: 20,
+    background: c.bg,
+    color: c.color,
+    whiteSpace: "nowrap",
+  }
 }
