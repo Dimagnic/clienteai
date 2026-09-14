@@ -46,7 +46,12 @@ ${negocio.direccion ? `DIRECCION: ${negocio.direccion}` : ''}
 ${negocio.telefono ? `TELEFONO: ${negocio.telefono}` : ''}
 ${negocio.extra ? `INFORMACION ADICIONAL:\n${negocio.extra}` : ''}
 
-Siempre se amable, breve y util. Si el cliente quiere hacer un pedido o necesita ayuda urgente, indicale que puede llamar o escribir directamente.`
+Siempre se amable, breve y util. Si el cliente quiere hacer un pedido o necesita ayuda urgente, indicale que puede llamar o escribir directamente.
+
+Al final de TODA tu respuesta, agrega SIEMPRE en una linea nueva una etiqueta interna de prioridad (el sistema la elimina automaticamente, el cliente nunca la vera). Usa exactamente uno de estos formatos segun corresponda:
+[PRIORIDAD: ALTA] -> el cliente muestra urgencia real, una queja fuerte, o intencion clara de comprar/contratar ahora mismo.
+[PRIORIDAD: MEDIA] -> consulta con interes genuino pero sin urgencia inmediata.
+[PRIORIDAD: BAJA] -> pregunta general o de curiosidad, sin intencion clara de compra.`
 }
 
 async function enviarCorreo(resendKey: string, to: string, subject: string, html: string) {
@@ -289,13 +294,20 @@ serve(async (req) => {
     const data = await response.json()
     if (!response.ok) throw new Error(data.error?.message || 'Error al conectar con Claude')
 
-    const reply = data.content[0].text
+    const replyCrudo = data.content[0].text
+
+    // Extrae la etiqueta interna de prioridad que el bot agrega al final de
+    // su respuesta (nunca se le muestra al cliente, solo se usa para
+    // marcar la conversacion en el dashboard).
+    const matchPrioridad = replyCrudo.match(/\[PRIORIDAD:\s*(ALTA|MEDIA|BAJA)\]\s*$/i)
+    const prioridad = matchPrioridad ? matchPrioridad[1].toLowerCase() : null
+    const reply = replyCrudo.replace(/\n?\[PRIORIDAD:\s*(ALTA|MEDIA|BAJA)\]\s*$/i, '').trim()
 
     if (negocio_id && messages.length > 0) {
       const lastUserMessage = messages[messages.length - 1]
       await supabase.from('conversaciones').insert([
-        { negocio_id, mensaje: lastUserMessage.content, rol: 'user', sesion_id, cliente_nombre, cliente_telefono },
-        { negocio_id, mensaje: reply, rol: 'assistant', sesion_id, cliente_nombre, cliente_telefono },
+        { negocio_id, mensaje: lastUserMessage.content, rol: 'user', sesion_id, cliente_nombre, cliente_telefono, prioridad },
+        { negocio_id, mensaje: reply, rol: 'assistant', sesion_id, cliente_nombre, cliente_telefono, prioridad },
       ])
       await supabase.rpc('increment_conversaciones', { p_negocio_id: negocio_id })
     }
