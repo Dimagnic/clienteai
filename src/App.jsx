@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { supabase } from './lib/supabase'
+import { getTheme, applyTheme } from './lib/theme'
 import Landing from './pages/Landing'
 import EnConstruccion from './pages/EnConstruccion'
 
@@ -55,12 +56,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!localStorage.getItem('theme')) {
-      document.documentElement.setAttribute('data-theme', 'light')
-      localStorage.setItem('theme', 'light')
-    } else {
-      document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'))
-    }
+    applyTheme(getTheme())
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
     })
