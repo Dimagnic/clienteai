@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 import s from './Configurar.module.css'
 
 const CAMPOS = [
@@ -78,6 +79,11 @@ export default function Configurar({ session }) {
     setSaved(false)
   }
 
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    navigate('/')
+  }
+
   async function handleSave(e) {
     e.preventDefault()
     if (!form.nombre.trim()) { setError('El nombre del negocio es obligatorio.'); return }
@@ -128,13 +134,28 @@ export default function Configurar({ session }) {
       <aside className={s.sidebar}>
         <div className={s.sidebarLogo}>ClienteAI</div>
         <nav className={s.sidebarNav}>
-          <button className={s.navItem} onClick={() => navigate('/dashboard')}>Dashboard</button>
-          <button className={`${s.navItem} ${s.navItemActive}`}>Mi asistente</button>
-          <button className={s.navItem} onClick={() => navigate('/preview')}>Vista previa</button>
+          <button className={s.navItem} onClick={() => navigate('/dashboard')}>
+            <span className={s.navIcon}>+</span> Dashboard
+          </button>
+          <button className={`${s.navItem} ${s.navItemActive}`}>
+            <span className={s.navIcon}>*</span> Mi asistente
+          </button>
+          <button className={s.navItem} onClick={() => navigate('/preview')}>
+            <span className={s.navIcon}>o</span> Vista previa
+          </button>
         </nav>
+        <div className={s.sidebarFooter}>
+          <div className={s.userInfo}>
+            <div className={s.userAvatar}>{session.user.email[0].toUpperCase()}</div>
+            <div className={s.userEmail}>{session.user.email}</div>
+          </div>
+          <ThemeToggle />
+          <button className={s.signOutMobile} onClick={handleSignOut}>Cerrar sesion</button>
+        </div>
       </aside>
 
       <main className={s.main}>
+        <button className={s.backBtn} onClick={() => navigate('/dashboard')}>&#8592; Volver al Dashboard</button>
         <div className={s.header}>
           <div>
             <h1 className={s.title}>Configura tu asistente</h1>

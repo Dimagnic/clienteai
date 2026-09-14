@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { askClaude, detectarIdioma } from '../lib/claude'
+import ThemeToggle from '../components/ThemeToggle'
 import s from './Preview.module.css'
 
 export default function Preview({ session }) {
@@ -78,6 +79,11 @@ export default function Preview({ session }) {
     setError('')
   }
 
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    navigate('/')
+  }
+
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ width: 32, height: 32, border: '3px solid #dcfce7', borderTopColor: '#16a34a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -90,12 +96,27 @@ export default function Preview({ session }) {
       <aside className={s.sidebar}>
         <div className={s.sidebarLogo}>ClienteAI</div>
         <nav className={s.sidebarNav}>
-          <button className={s.navItem} onClick={() => navigate('/dashboard')}>Dashboard</button>
-          <button className={s.navItem} onClick={() => navigate('/configurar')}>Mi asistente</button>
-          <button className={`${s.navItem} ${s.navItemActive}`}>Vista previa</button>
+          <button className={s.navItem} onClick={() => navigate('/dashboard')}>
+            <span className={s.navIcon}>+</span> Dashboard
+          </button>
+          <button className={s.navItem} onClick={() => navigate('/configurar')}>
+            <span className={s.navIcon}>*</span> Mi asistente
+          </button>
+          <button className={`${s.navItem} ${s.navItemActive}`}>
+            <span className={s.navIcon}>o</span> Vista previa
+          </button>
         </nav>
+        <div className={s.sidebarFooter}>
+          <div className={s.userInfo}>
+            <div className={s.userAvatar}>{session.user.email[0].toUpperCase()}</div>
+            <div className={s.userEmail}>{session.user.email}</div>
+          </div>
+          <ThemeToggle />
+          <button className={s.signOutMobile} onClick={handleSignOut}>Cerrar sesion</button>
+        </div>
       </aside>
       <main className={s.main}>
+        <button className={s.backBtn} onClick={() => navigate('/dashboard')}>&#8592; Volver al Dashboard</button>
         <div className={s.header}>
           <div>
             <h1 className={s.title}>Vista previa</h1>
