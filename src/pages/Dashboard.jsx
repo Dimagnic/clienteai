@@ -3,6 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import ReporteConversaciones from '../components/ReporteConversaciones'
 import { supabase } from '../lib/supabase'
 import ThemeToggle from '../components/ThemeToggle'
+import StatCard from '../components/StatCard'
+import ActionCard from '../components/ActionCard'
+import EmbedCode from '../components/EmbedCode'
+import ChatLink from '../components/ChatLink'
+import InstallGuide from '../components/InstallGuide'
+import EmptyState from '../components/EmptyState'
+import PageLoader from '../components/PageLoader'
+import QRDescargable from '../components/QRDescargable'
+import ConversacionesRecientes from '../components/ConversacionesRecientes'
 import s from './Dashboard.module.css'
 
 export default function Dashboard({ session }) {
@@ -973,239 +982,20 @@ setClientes((todos || []).map(n => ({ ...n, asesor: n.asesor_id ? asesoresMap[n.
   )
 }
 
-function StatCard({ label, value, icon, isText }) {
-  return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
-      <div style={{ fontSize: 24, marginBottom: 8 }}>{icon}</div>
-      <div style={{ fontSize: isText ? 20 : 32, fontWeight: 700, letterSpacing: '-0.5px', color: 'var(--text-primary)', marginBottom: 4 }}>{value}</div>
-      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{label}</div>
-    </div>
-  )
-}
 
-function ActionCard({ icon, title, desc, onClick }) {
-  return (
-    <button onClick={onClick} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', width: '100%' }}>
-      <div style={{ fontSize: 24, marginBottom: 10 }}>{icon}</div>
-      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{title}</div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{desc}</div>
-    </button>
-  )
-}
 
-function EmbedCode({ token }) {
-  const [copied, setCopied] = useState(false)
-  const code = `<script async src="https://clienteai.site/widget.js" data-token="${token}"></script>`
-  function copy() {
-    navigator.clipboard.writeText(code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-  return (
-    <div style={{ position: 'relative' }}>
-      <pre style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px', fontSize: 13, color: 'var(--text-primary)', overflowX: 'auto', fontFamily: 'monospace', lineHeight: 1.6 }}>
-        {code}
-      </pre>
-      <button onClick={copy} style={{ position: 'absolute', top: 10, right: 10, background: copied ? '#16a34a' : 'var(--bg-card)', color: copied ? '#fff' : 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.15s' }}>
-        {copied ? 'Copiado' : 'Copiar'}
-      </button>
-    </div>
-  )
-}
 
-function ChatLink({ token }) {
-  const [copied, setCopied] = useState(false)
-  const url = `https://clienteai.site/chat/${token}`
-  function copy() {
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-  return (
-    <div style={{ position: 'relative', marginTop: 8 }}>
-      <pre style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px', fontSize: 13, color: 'var(--text-primary)', overflowX: 'auto', fontFamily: 'monospace', lineHeight: 1.6, margin: 0 }}>
-        {url}
-      </pre>
-      <button onClick={copy} style={{ position: 'absolute', top: 10, right: 10, background: copied ? '#16a34a' : 'var(--bg-card)', color: copied ? '#fff' : 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.15s' }}>
-        {copied ? 'Copiado' : 'Copiar'}
-      </button>
-    </div>
-  )
-}
 
-function InstallGuide() {
-  const [abierto, setAbierto] = useState(false)
-  const plataformas = [
-    { nombre: 'WordPress', pasos: 'Instala el plugin gratuito "Insert Headers and Footers" y pega el codigo en el Footer. O ve a Apariencia > Editor de temas y pegalo justo antes de </body>.' },
-    { nombre: 'Wix', pasos: 'Ve a Configuracion > Avanzado > "Insertar codigo en todo el sitio" y pegalo en la seccion Body. Nota: esta funcion requiere un plan de pago de Wix, no esta disponible en el plan gratuito.' },
-    { nombre: 'Squarespace', pasos: 'Ve a Configuracion > Avanzado > Inyeccion de codigo y pegalo en el campo Footer.' },
-    { nombre: 'Shopify', pasos: 'Ve a Tienda online > Temas > Editar codigo, abre el archivo theme.liquid y pega el codigo justo antes de </body>.' },
-    { nombre: 'Webflow', pasos: 'Ve a Configuracion del proyecto > Custom Code > Footer Code y pega el codigo ahi.' },
-    { nombre: 'Carrd', pasos: 'Edita tu sitio, agrega una seccion de tipo "Embed" y pega el codigo dentro.' },
-    { nombre: 'Google Sites / Notion sites', pasos: 'Estas plataformas no permiten codigo personalizado. Usa mejor el link directo de chat que aparece mas abajo y compartelo con tus clientes.' },
-  ]
-  return (
-    <div style={{ marginTop: 16, border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
-      <button onClick={() => setAbierto(!abierto)} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'var(--bg-secondary)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Como instalar el codigo en tu pagina web
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{abierto ? 'Ocultar' : 'Ver guia'}</span>
-      </button>
-      {abierto && (
-        <div style={{ padding: '4px 16px 16px' }}>
-          {plataformas.map(p => (
-            <div key={p.nombre} style={{ padding: '10px 0', borderTop: '1px solid var(--border)' }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>{p.nombre}</p>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>{p.pasos}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
-function EmptyState({ navigate }) {
-  return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '56px 32px', textAlign: 'center', maxWidth: 500 }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🤖</div>
-      <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 10px', color: 'var(--text-primary)' }}>Configura tu primer asistente</h2>
-      <p style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 28, lineHeight: 1.6 }}>
-        Solo necesitas 10 minutos para tener un bot respondiendo por ti.
-      </p>
-      <button onClick={() => navigate('/configurar')} style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-        Configurar ahora
-      </button>
-    </div>
-  )
-}
 
-function PageLoader() {
-  return (
-    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-      <div style={{ width: 32, height: 32, border: '3px solid #dcfce7', borderTopColor: '#16a34a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  )
-}
 
-function QRDescargable({ token, nombre }) {
-  function descargarQR() {
-    const url = `https://clienteai.site/chat/${token}`
-    const canvas = document.createElement('canvas')
-    canvas.width = 600
-    canvas.height = 700
-    const ctx = canvas.getContext('2d')
 
-    // Fondo blanco
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, 600, 700)
 
-    // Header verde
-    ctx.fillStyle = '#16a34a'
-    ctx.fillRect(0, 0, 600, 80)
-    ctx.fillStyle = '#ffffff'
-    ctx.font = '900 28px Arial'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('ClienteAI', 300, 40)
 
-    // Texto escanea
-    ctx.fillStyle = '#111111'
-    ctx.font = '700 22px Arial'
-    ctx.fillText('¡Escanéame!', 300, 115)
-    ctx.font = '400 16px Arial'
-    ctx.fillStyle = '#6b7280'
-    ctx.fillText('Chatea con nuestro asistente virtual', 300, 145)
 
-    // QR usando API pública
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      ctx.drawImage(img, 125, 170, 350, 350)
 
-      // Nombre del negocio
-      ctx.fillStyle = '#111111'
-      ctx.font = '700 18px Arial'
-      ctx.fillText(nombre || 'Mi Negocio', 300, 570)
 
-      // URL pequeña
-      ctx.fillStyle = '#9ca3af'
-      ctx.font = '400 12px Arial'
-      ctx.fillText(url, 300, 595)
 
-      // Footer
-      ctx.fillStyle = '#f9fafb'
-      ctx.fillRect(0, 620, 600, 80)
-      ctx.fillStyle = '#6b7280'
-      ctx.font = '400 12px Arial'
-      ctx.fillText('Desarrollado por Cero+ Software · clienteai.site', 300, 660)
 
-      // Descargar
-      canvas.toBlob(blob => {
-        const a = document.createElement('a')
-        a.href = URL.createObjectURL(blob)
-        a.download = `qr-${nombre || 'bot'}.png`
-        a.click()
-        URL.revokeObjectURL(a.href)
-      }, 'image/png')
-    }
-    img.onerror = () => {
-      // Fallback sin QR visual
-      ctx.fillStyle = '#374151'
-      ctx.font = '400 14px Arial'
-      ctx.fillText('Error al generar QR. Intenta de nuevo.', 300, 400)
-      canvas.toBlob(blob => {
-        const a = document.createElement('a')
-        a.href = URL.createObjectURL(blob)
-        a.download = `qr-${nombre || 'bot'}.png`
-        a.click()
-      }, 'image/png')
-    }
-    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(url)}&color=000000&bgcolor=ffffff&margin=10`
-  }
 
-  return (
-    <button onClick={descargarQR} style={{ padding: '10px 20px', borderRadius: 8, border: '2px solid #16a34a', background: '#fff', color: '#16a34a', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
-      ⬇ Descargar QR
-    </button>
-  )
-}
 
-function ConversacionesRecientes({ negocioId }) {
-  const [mensajes, setMensajes] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const limite = 1000
-
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from('conversaciones').select('*').eq('negocio_id', negocioId).order('created_at', { ascending: false }).limit(limite)
-      setMensajes(data || [])
-      setLoading(false)
-    }
-    load()
-  }, [negocioId, limite])
-
-  if (loading) return <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Cargando...</div>
-  if (!mensajes.length) return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-      Aun no hay conversaciones. Comparte tu widget para empezar!
-    </div>
-  )
-
-  return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-      {mensajes.map((m, i) => (
-        <div key={m.id} style={{ padding: '14px 20px', borderBottom: i < mensajes.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: m.rol === 'user' ? '#dbeafe' : '#dcfce7', color: m.rol === 'user' ? '#1d4ed8' : '#16a34a', whiteSpace: 'nowrap', marginTop: 2 }}>
-            {m.rol === 'user' ? 'Cliente' : 'Bot'}
-          </span>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.5 }}>{m.mensaje}</p>
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>{new Date(m.created_at).toLocaleString('es-MX')}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
