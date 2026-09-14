@@ -7,6 +7,10 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVldmZsbXlvcXduZG9iamtqdW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MzI5MjMsImV4cCI6MjA5NzEwODkyM30.3GomP52oNTWL8sdttwHaF2NyfjklKKO9eucmgFe2x_E';
 
   let color = '#16a34a';
+  let clienteNombre = '';
+  let clienteTelefono = '';
+  let datosListos = false;
+  const sesionId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2));
 
   const style = document.createElement('style');
   document.head.appendChild(style);
@@ -44,6 +48,12 @@
       #cai-input:focus { border-color: ${c}; }
       #cai-send { background: ${c}; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; }
       #cai-send:disabled { opacity: 0.5; cursor: not-allowed; }
+      #cai-form { padding: 20px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
+      #cai-form-text { font-size: 13px; color: #6b7280; margin: 0 0 4px; text-align: center; }
+      #cai-form input { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
+      #cai-form input:focus { border-color: ${c}; }
+      #cai-form-btn { background: ${c}; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 4px; }
+      #cai-form-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     `;
   }
 
@@ -58,8 +68,14 @@
       <span id="cai-title">Asistente</span>
       <button id="cai-close">✕</button>
     </div>
-    <div id="cai-messages"></div>
-    <div id="cai-footer">
+    <div id="cai-form">
+      <p id="cai-form-text">Antes de empezar, cuentanos quien eres</p>
+      <input id="cai-form-nombre" type="text" placeholder="Tu nombre" maxlength="120" />
+      <input id="cai-form-telefono" type="text" placeholder="Tu telefono / WhatsApp" maxlength="40" />
+      <button id="cai-form-btn" disabled>Empezar a chatear</button>
+    </div>
+    <div id="cai-messages" style="display:none"></div>
+    <div id="cai-footer" style="display:none">
       <input id="cai-input" type="text" placeholder="Escribe tu mensaje..." />
       <button id="cai-send">→</button>
     </div>
@@ -113,7 +129,7 @@
     const input = document.getElementById('cai-input');
     const send = document.getElementById('cai-send');
     const text = input.value.trim();
-    if (!text || !negocio) return;
+    if (!text || !negocio || !datosListos) return;
     input.value = '';
     send.disabled = true;
     addMessage('user', text);
@@ -130,7 +146,7 @@
       const res = await fetch(`${SUPABASE_URL}/functions/v1/ask-claude`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ messages, negocio_id: negocio.id }),
+        body: JSON.stringify({ messages, negocio_id: negocio.id, sesion_id: sesionId, cliente_nombre: clienteNombre, cliente_telefono: clienteTelefono }),
       });
       const data = await res.json();
       document.getElementById('cai-thinking')?.remove();
@@ -160,6 +176,24 @@
     isOpen = false;
     box.classList.remove('open');
     btn.innerHTML = '💬';
+  });
+
+  function checkFormReady() {
+    const nombre = document.getElementById('cai-form-nombre').value.trim();
+    const telefono = document.getElementById('cai-form-telefono').value.trim();
+    document.getElementById('cai-form-btn').disabled = !nombre || !telefono;
+  }
+  document.getElementById('cai-form-nombre').addEventListener('input', checkFormReady);
+  document.getElementById('cai-form-telefono').addEventListener('input', checkFormReady);
+  document.getElementById('cai-form-btn').addEventListener('click', () => {
+    clienteNombre = document.getElementById('cai-form-nombre').value.trim();
+    clienteTelefono = document.getElementById('cai-form-telefono').value.trim();
+    if (!clienteNombre || !clienteTelefono) return;
+    datosListos = true;
+    document.getElementById('cai-form').style.display = 'none';
+    document.getElementById('cai-messages').style.display = 'flex';
+    document.getElementById('cai-footer').style.display = 'flex';
+    document.getElementById('cai-input').focus();
   });
 
   document.getElementById('cai-send').addEventListener('click', sendMessage);
